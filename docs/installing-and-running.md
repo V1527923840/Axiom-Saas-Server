@@ -208,7 +208,7 @@ If you want quick run your app, you can use following commands:
 ## Links
 
 - Swagger (API docs): <http://localhost:3000/docs>
-- Adminer (client for DB): <http://localhost:8080>
+- Adminer (client for DB): <http://localhost:8888>
 - MongoDB Express (client for DB): <http://localhost:8081/>
 - Maildev: <http://localhost:1080>
 

@@ -382,7 +382,7 @@ Open <http://localhost:3000>
 To set up Adminer:
 
 Open the running port in your browser.
-Open <http://localhost:8080>
+Open <http://localhost:8888>
 
 ![image](https://github.com/user-attachments/assets/f4b86daa-d93f-4ae9-a9e3-3c29bb3bba9d)
 
