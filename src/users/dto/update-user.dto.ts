@@ -1,5 +1,4 @@
-import { PartialType, ApiPropertyOptional } from '@nestjs/swagger';
-import { CreateUserDto } from './create-user.dto';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 import { Transform, Type } from 'class-transformer';
 import { IsEmail, IsOptional, MinLength } from 'class-validator';
@@ -8,7 +7,8 @@ import { RoleDto } from '../../roles/dto/role.dto';
 import { StatusDto } from '../../statuses/dto/status.dto';
 import { lowerCaseTransformer } from '../../utils/transformers/lower-case.transformer';
 
-export class UpdateUserDto extends PartialType(CreateUserDto) {
+// Define UpdateUserDto independently to avoid conflicts with CreateUserDto's strict types
+export class UpdateUserDto {
   @ApiPropertyOptional({ example: 'test1@example.com', type: String })
   @Transform(lowerCaseTransformer)
   @IsOptional()
@@ -45,4 +45,36 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
   @Type(() => StatusDto)
   status?: StatusDto;
+
+  @ApiPropertyOptional({ example: 'Lv0', type: String })
+  @IsOptional()
+  tier?: string;
+
+  @ApiPropertyOptional({ example: 'plan-uuid', type: String })
+  @IsOptional()
+  currentPlanId?: string | null;
+
+  @ApiPropertyOptional({ example: 100, type: Number })
+  @IsOptional()
+  pointsBalance?: number;
+
+  @ApiPropertyOptional({ example: 50, type: Number })
+  @IsOptional()
+  chatQuotaUsed?: number;
+
+  @ApiPropertyOptional({ example: 100, type: Number })
+  @IsOptional()
+  chatQuotaTotal?: number;
+
+  @ApiPropertyOptional({ example: '2026-06-11T00:00:00Z', type: String })
+  @IsOptional()
+  subscriptionExpiredAt?: string | null;
+
+  @ApiPropertyOptional({ example: '2026-01-01T00:00:00Z', type: String })
+  @IsOptional()
+  registeredAt?: string | null;
+
+  @ApiPropertyOptional({ example: '2026-05-10T00:00:00Z', type: String })
+  @IsOptional()
+  lastLoginAt?: string | null;
 }

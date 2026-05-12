@@ -47,6 +47,32 @@ export class UserEntity extends EntityRelationalHelper {
   @Column({ type: String, nullable: true })
   lastName: string | null;
 
+  @Index()
+  @Column({ type: String, default: 'Lv0' })
+  tier: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  currentPlanId: string | null;
+
+  @Column({ type: 'int', default: 0 })
+  pointsBalance: number;
+
+  @Column({ type: 'int', default: 0 })
+  chatQuotaUsed: number;
+
+  @Column({ type: 'int', default: 0 })
+  chatQuotaTotal: number;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  subscriptionExpiredAt: Date | null;
+
+  @Index()
+  @Column({ type: 'timestamptz', nullable: true })
+  registeredAt: Date | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  lastLoginAt: Date | null;
+
   @OneToOne(() => FileEntity, {
     eager: true,
   })

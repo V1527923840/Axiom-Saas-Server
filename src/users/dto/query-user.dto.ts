@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsString,
   ValidateNested,
+  IsIn,
 } from 'class-validator';
 import { Transform, Type, plainToInstance } from 'class-transformer';
 import { User } from '../domain/user';
@@ -15,6 +16,16 @@ export class FilterUserDto {
   @ValidateNested({ each: true })
   @Type(() => RoleDto)
   roles?: RoleDto[] | null;
+
+  @ApiPropertyOptional({ example: 'Lv0', type: String })
+  @IsOptional()
+  @IsIn(['Lv0', 'Lv1', 'Lv2', 'Lv3'])
+  tier?: string;
+
+  @ApiPropertyOptional({ example: 'active', type: String })
+  @IsOptional()
+  @IsIn(['active', 'disabled'])
+  status?: string;
 }
 
 export class SortUserDto {

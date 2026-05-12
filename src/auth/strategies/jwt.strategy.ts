@@ -9,10 +9,19 @@ import { AllConfigType } from '../../config/config.type';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(configService: ConfigService<AllConfigType>) {
-    super({
+    const secret =
+      configService.getOrThrow('auth.secret', { infer: true }) ||
+      'default_jwt_secret_for_dev';
+    const options = {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: configService.getOrThrow('auth.secret', { infer: true }),
-    });
+      secretOrKey: secret,
+    };
+    console.log(
+      '[JwtStrategy] Calling super with options:',
+      JSON.stringify(options),
+    );
+    super(options);
+    console.log('[JwtStrategy] After super call');
   }
 
   // Why we don't check if the user exists in the database:

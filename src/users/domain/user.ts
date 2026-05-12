@@ -2,7 +2,7 @@ import { Exclude, Expose } from 'class-transformer';
 import { FileType } from '../../files/domain/file';
 import { Role } from '../../roles/domain/role';
 import { Status } from '../../statuses/domain/status';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import databaseConfig from '../../database/config/database.config';
 import { DatabaseConfig } from '../../database/config/database-config.type';
 
@@ -77,4 +77,28 @@ export class User {
 
   @ApiProperty()
   deletedAt: Date;
+
+  @ApiProperty({ example: 'Lv0' })
+  tier: string;
+
+  @ApiPropertyOptional({ example: 'plan-uuid' })
+  currentPlanId?: string | null;
+
+  @ApiProperty({ example: 100 })
+  pointsBalance?: number;
+
+  @ApiProperty({ example: 50 })
+  chatQuotaUsed?: number;
+
+  @ApiProperty({ example: 100 })
+  chatQuotaTotal?: number;
+
+  @ApiPropertyOptional({ example: '2026-06-11T00:00:00Z' })
+  subscriptionExpiredAt?: string | null;
+
+  @ApiPropertyOptional({ example: '2026-01-01T00:00:00Z' })
+  registeredAt?: string | null;
+
+  @ApiPropertyOptional({ example: '2026-05-10T00:00:00Z' })
+  lastLoginAt?: string | null;
 }

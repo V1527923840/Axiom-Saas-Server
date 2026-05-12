@@ -69,10 +69,15 @@ export class FilesS3PresignedService {
       });
     }
 
-    const key = `${randomStringGenerator()}.${file.fileName
-      .split('.')
-      .pop()
-      ?.toLowerCase()}`;
+    const key = file.path
+      ? `${file.path}${randomStringGenerator()}.${file.fileName
+          .split('.')
+          .pop()
+          ?.toLowerCase()}`
+      : `${randomStringGenerator()}.${file.fileName
+          .split('.')
+          .pop()
+          ?.toLowerCase()}`;
 
     const command = new PutObjectCommand({
       Bucket: this.configService.getOrThrow('file.awsDefaultS3Bucket', {

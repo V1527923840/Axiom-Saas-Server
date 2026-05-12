@@ -1,29 +1,33 @@
 import { registerAs } from '@nestjs/config';
 
-import { IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import validateConfig from '../../utils/validate-config';
 import { AuthConfig } from './auth-config.type';
 import ms from 'ms';
 
 class EnvironmentVariablesValidator {
+  @IsOptional()
   @IsString()
   AUTH_JWT_SECRET: string;
 
   @IsString()
   AUTH_JWT_TOKEN_EXPIRES_IN: string;
 
+  @IsOptional()
   @IsString()
   AUTH_REFRESH_SECRET: string;
 
   @IsString()
   AUTH_REFRESH_TOKEN_EXPIRES_IN: string;
 
+  @IsOptional()
   @IsString()
   AUTH_FORGOT_SECRET: string;
 
   @IsString()
   AUTH_FORGOT_TOKEN_EXPIRES_IN: string;
 
+  @IsOptional()
   @IsString()
   AUTH_CONFIRM_EMAIL_SECRET: string;
 

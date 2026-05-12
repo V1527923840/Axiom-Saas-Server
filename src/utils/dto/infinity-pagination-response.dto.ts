@@ -1,10 +1,11 @@
 import { Type } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class InfinityPaginationResponseDto<T> {
-  data: T[];
-  hasNextPage: boolean;
-}
+// Re-export InfinityPaginationResponseDto and PaginatedApiResponseDto from api-response.dto
+export {
+  InfinityPaginationResponseDto,
+  PaginatedApiResponseDto,
+} from './api-response.dto';
 
 export function InfinityPaginationResponse<T>(classReference: Type<T>) {
   abstract class Pagination {

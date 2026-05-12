@@ -29,9 +29,10 @@ export class SessionRelationalRepository implements SessionRepository {
 
   async create(data: Session): Promise<Session> {
     const persistenceModel = SessionMapper.toPersistence(data);
-    return this.sessionRepository.save(
+    const saved = await this.sessionRepository.save(
       this.sessionRepository.create(persistenceModel),
     );
+    return SessionMapper.toDomain(saved);
   }
 
   async update(

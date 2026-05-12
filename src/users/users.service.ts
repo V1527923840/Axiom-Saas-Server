@@ -1,12 +1,16 @@
 import {
   HttpStatus,
   Injectable,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { NullableType } from '../utils/types/nullable.type';
 import { FilterUserDto, SortUserDto } from './dto/query-user.dto';
 import { UserRepository } from './infrastructure/persistence/user.repository';
+import { UserMenuRepository } from './infrastructure/persistence/user-menu.repository';
+import { PlanMenuRepository } from '../plans/infrastructure/persistence/plan-menu.repository';
+import { MenuRepository } from '../menus/infrastructure/persistence/menu.repository';
 import { User } from './domain/user';
 import bcrypt from 'bcryptjs';
 import { AuthProvidersEnum } from '../auth/auth-providers.enum';
@@ -18,12 +22,16 @@ import { FileType } from '../files/domain/file';
 import { Role } from '../roles/domain/role';
 import { Status } from '../statuses/domain/status';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Menu } from '../menus/domain/menu';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly usersRepository: UserRepository,
     private readonly filesService: FilesService,
+    private readonly userMenuRepository: UserMenuRepository,
+    private readonly planMenuRepository: PlanMenuRepository,
+    private readonly menuRepository: MenuRepository,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -125,6 +133,14 @@ export class UsersService {
       status: status,
       provider: createUserDto.provider ?? AuthProvidersEnum.email,
       socialId: createUserDto.socialId,
+      tier: createUserDto.tier ?? 'Lv0',
+      currentPlanId: createUserDto.currentPlanId ?? null,
+      pointsBalance: createUserDto.pointsBalance ?? 0,
+      chatQuotaUsed: createUserDto.chatQuotaUsed ?? 0,
+      chatQuotaTotal: createUserDto.chatQuotaTotal ?? 0,
+      subscriptionExpiredAt: createUserDto.subscriptionExpiredAt ?? null,
+      registeredAt: createUserDto.registeredAt ?? null,
+      lastLoginAt: createUserDto.lastLoginAt ?? null,
     });
   }
 
@@ -136,7 +152,7 @@ export class UsersService {
     filterOptions?: FilterUserDto | null;
     sortOptions?: SortUserDto[] | null;
     paginationOptions: IPaginationOptions;
-  }): Promise<User[]> {
+  }) {
     return this.usersRepository.findManyWithPagination({
       filterOptions,
       sortOptions,
@@ -279,10 +295,80 @@ export class UsersService {
       status,
       provider: updateUserDto.provider,
       socialId: updateUserDto.socialId,
+      tier: updateUserDto.tier,
+      currentPlanId: updateUserDto.currentPlanId,
+      pointsBalance: updateUserDto.pointsBalance,
+      chatQuotaUsed: updateUserDto.chatQuotaUsed,
+      chatQuotaTotal: updateUserDto.chatQuotaTotal,
+      subscriptionExpiredAt: updateUserDto.subscriptionExpiredAt,
     });
   }
 
   async remove(id: User['id']): Promise<void> {
     await this.usersRepository.remove(id);
+  }
+
+  async assignExtraMenu(
+    userId: number,
+    menuId: string,
+    expiresAt?: Date,
+  ): Promise<void> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    await this.userMenuRepository.assignMenuToUser(userId, menuId, expiresAt);
+  }
+
+  async removeExtraMenu(userId: number, menuId: string): Promise<void> {
+    await this.userMenuRepository.removeMenuFromUser(userId, menuId);
+  }
+
+  async getUserExtraMenus(userId: number): Promise<Menu[]> {
+    const userMenus = await this.userMenuRepository.findByUserId(userId);
+    if (userMenus.length === 0) {
+      return [];
+    }
+    const menuIds = userMenus.map((um) => um.menuId);
+    return this.menuRepository.findByIds(menuIds);
+  }
+
+  async getUserAllMenus(userId: number): Promise<Menu[]> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const allMenuIds = new Set<string>();
+
+    // 1. Get menus from role
+    if (user.role?.id) {
+      const roleId =
+        typeof user.role.id === 'string'
+          ? parseInt(user.role.id, 10)
+          : user.role.id;
+      const roleMenus = await this.menuRepository.getMenusByRoleId(roleId);
+      roleMenus.forEach((m) => allMenuIds.add(m.id));
+    }
+
+    // 2. Get menus from plan
+    if (user.currentPlanId) {
+      const planMenus = await this.planMenuRepository.findByPlanId(
+        user.currentPlanId,
+      );
+      planMenus.forEach((pm) => allMenuIds.add(pm.menuId));
+    }
+
+    // 3. Get user extra menus (valid ones only - not expired)
+    const userExtraMenus =
+      await this.userMenuRepository.findValidByUserId(userId);
+    userExtraMenus.forEach((um) => allMenuIds.add(um.menuId));
+
+    if (allMenuIds.size === 0) {
+      return [];
+    }
+
+    // Return all menus with their full details
+    return this.menuRepository.findByIds([...allMenuIds]);
   }
 }

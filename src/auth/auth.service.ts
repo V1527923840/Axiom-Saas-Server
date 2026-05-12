@@ -519,6 +519,7 @@ export class AuthService {
       id: session.user.id,
       role: {
         id: user.role.id,
+        name: user.role.name,
       },
       sessionId: session.id,
       hash,

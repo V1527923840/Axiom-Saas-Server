@@ -11,6 +11,8 @@ import { RelationalUserPersistenceModule } from './infrastructure/persistence/re
 import { DatabaseConfig } from '../database/config/database-config.type';
 import databaseConfig from '../database/config/database.config';
 import { FilesModule } from '../files/files.module';
+import { MenusModule } from '../menus/menus.module';
+import { PlansModule } from '../plans/plans.module';
 
 // <database-block>
 const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
@@ -24,6 +26,8 @@ const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
     // import modules, etc.
     infrastructurePersistenceModule,
     FilesModule,
+    MenusModule,
+    PlansModule,
   ],
   controllers: [UsersController],
   providers: [UsersService],

@@ -33,15 +33,21 @@ export class UsersRelationalRepository implements UserRepository {
     filterOptions?: FilterUserDto | null;
     sortOptions?: SortUserDto[] | null;
     paginationOptions: IPaginationOptions;
-  }): Promise<User[]> {
+  }): Promise<{ data: User[]; total: number }> {
     const where: FindOptionsWhere<UserEntity> = {};
     if (filterOptions?.roles?.length) {
       where.role = filterOptions.roles.map((role) => ({
         id: Number(role.id),
       }));
     }
+    if (filterOptions?.tier) {
+      where.tier = filterOptions.tier;
+    }
+    if (filterOptions?.status) {
+      where.status = filterOptions.status as any;
+    }
 
-    const entities = await this.usersRepository.find({
+    const [entities, total] = await this.usersRepository.findAndCount({
       skip: (paginationOptions.page - 1) * paginationOptions.limit,
       take: paginationOptions.limit,
       where: where,
@@ -54,7 +60,10 @@ export class UsersRelationalRepository implements UserRepository {
       ),
     });
 
-    return entities.map((user) => UserMapper.toDomain(user));
+    return {
+      data: entities.map((user) => UserMapper.toDomain(user)),
+      total,
+    };
   }
 
   async findById(id: User['id']): Promise<NullableType<User>> {

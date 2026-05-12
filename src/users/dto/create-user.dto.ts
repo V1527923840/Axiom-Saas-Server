@@ -52,4 +52,36 @@ export class CreateUserDto {
   @IsOptional()
   @Type(() => StatusDto)
   status?: StatusDto;
+
+  @ApiPropertyOptional({ example: 'Lv0', type: String })
+  @IsOptional()
+  tier?: string;
+
+  @ApiPropertyOptional({ example: 'plan-uuid', type: String })
+  @IsOptional()
+  currentPlanId?: string;
+
+  @ApiPropertyOptional({ example: 0, type: Number })
+  @IsOptional()
+  pointsBalance?: number;
+
+  @ApiPropertyOptional({ example: 0, type: Number })
+  @IsOptional()
+  chatQuotaUsed?: number;
+
+  @ApiPropertyOptional({ example: 0, type: Number })
+  @IsOptional()
+  chatQuotaTotal?: number;
+
+  @ApiPropertyOptional({ example: '2026-06-11T00:00:00Z', type: String })
+  @IsOptional()
+  subscriptionExpiredAt?: string;
+
+  @ApiPropertyOptional({ example: '2026-01-01T00:00:00Z', type: String })
+  @IsOptional()
+  registeredAt?: string;
+
+  @ApiPropertyOptional({ example: '2026-05-10T00:00:00Z', type: String })
+  @IsOptional()
+  lastLoginAt?: string;
 }

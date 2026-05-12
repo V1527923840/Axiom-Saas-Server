@@ -23,6 +23,15 @@ export class UserMapper {
     domainEntity.createdAt = raw.createdAt;
     domainEntity.updatedAt = raw.updatedAt;
     domainEntity.deletedAt = raw.deletedAt;
+    domainEntity.tier = raw.tier;
+    domainEntity.currentPlanId = raw.currentPlanId;
+    domainEntity.pointsBalance = raw.pointsBalance;
+    domainEntity.chatQuotaUsed = raw.chatQuotaUsed;
+    domainEntity.chatQuotaTotal = raw.chatQuotaTotal;
+    domainEntity.subscriptionExpiredAt =
+      raw.subscriptionExpiredAt?.toISOString() ?? null;
+    domainEntity.registeredAt = raw.registeredAt?.toISOString() ?? null;
+    domainEntity.lastLoginAt = raw.lastLoginAt?.toISOString() ?? null;
     return domainEntity;
   }
 
@@ -67,6 +76,20 @@ export class UserMapper {
     persistenceEntity.createdAt = domainEntity.createdAt;
     persistenceEntity.updatedAt = domainEntity.updatedAt;
     persistenceEntity.deletedAt = domainEntity.deletedAt;
+    persistenceEntity.tier = domainEntity.tier;
+    persistenceEntity.currentPlanId = domainEntity.currentPlanId ?? null;
+    persistenceEntity.pointsBalance = domainEntity.pointsBalance ?? 0;
+    persistenceEntity.chatQuotaUsed = domainEntity.chatQuotaUsed ?? 0;
+    persistenceEntity.chatQuotaTotal = domainEntity.chatQuotaTotal ?? 0;
+    persistenceEntity.subscriptionExpiredAt = domainEntity.subscriptionExpiredAt
+      ? new Date(domainEntity.subscriptionExpiredAt)
+      : null;
+    persistenceEntity.registeredAt = domainEntity.registeredAt
+      ? new Date(domainEntity.registeredAt)
+      : null;
+    persistenceEntity.lastLoginAt = domainEntity.lastLoginAt
+      ? new Date(domainEntity.lastLoginAt)
+      : null;
     return persistenceEntity;
   }
 }

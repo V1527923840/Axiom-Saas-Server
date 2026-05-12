@@ -27,14 +27,20 @@ import { AuthGuard } from '@nestjs/passport';
 
 import {
   InfinityPaginationResponse,
-  InfinityPaginationResponseDto,
+  PaginatedApiResponseDto,
 } from '../utils/dto/infinity-pagination-response.dto';
 import { NullableType } from '../utils/types/nullable.type';
-import { QueryUserDto } from './dto/query-user.dto';
+import { FilterUserDto } from './dto/query-user.dto';
 import { User } from './domain/user';
 import { UsersService } from './users.service';
 import { RolesGuard } from '../roles/roles.guard';
 import { infinityPagination } from '../utils/infinity-pagination';
+import { Menu } from '../menus/domain/menu';
+
+class AssignExtraMenuDto {
+  menuId: string;
+  expiresAt?: Date;
+}
 
 @ApiBearerAuth()
 @Roles(RoleEnum.admin)
@@ -68,25 +74,43 @@ export class UsersController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(
-    @Query() query: QueryUserDto,
-  ): Promise<InfinityPaginationResponseDto<User>> {
-    const page = query?.page ?? 1;
-    let limit = query?.limit ?? 10;
-    if (limit > 50) {
-      limit = 50;
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('role') role?: string,
+    @Query('status') status?: string,
+    @Query('tier') tier?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
+  ): Promise<PaginatedApiResponseDto<User>> {
+    const pageNum = page ?? 1;
+    let limitNum = limit ?? 10;
+    if (limitNum > 50) {
+      limitNum = 50;
     }
 
+    const filters: FilterUserDto = {};
+    if (role) filters.roles = [{ id: role }];
+    if (status) filters.status = status;
+    if (tier) filters.tier = tier;
+
+    const sort = sortBy
+      ? [{ orderBy: sortBy as keyof User, order: sortOrder ?? 'ASC' }]
+      : undefined;
+
+    const result = await this.usersService.findManyWithPagination({
+      filterOptions: Object.keys(filters).length ? filters : undefined,
+      sortOptions: sort ?? undefined,
+      paginationOptions: {
+        page: pageNum,
+        limit: limitNum,
+      },
+    });
+
     return infinityPagination(
-      await this.usersService.findManyWithPagination({
-        filterOptions: query?.filters,
-        sortOptions: query?.sort,
-        paginationOptions: {
-          page,
-          limit,
-        },
-      }),
-      { page, limit },
-    );
+      result.data,
+      { page: pageNum, limit: limitNum },
+      result.total,
+    ) as PaginatedApiResponseDto<User>;
   }
 
   @ApiOkResponse({
@@ -135,5 +159,80 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: User['id']): Promise<void> {
     return this.usersService.remove(id);
+  }
+
+  @ApiOkResponse({
+    type: [Menu],
+  })
+  @SerializeOptions({
+    groups: ['admin'],
+  })
+  @Get(':id/menus')
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  getUserAllMenus(@Param('id') id: string): Promise<Menu[]> {
+    return this.usersService.getUserAllMenus(Number(id));
+  }
+
+  @ApiOkResponse({
+    type: [Menu],
+  })
+  @SerializeOptions({
+    groups: ['admin'],
+  })
+  @Get(':id/extra-menus')
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  getUserExtraMenus(@Param('id') id: string): Promise<Menu[]> {
+    return this.usersService.getUserExtraMenus(Number(id));
+  }
+
+  @ApiOkResponse()
+  @SerializeOptions({
+    groups: ['admin'],
+  })
+  @Post(':id/extra-menus')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  assignExtraMenu(
+    @Param('id') id: string,
+    @Body() assignExtraMenuDto: AssignExtraMenuDto,
+  ): Promise<void> {
+    return this.usersService.assignExtraMenu(
+      Number(id),
+      assignExtraMenuDto.menuId,
+      assignExtraMenuDto.expiresAt,
+    );
+  }
+
+  @Delete(':id/extra-menus/:menuId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  @ApiParam({
+    name: 'menuId',
+    type: String,
+    required: true,
+  })
+  removeExtraMenu(
+    @Param('id') id: string,
+    @Param('menuId') menuId: string,
+  ): Promise<void> {
+    return this.usersService.removeExtraMenu(Number(id), menuId);
   }
 }

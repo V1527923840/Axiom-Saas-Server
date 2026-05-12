@@ -27,6 +27,12 @@ import { MailerModule } from './mailer/mailer.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MongooseConfigService } from './database/mongoose-config.service';
 import { DatabaseConfig } from './database/config/database-config.type';
+import { ContentModule } from './content/content.module';
+import { PlansModule } from './plans/plans.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { BillsModule } from './bills/bills.module';
+import { MenusModule } from './menus/menus.module';
+import { RolesModule } from './roles/roles.module';
 
 // <database-block>
 const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
@@ -64,7 +70,10 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
         fallbackLanguage: configService.getOrThrow('app.fallbackLanguage', {
           infer: true,
         }),
-        loaderOptions: { path: path.join(__dirname, '/i18n/'), watch: true },
+        loaderOptions: {
+          path: path.join(process.cwd(), 'src/i18n'),
+          watch: true,
+        },
       }),
       resolvers: [
         {
@@ -92,6 +101,12 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     MailModule,
     MailerModule,
     HomeModule,
+    ContentModule,
+    PlansModule,
+    SubscriptionsModule,
+    BillsModule,
+    MenusModule,
+    RolesModule,
   ],
 })
 export class AppModule {}
