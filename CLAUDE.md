@@ -60,3 +60,90 @@ See `.env.example` for required configuration. Key vars:
 - `DATABASE_URL` - PostgreSQL connection
 - `JWT_SECRET` / `JWT_REFRESH_SECRET` - Token secrets
 - `APP_PORT` - Server port (default: 3000)
+
+## Codebase Patterns
+
+### Repository + Mapper Pattern
+实体仓库使用 Mapper 将 Entity 和 Domain 对象互相转换：
+```typescript
+// Repository
+async create(data: Omit<Menu, 'id' | 'createdAt' | 'updatedAt'>): Promise<Menu> {
+  const persistenceModel = MenuMapper.toPersistence(data);
+  const newEntity = await this.menuRepository.save(
+    this.menuRepository.create(persistenceModel),
+  );
+  return MenuMapper.toDomain(newEntity);
+}
+```
+
+### Pagination Pattern
+使用 `skip/take` 配合 `findAndCount` 实现分页：
+```typescript
+const [entities, total] = await this.menuRepository.findAndCount({
+  skip: (paginationOptions.page - 1) * paginationOptions.limit,
+  take: paginationOptions.limit,
+  order: { sortOrder: 'ASC' },
+});
+```
+
+### Tree Structure Building Pattern
+两遍遍历构建树状结构：
+```typescript
+// First pass: create map
+filteredMenus.forEach((menu) => {
+  menuMap.set(menu.id, MenuMapper.toDomain(menu, []));
+});
+// Second pass: build tree
+filteredMenus.forEach((menu) => {
+  const domainMenu = menuMap.get(menu.id)!;
+  if (menu.parentId && menuMap.has(menu.parentId)) {
+    const parent = menuMap.get(menu.parentId)!;
+    if (!parent.children) parent.children = [];
+    parent.children.push(domainMenu);
+  } else {
+    roots.push(domainMenu);
+  }
+});
+```
+
+### Role-Menu Assignment Pattern
+先删除旧关联再创建新关联：
+```typescript
+async assignMenusToRole(roleId: number, menuIds: string[]): Promise<void> {
+  await this.roleMenuRepository.delete({ roleId }); // Delete existing
+  if (menuIds.length > 0) {
+    const roleMenus = menuIds.map((menuId) => {
+      const roleMenu = new RoleMenuEntity();
+      roleMenu.roleId = roleId;
+      roleMenu.menuId = menuId;
+      return roleMenu;
+    });
+    await this.roleMenuRepository.save(roleMenus); // Create new
+  }
+}
+```
+
+### CurrentUser Decorator Pattern
+使用 `@CurrentUser()` 获取当前登录用户，支持获取特定字段：
+```typescript
+@Get('profile')
+getProfile(@CurrentUser() user: UserEntity) { ... }
+
+// Or get specific field
+@Get('id')
+getId(@CurrentUser('id') userId: number) { ... }
+```
+
+### Update with Selective Fields Pattern
+更新时只更新提供的字段：
+```typescript
+async update(id: Menu['id'], payload: Partial<Menu>): Promise<Menu | null> {
+  const entity = await this.menuRepository.findOne({ where: { id: id as string } });
+  if (!entity) return null;
+
+  if (payload.name !== undefined) entity.name = payload.name;
+  if (payload.code !== undefined) entity.code = payload.code;
+  // ... only update fields that are provided
+  return MenuMapper.toDomain(await this.menuRepository.save(entity));
+}
+```
