@@ -37,5 +37,8 @@ lerna-debug.log*
 .data
 /files
 .env
+.env.dev
+.env.release
+pnpm-lock.yaml
 /ormconfig.json
 .codegpt
