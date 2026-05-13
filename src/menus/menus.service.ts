@@ -27,6 +27,10 @@ export class MenusService {
     return this.menuRepository.findAll();
   }
 
+  findTree(): Promise<Menu[]> {
+    return this.menuRepository.findTree();
+  }
+
   findTreeByRoleId(roleId: number): Promise<Menu[]> {
     return this.menuRepository.findTreeByRoleId(roleId);
   }

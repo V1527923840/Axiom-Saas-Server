@@ -53,6 +53,34 @@ export class MenuRelationalRepository implements MenuRepository {
     return entities.map((entity) => MenuMapper.toDomain(entity));
   }
 
+  async findTree(): Promise<Menu[]> {
+    const allMenus = await this.menuRepository.find({
+      order: { sortOrder: 'ASC' },
+    });
+
+    const menuMap = new Map<string, Menu>();
+    const roots: Menu[] = [];
+
+    allMenus.forEach((menu) => {
+      menuMap.set(menu.id, MenuMapper.toDomain(menu, []));
+    });
+
+    allMenus.forEach((menu) => {
+      const domainMenu = menuMap.get(menu.id)!;
+      if (menu.parentId && menuMap.has(menu.parentId)) {
+        const parent = menuMap.get(menu.parentId)!;
+        if (!parent.children) {
+          parent.children = [];
+        }
+        parent.children.push(domainMenu);
+      } else {
+        roots.push(domainMenu);
+      }
+    });
+
+    return roots;
+  }
+
   async findTreeByRoleId(roleId: number): Promise<Menu[]> {
     // Get all menus ordered by sortOrder
     const allMenus = await this.menuRepository.find({

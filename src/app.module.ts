@@ -33,6 +33,8 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { BillsModule } from './bills/bills.module';
 import { MenusModule } from './menus/menus.module';
 import { RolesModule } from './roles/roles.module';
+import { CategoriesModule } from './categories/categories.module';
+import { EtlModule } from './etl/etl.module';
 
 // <database-block>
 const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
@@ -107,6 +109,8 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     BillsModule,
     MenusModule,
     RolesModule,
+    CategoriesModule,
+    EtlModule,
   ],
 })
 export class AppModule {}

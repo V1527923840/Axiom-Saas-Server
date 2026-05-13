@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere } from 'typeorm';
+import {
+  Repository,
+  FindOptionsWhere,
+  ILike,
+  Between,
+  MoreThanOrEqual,
+  LessThanOrEqual,
+} from 'typeorm';
 import { ContentItemEntity } from '../entities/content-item.entity';
 import { ContentItemMapper } from '../mappers/content-item.mapper';
 import { ContentItemRepository } from '../../content-item.repository';
@@ -34,6 +41,32 @@ export class ContentItemRelationalRepository implements ContentItemRepository {
 
     if (filterOptions?.status) {
       where.status = filterOptions.status;
+    }
+
+    if (filterOptions?.sentiment) {
+      where.sentiment = filterOptions.sentiment;
+    }
+
+    if (filterOptions?.parser) {
+      where.parser = filterOptions.parser;
+    }
+
+    if (filterOptions?.company) {
+      // Search in companies JSONB array
+      where.companies = ILike(`%${filterOptions.company}%`);
+    }
+
+    if (filterOptions?.dateFrom && filterOptions?.dateTo) {
+      where.contentTimestamp = Between(
+        new Date(filterOptions.dateFrom),
+        new Date(filterOptions.dateTo),
+      );
+    } else if (filterOptions?.dateFrom) {
+      where.contentTimestamp = MoreThanOrEqual(
+        new Date(filterOptions.dateFrom),
+      );
+    } else if (filterOptions?.dateTo) {
+      where.contentTimestamp = LessThanOrEqual(new Date(filterOptions.dateTo));
     }
 
     const entities = await this.contentItemRepository.find({

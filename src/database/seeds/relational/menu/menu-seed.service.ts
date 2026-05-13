@@ -80,6 +80,34 @@ export class MenuSeedService {
         parentId: null,
         sortOrder: 3,
       },
+      {
+        name: '舆情帖子',
+        code: 'sentiment-posts',
+        icon: 'MessageSquare',
+        path: '/content/sentiment-posts',
+        parentId: null,
+        sortOrder: 4,
+      },
+
+      // ETL Management (Admin only)
+      {
+        name: '数据入库',
+        code: 'etl',
+        icon: 'Database',
+        path: '/etl',
+        parentId: null,
+        sortOrder: 4,
+      },
+
+      // Categories Management (Admin only)
+      {
+        name: '分类管理',
+        code: 'categories',
+        icon: 'Tag',
+        path: '/categories',
+        parentId: null,
+        sortOrder: 5,
+      },
 
       // User & Subscription
       {
@@ -214,6 +242,9 @@ export class MenuSeedService {
       'daily-news': 'content',
       'audio-interpretation': 'content',
       'institution-reports': 'content',
+      'sentiment-posts': 'content',
+      etl: null, // top-level admin menu
+      categories: null, // top-level admin menu
       users: 'user-subscription',
       plans: 'user-subscription',
       subscriptions: 'user-subscription',

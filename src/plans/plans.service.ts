@@ -81,7 +81,29 @@ export class PlansService {
       return [];
     }
     const menuIds = planMenus.map((pm) => pm.menuId);
-    return this.menuRepository.findByIds(menuIds);
+    const menus = await this.menuRepository.findByIds(menuIds);
+    return this.buildMenuTree(menus);
+  }
+
+  private buildMenuTree(menus: Menu[]): Menu[] {
+    const menuMap = new Map<string, Menu>();
+    const roots: Menu[] = [];
+
+    menus.forEach((menu) => {
+      menuMap.set(menu.id, { ...menu, children: [] });
+    });
+
+    menus.forEach((menu) => {
+      const domainMenu = menuMap.get(menu.id)!;
+      if (menu.parentId && menuMap.has(menu.parentId)) {
+        const parent = menuMap.get(menu.parentId)!;
+        parent.children!.push(domainMenu);
+      } else {
+        roots.push(domainMenu);
+      }
+    });
+
+    return roots;
   }
 
   async getAllMenusForPlan(planId: string): Promise<Menu[]> {

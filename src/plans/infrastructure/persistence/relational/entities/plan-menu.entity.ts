@@ -22,21 +22,21 @@ export class PlanMenuEntity extends EntityRelationalHelper {
   id: string;
 
   @Index()
-  @Column({ type: 'uuid', nullable: false })
+  @Column({ name: 'plan_id', type: 'uuid', nullable: false })
   planId: string;
 
   @ManyToOne(() => PlanEntity, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'planId' })
+  @JoinColumn({ name: 'plan_id' })
   plan?: PlanEntity;
 
   @Index()
-  @Column({ type: 'uuid', nullable: false })
+  @Column({ name: 'menu_id', type: 'uuid', nullable: false })
   menuId: string;
 
   @ManyToOne(() => MenuEntity, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'menuId' })
+  @JoinColumn({ name: 'menu_id' })
   menu?: MenuEntity;
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 }

@@ -1,48 +1,47 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class ContentCategory {
+export class Category {
   @ApiProperty({
     type: String,
-    example: 'cbcfa8b8-3a25-4adb-a9c6-e325f0d0f3ae',
+    example: '770e8400-e29b-41d4-a716-446655440001',
   })
   id: string;
 
   @ApiProperty({
     type: String,
-    example: '每日消息',
+    example: '非结构化短文本',
   })
   name: string;
 
   @ApiProperty({
     type: String,
-    example: 'daily-news',
+    example: 'UNSTRUCTURED_TEXT',
   })
   code: string;
 
   @ApiProperty({
     type: String,
     example: 'carrier',
-    required: false,
   })
-  layer?: string | null;
+  layer: string;
 
   @ApiProperty({
     type: String,
-    example: 'STRUCTURED_DOC',
+    example: null,
     required: false,
   })
   parentCode?: string | null;
 
   @ApiProperty({
     type: String,
-    example: '每日资讯新闻内容',
+    example: '快讯、推送等短文本内容',
     required: false,
   })
   description?: string | null;
 
   @ApiProperty({
     type: Number,
-    example: 1,
+    example: 3,
   })
   sortOrder: number;
 

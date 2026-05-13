@@ -110,4 +110,61 @@ export class ContentItem {
     required: false,
   })
   deletedAt?: Date | null;
+
+  // New fields for agent ingestion
+  @ApiProperty({
+    type: String,
+    example: 'zsxq_all_20260504093821.md',
+    required: false,
+  })
+  sourceFile?: string | null;
+
+  @ApiProperty({
+    type: String,
+    example: 'zsxq_parser',
+    required: false,
+  })
+  parser?: string | null;
+
+  @ApiProperty({
+    type: Date,
+    example: '2026-05-03',
+    required: false,
+  })
+  reportDate?: Date | null;
+
+  @ApiProperty({
+    type: Number,
+    example: 1,
+    required: false,
+  })
+  entryIndex?: number | null;
+
+  @ApiProperty({
+    type: String,
+    example: 'entry-001',
+    required: false,
+  })
+  entryId?: string | null;
+
+  @ApiProperty({
+    type: Date,
+    example: '2026-05-03T03:59:00Z',
+    required: false,
+  })
+  contentTimestamp?: Date | null;
+
+  @ApiProperty({
+    type: [Object],
+    example: [{ name: '康方生物', context: 'direct_mention' }],
+    required: false,
+  })
+  companies?: Record<string, any>[];
+
+  @ApiProperty({
+    type: String,
+    example: 'negative',
+    required: false,
+  })
+  sentiment?: string | null;
 }

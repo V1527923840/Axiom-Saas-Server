@@ -15,6 +15,8 @@ export abstract class MenuRepository {
 
   abstract findAll(): Promise<Menu[]>;
 
+  abstract findTree(): Promise<Menu[]>;
+
   abstract findTreeByRoleId(roleId: number): Promise<Menu[]>;
 
   abstract findById(id: Menu['id']): Promise<NullableType<Menu>>;

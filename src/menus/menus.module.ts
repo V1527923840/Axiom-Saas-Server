@@ -1,9 +1,11 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MenusController } from './menus.controller';
 import { MenusService } from './menus.service';
 import { RelationalMenuPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
 import databaseConfig from '../database/config/database.config';
 import { DatabaseConfig } from '../database/config/database-config.type';
+import { PlansModule } from '../plans/plans.module';
+import { UsersModule } from '../users/users.module';
 
 const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
   .isDocumentDatabase
@@ -11,7 +13,11 @@ const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
   : RelationalMenuPersistenceModule;
 
 @Module({
-  imports: [infrastructurePersistenceModule],
+  imports: [
+    infrastructurePersistenceModule,
+    forwardRef(() => PlansModule),
+    forwardRef(() => UsersModule),
+  ],
   controllers: [MenusController],
   providers: [MenusService],
   exports: [MenusService, infrastructurePersistenceModule],

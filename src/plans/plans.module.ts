@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PlansController } from './plans.controller';
 import { PlansService } from './plans.service';
 import { DocumentPlanPersistenceModule } from './infrastructure/persistence/document/document-persistence.module';
@@ -15,7 +15,7 @@ const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
 // </database-block>
 
 @Module({
-  imports: [infrastructurePersistenceModule, MenusModule],
+  imports: [infrastructurePersistenceModule, forwardRef(() => MenusModule)],
   controllers: [PlansController],
   providers: [PlansService],
   exports: [PlansService, infrastructurePersistenceModule],

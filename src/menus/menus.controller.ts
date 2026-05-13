@@ -13,25 +13,27 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiParam } from '@nestjs/swagger';
 import { CreateMenuDto, UpdateMenuDto, AssignMenusDto } from './dto/menu.dto';
-import { Roles } from '../roles/roles.decorator';
-import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from '../roles/roles.guard';
 import { NullableType } from '../utils/types/nullable.type';
 import { Menu } from './domain/menu';
 import { MenusService } from './menus.service';
+import { PlansService } from '../plans/plans.service';
+import { UsersService } from '../users/users.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiBearerAuth()
-@Roles(RoleEnum.admin)
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'))
 @ApiTags('Menus')
 @Controller({
   path: 'menus',
   version: '1',
 })
 export class MenusController {
-  constructor(private readonly menusService: MenusService) {}
+  constructor(
+    private readonly menusService: MenusService,
+    private readonly plansService: PlansService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -65,9 +67,21 @@ export class MenusController {
 
   @Get('my')
   @HttpCode(HttpStatus.OK)
-  async getMyMenus(@CurrentUser('role') role: { id: number }): Promise<Menu[]> {
-    // Use role.id from JWT payload to get menus for this role
-    return this.menusService.findTreeByRoleId(role.id);
+  async getMyMenus(
+    @CurrentUser('id') userId: number,
+    @CurrentUser('role') role: { id: number },
+  ): Promise<Menu[]> {
+    // Super admin (role id 1) gets all menus in tree structure
+    if (role.id === 1) {
+      return this.menusService.findTree();
+    }
+    // For other users, get currentPlanId from database
+    const user = await this.usersService.findById(userId);
+    if (user?.currentPlanId) {
+      return this.plansService.getPlanMenus(user.currentPlanId);
+    }
+    // If no plan assigned, return empty
+    return [];
   }
 
   @Get(':id')

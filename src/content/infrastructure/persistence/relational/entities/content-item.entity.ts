@@ -90,4 +90,36 @@ export class ContentItemEntity extends EntityRelationalHelper {
 
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt?: Date | null;
+
+  // New fields for agent ingestion
+  @Index()
+  @Column({ type: String, length: 512, nullable: true, name: 'source_file' })
+  sourceFile?: string | null;
+
+  @Index()
+  @Column({ type: String, length: 128, nullable: true })
+  parser?: string | null;
+
+  @Index()
+  @Column({ type: 'date', nullable: true, name: 'report_date' })
+  reportDate?: Date | null;
+
+  @Index()
+  @Column({ type: 'int', nullable: true, name: 'entry_index' })
+  entryIndex?: number | null;
+
+  @Index()
+  @Column({ type: String, length: 128, nullable: true, name: 'entry_id' })
+  entryId?: string | null;
+
+  @Index()
+  @Column({ type: 'timestamptz', nullable: true, name: 'content_timestamp' })
+  contentTimestamp?: Date | null;
+
+  @Column({ type: 'jsonb', default: '[]' })
+  companies: Record<string, any>[];
+
+  @Index()
+  @Column({ type: String, length: 32, nullable: true })
+  sentiment?: string | null;
 }

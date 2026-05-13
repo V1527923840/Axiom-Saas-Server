@@ -1,13 +1,13 @@
-import { ContentCategory } from '../../../../domain/content-category';
-import { ContentCategoryEntity } from '../entities/content-category.entity';
+import { Category } from 'src/categories/domain/category';
+import { ContentCategoryEntity } from 'src/content/infrastructure/persistence/relational/entities/content-category.entity';
 
-export class ContentCategoryMapper {
-  static toDomain(raw: ContentCategoryEntity): ContentCategory {
-    const domainEntity = new ContentCategory();
+export class CategoryMapper {
+  static toDomain(raw: ContentCategoryEntity): Category {
+    const domainEntity = new Category();
     domainEntity.id = raw.id;
     domainEntity.name = raw.name;
     domainEntity.code = raw.code;
-    domainEntity.layer = raw.layer ?? null;
+    domainEntity.layer = raw.layer ?? 'carrier';
     domainEntity.parentCode = raw.parentCode ?? null;
     domainEntity.description = raw.description ?? null;
     domainEntity.sortOrder = raw.sortOrder;
@@ -18,12 +18,12 @@ export class ContentCategoryMapper {
     return domainEntity;
   }
 
-  static toPersistence(domainEntity: ContentCategory): ContentCategoryEntity {
+  static toPersistence(domainEntity: Category): ContentCategoryEntity {
     const persistenceEntity = new ContentCategoryEntity();
     persistenceEntity.id = domainEntity.id;
     persistenceEntity.name = domainEntity.name;
     persistenceEntity.code = domainEntity.code;
-    persistenceEntity.layer = domainEntity.layer ?? null;
+    persistenceEntity.layer = domainEntity.layer;
     persistenceEntity.parentCode = domainEntity.parentCode ?? null;
     persistenceEntity.description = domainEntity.description ?? null;
     persistenceEntity.sortOrder = domainEntity.sortOrder;
