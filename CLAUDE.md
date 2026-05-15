@@ -270,7 +270,7 @@ MAIL_PASSWORD=your-password
 | `AUTH_REFRESH_SECRET` | Refresh Token 密钥 | - |
 | `AUTH_REFRESH_TOKEN_EXPIRES_IN` | Refresh Token 过期时间 | `7d` |
 | `FILE_DRIVER` | 文件存储驱动 | `local` |
-| `MINIO_ENDPOINT` | MinIO 兼容对象存储端点 | - |
+| `MINIO_ENDPOINT` | MinIO 兼容对象存储端点（可选） | - |
 
 ---
 
@@ -363,6 +363,56 @@ export class CreatePlansTable1747000000000 implements MigrationInterface {
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.dropTable('plan');
   }
+}
+```
+
+### 迁移类型模式
+
+**业务表迁移**：使用 `queryRunner.createTable()` 创建标准表结构。
+
+**菜单迁移**：插入菜单并分配给角色时，使用原始 SQL：
+
+```typescript
+// 菜单迁移示例：插入菜单并分配给 Admin 角色
+public async up(queryRunner: QueryRunner): Promise<void> {
+  await queryRunner.query(`
+    INSERT INTO menu (id, name, code, icon, path, "parentId", "sortOrder", status, "createdAt", "updatedAt")
+    VALUES (
+      gen_random_uuid()::uuid,
+      '菜单名称',
+      'menu-code',
+      'IconName',
+      '/menu-path',
+      NULL,
+      5,
+      'active',
+      NOW(),
+      NOW()
+    )
+  `);
+
+  // 分配给 Admin 角色 (roleId = 2)
+  await queryRunner.query(`
+    INSERT INTO role_menu ("roleId", "menuId")
+    SELECT 2, id FROM menu WHERE code = 'menu-code'
+  `);
+}
+```
+
+**Seed-Only 表**：某些表（如 `scrape_log`）通过 Seed 创建而非迁移，使用原始 SQL 在 SeedService 中建表：
+
+```typescript
+// scrape-log-seed.service.ts - Seed 中建表
+async run() {
+  const sql = `
+  CREATE TABLE IF NOT EXISTS scrape_log (
+    id uuid NOT NULL DEFAULT uuid_generate_v4(),
+    source varchar(50) NOT NULL,
+    targettime timestamptz NOT NULL,
+    ...
+  );
+  `;
+  await this.dataSource.query(sql);
 }
 ```
 
