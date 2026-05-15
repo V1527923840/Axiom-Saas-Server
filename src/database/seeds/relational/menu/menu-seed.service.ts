@@ -99,6 +99,16 @@ export class MenuSeedService {
         sortOrder: 4,
       },
 
+      // OSS Browser (Admin only)
+      {
+        name: '文件管理',
+        code: 'oss-browser',
+        icon: 'Folder',
+        path: '/oss-browser',
+        parentId: null,
+        sortOrder: 4,
+      },
+
       // Categories Management (Admin only)
       {
         name: '分类管理',
@@ -107,6 +117,16 @@ export class MenuSeedService {
         path: '/categories',
         parentId: null,
         sortOrder: 5,
+      },
+
+      // Scrape Log Management (Admin only)
+      {
+        name: '爬虫日志',
+        code: 'scrape-logs',
+        icon: 'Bot',
+        path: '/scrape-logs',
+        parentId: null,
+        sortOrder: 6,
       },
 
       // User & Subscription

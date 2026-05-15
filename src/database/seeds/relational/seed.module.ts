@@ -9,6 +9,7 @@ import { StatusSeedModule } from './status/status-seed.module';
 import { UserSeedModule } from './user/user-seed.module';
 import { ContentSeedModule } from './content/content-seed.module';
 import { MenuSeedModule } from './menu/menu-seed.module';
+import { ScrapeLogSeedModule } from './scrape_log/scrape-log-seed.module';
 import databaseConfig from '../../config/database.config';
 import appConfig from '../../../config/app.config';
 
@@ -19,6 +20,7 @@ import appConfig from '../../../config/app.config';
     UserSeedModule,
     ContentSeedModule,
     MenuSeedModule,
+    ScrapeLogSeedModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig, appConfig],

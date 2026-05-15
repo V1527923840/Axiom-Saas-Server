@@ -83,6 +83,8 @@ admin-server/src/
 ├── statuses/                  # 状态定义
 ├── session/                   # 会话管理
 ├── etl/                       # ETL 任务
+├── scrape-log/               # 爬虫日志管理
+├── oss/                       # 对象存储浏览器
 │
 ├── mail/                      # 邮件发送模块
 ├── mailer/                    # 邮件发送基础设施
@@ -249,6 +251,7 @@ ACCESS_KEY_ID=your-aws-access-key
 SECRET_ACCESS_KEY=your-aws-secret
 AWS_DEFAULT_S3_BUCKET=your-bucket
 AWS_S3_REGION=us-east-1
+MINIO_ENDPOINT=your-minio-endpoint  # 可选，用于 MinIO 兼容的对象存储
 
 # ============ 邮件配置 ============
 MAIL_HOST=smtp.example.com
@@ -267,6 +270,7 @@ MAIL_PASSWORD=your-password
 | `AUTH_REFRESH_SECRET` | Refresh Token 密钥 | - |
 | `AUTH_REFRESH_TOKEN_EXPIRES_IN` | Refresh Token 过期时间 | `7d` |
 | `FILE_DRIVER` | 文件存储驱动 | `local` |
+| `MINIO_ENDPOINT` | MinIO 兼容对象存储端点 | - |
 
 ---
 
@@ -303,6 +307,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
 | Plan | UUID | 订阅计划 |
 | Subscription | UUID | 用户订阅 |
 | Bill | UUID | 账单记录 |
+| ScrapeLog | UUID | 爬虫日志 |
 
 ---
 
@@ -390,7 +395,8 @@ src/database/seeds/
 │   ├── role/
 │   ├── menu/
 │   ├── status/
-│   └── content/
+│   ├── content/
+│   └── scrape_log/            # 爬虫日志种子（建表脚本）
 └── document/                   # MongoDB Seeds
     ├── seed.module.ts
     ├── run-seed.ts

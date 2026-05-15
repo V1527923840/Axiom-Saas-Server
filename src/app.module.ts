@@ -35,6 +35,8 @@ import { MenusModule } from './menus/menus.module';
 import { RolesModule } from './roles/roles.module';
 import { CategoriesModule } from './categories/categories.module';
 import { EtlModule } from './etl/etl.module';
+import { OssModule } from './oss/oss.module';
+import { ScrapeLogModule } from './scrape-log/scrape-log.module';
 
 // <database-block>
 const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
@@ -111,6 +113,8 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     RolesModule,
     CategoriesModule,
     EtlModule,
+    OssModule,
+    ScrapeLogModule,
   ],
 })
 export class AppModule {}
