@@ -58,20 +58,16 @@ admin-server/src/
 │   ├── dto/                   # 认证 DTO
 │   └── strategies/            # Passport 策略
 │
+├── auth-google/               # Google 社交登录
+├── auth-facebook/            # Facebook 社交登录
+├── auth-apple/               # Apple 社交登录
+│
 ├── users/                     # 用户模块
 │   ├── users.module.ts
 │   ├── users.service.ts
 │   ├── users.controller.ts
 │   └── infrastructure/
 │       └── persistence/       # 数据持久化（relational/document）
-│
-├── files/                     # 文件上传模块
-│   ├── files.module.ts
-│   ├── files.service.ts
-│   ├── config/                # 文件配置
-│   └── infrastructure/
-│       ├── persistence/       # 文件元数据存储
-│       └── uploader/          # 上传器实现（local/s3/s3-presigned）
 │
 ├── roles/                     # 角色管理
 ├── menus/                     # 菜单管理（树形结构）
@@ -85,6 +81,15 @@ admin-server/src/
 ├── etl/                       # ETL 任务
 ├── scrape-log/               # 爬虫日志管理
 ├── oss/                       # 对象存储浏览器
+├── parse-task/               # 解析任务模块
+│
+├── files/                     # 文件上传模块
+│   ├── files.module.ts
+│   ├── files.service.ts
+│   ├── config/                # 文件配置
+│   └── infrastructure/
+│       ├── persistence/       # 文件元数据存储
+│       └── uploader/          # 上传器实现（local/s3/s3-presigned）
 │
 ├── mail/                      # 邮件发送模块
 ├── mailer/                    # 邮件发送基础设施
