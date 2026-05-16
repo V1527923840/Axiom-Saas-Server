@@ -129,6 +129,24 @@ export class MenuSeedService {
         sortOrder: 6,
       },
 
+      // Parse Task Management (Admin only)
+      {
+        name: '解析任务',
+        code: 'parse-tasks',
+        icon: 'FileJson',
+        path: '/parse/tasks',
+        parentId: null,
+        sortOrder: 7,
+      },
+      {
+        name: '版本管理',
+        code: 'versions',
+        icon: 'Layers',
+        path: '/versions',
+        parentId: null,
+        sortOrder: 8,
+      },
+
       // User & Subscription
       {
         name: '用户与订阅',
