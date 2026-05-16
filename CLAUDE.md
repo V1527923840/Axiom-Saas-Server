@@ -579,6 +579,61 @@ Swagger UI 提供：
 
 ---
 
+## API 响应格式规范
+
+### 标准响应格式
+
+后端 API 统一使用以下响应格式之一：
+
+**格式 A: 标准分页响应（使用 `infinityPagination`）**
+```typescript
+// 用于列表端点 (GET /users, GET /tasks 等)
+{
+  data: T[],
+  total: number,
+  page: number,
+  pageSize: number
+}
+```
+
+**格式 B: 单对象响应（直接返回 `{ data }`）**
+```typescript
+// 用于详情端点 (GET /users/:id, POST /tasks 等)
+{
+  data: T
+}
+```
+
+**格式 C: 操作结果响应（使用 `{ success, data }` 包装）**
+```typescript
+// 用于 create/update/delete 操作
+{
+  success: true,
+  data: T,
+  message?: string
+}
+```
+
+### 已废弃的格式（避免使用）
+
+**不要使用** `{ success: true, data: { versions: [...] } }` 这种嵌套格式，这会导致前端需要额外解包。
+
+如果必须使用 `{ success, data }` 包装，**必须**确保前端 `api.ts` 的 auto-unwrap 机制已处理。
+
+### 示例：正确的响应
+
+```typescript
+// ✅ 正确 - 使用 infinityPagination
+return infinityPagination(items, { page, limit }, total)
+
+// ✅ 正确 - 直接返回对象
+return { data: createdItem }
+
+// ❌ 错误 - 嵌套过多层
+return { success: true, data: { items: [...] } }
+// 这会导致 response.data.data.items
+```
+
 ## 常见模式
 
 ### Repository + Mapper 模式

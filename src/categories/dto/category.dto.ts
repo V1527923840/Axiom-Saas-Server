@@ -117,6 +117,24 @@ export class UpdateCategoryDto {
 
 export class QueryCategoryDto {
   @ApiPropertyOptional({
+    type: Number,
+    example: 1,
+    description: 'Page number',
+  })
+  @IsOptional()
+  @IsNumber()
+  page?: number;
+
+  @ApiPropertyOptional({
+    type: Number,
+    example: 50,
+    description: 'Items per page',
+  })
+  @IsOptional()
+  @IsNumber()
+  limit?: number;
+
+  @ApiPropertyOptional({
     type: String,
     example: 'info_type',
     description: 'Filter by layer: carrier, info_type, financial',

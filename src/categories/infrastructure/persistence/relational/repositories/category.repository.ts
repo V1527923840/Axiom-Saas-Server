@@ -43,6 +43,46 @@ export class CategoryRelationalRepository implements CategoryRepository {
     return entities.map((entity) => CategoryMapper.toDomain(entity));
   }
 
+  async findAllWithPagination({
+    skip,
+    take,
+    filters,
+  }: {
+    skip: number;
+    take: number;
+    filters?: {
+      layer?: string | null;
+      parentCode?: string | null;
+      isActive?: boolean | null;
+    };
+  }): Promise<{ data: Category[]; total: number }> {
+    const where: Record<string, any> = {};
+
+    if (filters?.layer) {
+      where.layer = filters.layer;
+    }
+    if (filters?.parentCode) {
+      where.parentCode = filters.parentCode;
+    } else if (filters?.parentCode === null) {
+      where.parentCode = IsNull();
+    }
+    if (filters?.isActive !== undefined && filters?.isActive !== null) {
+      where.isActive = filters.isActive;
+    }
+
+    const [entities, total] = await this.categoryRepository.findAndCount({
+      where,
+      order: { sortOrder: 'ASC' },
+      skip,
+      take,
+    });
+
+    return {
+      data: entities.map((entity) => CategoryMapper.toDomain(entity)),
+      total,
+    };
+  }
+
   async findById(id: Category['id']): Promise<NullableType<Category>> {
     const entity = await this.categoryRepository.findOne({
       where: { id },

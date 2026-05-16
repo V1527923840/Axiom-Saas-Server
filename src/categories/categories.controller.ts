@@ -27,6 +27,7 @@ import {
   UpdateCategoryDto,
   QueryCategoryDto,
 } from './dto/category.dto';
+import { infinityPagination } from '../utils/infinity-pagination';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -41,10 +42,30 @@ export class CategoriesController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get all categories with optional filters' })
-  async findAll(
-    @Query() query: QueryCategoryDto,
-  ): Promise<{ data: Category[]; total: number }> {
-    return this.categoriesService.findAll(query);
+  async findAll(@Query() query: QueryCategoryDto): Promise<{
+    data: Category[];
+    total: number;
+    page: number;
+    pageSize: number;
+  }> {
+    const pageNum = query.page ?? 1;
+    let limitNum = query.limit ?? 50;
+    if (limitNum > 100) limitNum = 100;
+
+    const result = await this.categoriesService.findAllWithPagination({
+      paginationOptions: { page: pageNum, limit: limitNum },
+      filters: {
+        layer: query.layer ?? null,
+        parentCode: query.parentCode ?? null,
+        isActive: query.isActive ?? null,
+      },
+    });
+
+    return infinityPagination(
+      result.data,
+      { page: pageNum, limit: limitNum },
+      result.total,
+    ) as { data: Category[]; total: number; page: number; pageSize: number };
   }
 
   @Get(':id')

@@ -10,10 +10,42 @@ import {
   UpdateCategoryDto,
   QueryCategoryDto,
 } from './dto/category.dto';
+import { IPaginationOptions } from '../utils/types/pagination-options';
+
+interface PaginationResult<T> {
+  data: T[];
+  total: number;
+}
 
 @Injectable()
 export class CategoriesService {
   constructor(private readonly categoryRepository: CategoryRepository) {}
+
+  async findAllWithPagination({
+    paginationOptions,
+    filters,
+  }: {
+    paginationOptions: IPaginationOptions;
+    filters: {
+      layer?: string | null;
+      parentCode?: string | null;
+      isActive?: boolean | null;
+    };
+  }): Promise<PaginationResult<Category>> {
+    const { page, limit } = paginationOptions;
+    const skip = (page - 1) * limit;
+
+    const result = await this.categoryRepository.findAllWithPagination({
+      skip,
+      take: limit,
+      filters,
+    });
+
+    return {
+      data: result.data,
+      total: result.total,
+    };
+  }
 
   async findAll(
     query: QueryCategoryDto,

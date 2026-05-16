@@ -30,8 +30,9 @@ export class RolesController {
   })
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(): Promise<RoleEntity[]> {
-    return this.rolesService.findAll();
+  async findAll(): Promise<{ data: RoleEntity[] }> {
+    const roles = await this.rolesService.findAll();
+    return { data: roles };
   }
 
   @ApiOkResponse({

@@ -53,12 +53,23 @@ export class ContentController {
     page: number;
     pageSize: number;
   }> {
-    return this.contentService.getContentList(categoryCode, {
-      page: query.page,
-      pageSize: query.pageSize,
+    const pageNum = query.page ?? 1;
+    let limitNum = query.pageSize ?? 50;
+    if (limitNum > 100) limitNum = 100;
+
+    const result = await this.contentService.getContentList(categoryCode, {
+      page: pageNum,
+      pageSize: limitNum,
       filters: query.filters,
       sort: query.sort,
     });
+
+    return {
+      data: result.data,
+      total: result.total,
+      page: pageNum,
+      pageSize: limitNum,
+    };
   }
 
   @Get(':categoryCode/:id')

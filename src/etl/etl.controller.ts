@@ -63,7 +63,22 @@ export class EtlController {
     page: number;
     pageSize: number;
   }> {
-    return this.etlService.getJobHistory(query);
+    const pageNum = query.page ?? 1;
+    let limitNum = query.pageSize ?? 50;
+    if (limitNum > 100) limitNum = 100;
+
+    const result = await this.etlService.getJobHistory({
+      ...query,
+      page: pageNum,
+      pageSize: limitNum,
+    });
+
+    return {
+      data: result.data,
+      total: result.total,
+      page: pageNum,
+      pageSize: limitNum,
+    };
   }
 
   @Get('jobs/:id')

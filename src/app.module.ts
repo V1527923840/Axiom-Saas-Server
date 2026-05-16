@@ -37,6 +37,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { EtlModule } from './etl/etl.module';
 import { OssModule } from './oss/oss.module';
 import { ScrapeLogModule } from './scrape-log/scrape-log.module';
+import { ParseTaskModule } from './parse-task/parse-task.module';
 
 // <database-block>
 const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
@@ -115,6 +116,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     EtlModule,
     OssModule,
     ScrapeLogModule,
+    ParseTaskModule,
   ],
 })
 export class AppModule {}

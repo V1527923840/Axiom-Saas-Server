@@ -8,6 +8,20 @@ export abstract class CategoryRepository {
     isActive?: boolean | null;
   }): Promise<Category[]>;
 
+  abstract findAllWithPagination({
+    skip,
+    take,
+    filters,
+  }: {
+    skip: number;
+    take: number;
+    filters?: {
+      layer?: string | null;
+      parentCode?: string | null;
+      isActive?: boolean | null;
+    };
+  }): Promise<{ data: Category[]; total: number }>;
+
   abstract findById(id: Category['id']): Promise<NullableType<Category>>;
 
   abstract findByCode(code: string): Promise<NullableType<Category>>;

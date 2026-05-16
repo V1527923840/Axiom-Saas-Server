@@ -40,19 +40,26 @@ export class MenusController {
   async findAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
-  ): Promise<{ data: Menu[]; total: number }> {
+  ): Promise<{ data: Menu[]; total: number; page: number; pageSize: number }> {
     const pageNum = page ?? 1;
     let limitNum = limit ?? 50;
     if (limitNum > 100) {
       limitNum = 100;
     }
 
-    return this.menusService.findMenusWithPagination({
+    const result = await this.menusService.findMenusWithPagination({
       paginationOptions: {
         page: pageNum,
         limit: limitNum,
       },
     });
+
+    return {
+      data: result.data,
+      total: result.total,
+      page: pageNum,
+      pageSize: limitNum,
+    };
   }
 
   @Get('tree')
