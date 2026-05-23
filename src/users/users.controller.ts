@@ -21,9 +21,9 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { Roles } from '../roles/roles.decorator';
-import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
+import { MenuAccessGuard } from '../menus/menu-access.guard';
+import { IsArray, IsOptional, IsString } from 'class-validator';
 
 import {
   InfinityPaginationResponse,
@@ -33,18 +33,20 @@ import { NullableType } from '../utils/types/nullable.type';
 import { FilterUserDto } from './dto/query-user.dto';
 import { User } from './domain/user';
 import { UsersService } from './users.service';
-import { RolesGuard } from '../roles/roles.guard';
 import { infinityPagination } from '../utils/infinity-pagination';
 import { Menu } from '../menus/domain/menu';
 
-class AssignExtraMenuDto {
-  menuId: string;
+class AssignExtraMenusDto {
+  @IsArray()
+  @IsString({ each: true })
+  menuIds: string[];
+
+  @IsOptional()
   expiresAt?: Date;
 }
 
 @ApiBearerAuth()
-@Roles(RoleEnum.admin)
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'), MenuAccessGuard)
 @ApiTags('Users')
 @Controller({
   path: 'users',
@@ -208,13 +210,9 @@ export class UsersController {
   })
   assignExtraMenu(
     @Param('id') id: string,
-    @Body() assignExtraMenuDto: AssignExtraMenuDto,
+    @Body() assignDto: AssignExtraMenusDto,
   ): Promise<void> {
-    return this.usersService.assignExtraMenu(
-      Number(id),
-      assignExtraMenuDto.menuId,
-      assignExtraMenuDto.expiresAt,
-    );
+    return this.usersService.assignExtraMenus(Number(id), assignDto.menuIds);
   }
 
   @Delete(':id/extra-menus/:menuId')
@@ -234,5 +232,52 @@ export class UsersController {
     @Param('menuId') menuId: string,
   ): Promise<void> {
     return this.usersService.removeExtraMenu(Number(id), menuId);
+  }
+
+  @ApiOkResponse()
+  @Get(':id/roles')
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  async getUserRoles(@Param('id') id: string): Promise<{ data: number[] }> {
+    const roleIds = await this.usersService.getUserRoles(Number(id));
+    return { data: roleIds };
+  }
+
+  @ApiOkResponse()
+  @Post(':id/roles')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  assignRoles(
+    @Param('id') id: string,
+    @Body() body: { roleIds: number[] },
+  ): Promise<void> {
+    return this.usersService.assignRoles(Number(id), body.roleIds);
+  }
+
+  @Delete(':id/roles/:roleId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  @ApiParam({
+    name: 'roleId',
+    type: String,
+    required: true,
+  })
+  removeRole(
+    @Param('id') id: string,
+    @Param('roleId') roleId: string,
+  ): Promise<void> {
+    return this.usersService.removeRole(Number(id), Number(roleId));
   }
 }

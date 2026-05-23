@@ -17,7 +17,6 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from '../roles/roles.guard';
 import { EtlService } from './etl.service';
 import {
   ImportRequestDto,
@@ -26,9 +25,11 @@ import {
   ImportResponseDto,
   JobStatusDto,
 } from './dto/etl.dto';
+import { MenuAccessGuard } from '../menus/menu-access.guard';
+import { MenuPaths } from '../menus/menu-paths.decorator';
 
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'), MenuAccessGuard)
 @ApiTags('ETL')
 @Controller({
   path: 'etl',
@@ -38,6 +39,7 @@ export class EtlController {
   constructor(private readonly etlService: EtlService) {}
 
   @Get('files')
+  @MenuPaths('/etl')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Scan pending import files in output_v2 directory' })
   async scanFiles(): Promise<ScanFilesResponseDto> {
@@ -45,6 +47,7 @@ export class EtlController {
   }
 
   @Post('import')
+  @MenuPaths('/etl')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Execute import for selected files' })
   async importFiles(
@@ -55,6 +58,7 @@ export class EtlController {
   }
 
   @Get('jobs')
+  @MenuPaths('/etl')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get import job history' })
   async getJobHistory(@Query() query: JobListQueryDto): Promise<{
@@ -82,6 +86,7 @@ export class EtlController {
   }
 
   @Get('jobs/:id')
+  @MenuPaths('/etl')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get job status by ID' })
   @ApiParam({ name: 'id', type: String })

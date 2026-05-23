@@ -12,4 +12,6 @@ export abstract class UserMenuRepository {
   ): Promise<void>;
 
   abstract removeMenuFromUser(userId: number, menuId: string): Promise<void>;
+
+  abstract deleteByUserId(userId: number): Promise<void>;
 }

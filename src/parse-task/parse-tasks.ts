@@ -11,10 +11,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiParam } from '@nestjs/swagger';
-import { Roles } from '../roles/roles.decorator';
-import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from '../roles/roles.guard';
+import { MenuAccessGuard } from '../menus/menu-access.guard';
+import { MenuPaths } from '../menus/menu-paths.decorator';
 import { infinityPagination } from '../utils/infinity-pagination';
 import { PaginatedApiResponseDto } from '../utils/dto/infinity-pagination-response.dto';
 import { NullableType } from '../utils/types/nullable.type';
@@ -28,8 +27,7 @@ import {
 } from './dto/parse-task.dto';
 
 @ApiBearerAuth()
-@Roles(RoleEnum.admin)
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'), MenuAccessGuard)
 @ApiTags('ParseTasks')
 @Controller({
   path: 'parse/tasks',
@@ -43,6 +41,7 @@ export class ParseTaskController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  @MenuPaths('/parse/tasks')
   async findAll(
     @Query() query: ParseTaskQueryDto,
   ): Promise<PaginatedApiResponseDto<ParseTask>> {
@@ -129,8 +128,7 @@ export class ParseTaskController {
 }
 
 @ApiBearerAuth()
-@Roles(RoleEnum.admin)
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'), MenuAccessGuard)
 @ApiTags('Versions')
 @Controller({
   path: 'versions',
@@ -141,6 +139,7 @@ export class VersionController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  @MenuPaths('/versions')
   async findAll(@Query('source') source?: string): Promise<{
     data: any[];
     total: number;

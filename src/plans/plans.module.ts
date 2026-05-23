@@ -6,6 +6,7 @@ import { RelationalPlanPersistenceModule } from './infrastructure/persistence/re
 import { DatabaseConfig } from '../database/config/database-config.type';
 import databaseConfig from '../database/config/database.config';
 import { MenusModule } from '../menus/menus.module';
+import { UsersModule } from '../users/users.module';
 
 // <database-block>
 const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
@@ -15,7 +16,11 @@ const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
 // </database-block>
 
 @Module({
-  imports: [infrastructurePersistenceModule, forwardRef(() => MenusModule)],
+  imports: [
+    infrastructurePersistenceModule,
+    forwardRef(() => MenusModule),
+    forwardRef(() => UsersModule),
+  ],
   controllers: [PlansController],
   providers: [PlansService],
   exports: [PlansService, infrastructurePersistenceModule],

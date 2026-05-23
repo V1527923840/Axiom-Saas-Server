@@ -19,7 +19,8 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from '../roles/roles.guard';
+import { MenuAccessGuard } from '../menus/menu-access.guard';
+import { MenuPaths } from '../menus/menu-paths.decorator';
 import { CategoriesService } from './categories.service';
 import { Category } from './domain/category';
 import {
@@ -30,7 +31,7 @@ import {
 import { infinityPagination } from '../utils/infinity-pagination';
 
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'), MenuAccessGuard)
 @ApiTags('Categories')
 @Controller({
   path: 'categories',
@@ -41,6 +42,7 @@ export class CategoriesController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  @MenuPaths('/categories')
   @ApiOperation({ summary: 'Get all categories with optional filters' })
   async findAll(@Query() query: QueryCategoryDto): Promise<{
     data: Category[];

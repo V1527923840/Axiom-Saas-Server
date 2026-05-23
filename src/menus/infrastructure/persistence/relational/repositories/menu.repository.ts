@@ -82,23 +82,19 @@ export class MenuRelationalRepository implements MenuRepository {
   }
 
   async findTreeByRoleId(roleId: number): Promise<Menu[]> {
-    // Get all menus ordered by sortOrder
     const allMenus = await this.menuRepository.find({
       order: { sortOrder: 'ASC' },
     });
 
-    // Get menu IDs assigned to this role
     const roleMenus = await this.roleMenuRepository.find({
       where: { roleId },
     });
     const assignedMenuIds = new Set(roleMenus.map((rm) => rm.menuId));
 
-    // Filter menus that are assigned to this role (or have no parent)
     const filteredMenus = allMenus.filter(
       (menu) => menu.status === 'active' && assignedMenuIds.has(menu.id),
     );
 
-    // Build tree structure
     const menuMap = new Map<string, Menu>();
     const roots: Menu[] = [];
 
@@ -147,7 +143,6 @@ export class MenuRelationalRepository implements MenuRepository {
       return null;
     }
 
-    // Only update fields that are provided in payload
     if (payload.name !== undefined) entity.name = payload.name;
     if (payload.code !== undefined) entity.code = payload.code;
     if (payload.icon !== undefined) entity.icon = payload.icon;
@@ -166,12 +161,12 @@ export class MenuRelationalRepository implements MenuRepository {
   }
 
   async assignMenusToRole(roleId: number, menuIds: string[]): Promise<void> {
-    // Delete existing role-menu associations
     await this.roleMenuRepository.delete({ roleId });
 
-    // Create new associations
     if (menuIds.length > 0) {
-      const roleMenus = menuIds.map((menuId) => {
+      const allMenuIds = await this.collectAncestorIds(menuIds);
+
+      const roleMenus = allMenuIds.map((menuId) => {
         const roleMenu = new RoleMenuEntity();
         roleMenu.roleId = roleId;
         roleMenu.menuId = menuId;
@@ -180,6 +175,28 @@ export class MenuRelationalRepository implements MenuRepository {
 
       await this.roleMenuRepository.save(roleMenus);
     }
+  }
+
+  private async collectAncestorIds(menuIds: string[]): Promise<string[]> {
+    const allMenus = await this.menuRepository.find();
+    const menuMap = new Map<string, { id: string; parentId: string | null }>();
+
+    allMenus.forEach((menu) => {
+      menuMap.set(menu.id, { id: menu.id, parentId: menu.parentId });
+    });
+
+    const ancestorIds = new Set<string>();
+
+    for (const menuId of menuIds) {
+      ancestorIds.add(menuId);
+      let current = menuMap.get(menuId);
+      while (current && current.parentId) {
+        ancestorIds.add(current.parentId);
+        current = menuMap.get(current.parentId);
+      }
+    }
+
+    return Array.from(ancestorIds);
   }
 
   async getMenusByRoleId(roleId: number): Promise<Menu[]> {
@@ -198,6 +215,20 @@ export class MenuRelationalRepository implements MenuRepository {
     });
 
     return menus.map((menu) => MenuMapper.toDomain(menu));
+  }
+
+  getMenusByPlanId(planId: string): { menuId: string }[] {
+    // This method is no longer used here - use PlanMenuRepository directly
+
+    void planId;
+    return [];
+  }
+
+  getUserExtraMenus(userId: number): { menuId: string }[] {
+    // This method is no longer used here - use UserMenuRepository directly
+
+    void userId;
+    return [];
   }
 
   async findByIds(ids: Menu['id'][]): Promise<Menu[]> {

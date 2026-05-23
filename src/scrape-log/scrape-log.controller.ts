@@ -8,10 +8,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiParam } from '@nestjs/swagger';
-import { Roles } from '../roles/roles.decorator';
-import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from '../roles/roles.guard';
+import { MenuAccessGuard } from '../menus/menu-access.guard';
+import { MenuPaths } from '../menus/menu-paths.decorator';
 import { infinityPagination } from '../utils/infinity-pagination';
 import { PaginatedApiResponseDto } from '../utils/dto/infinity-pagination-response.dto';
 import { NullableType } from '../utils/types/nullable.type';
@@ -19,8 +18,7 @@ import { ScrapeLog } from './domain/scrape-log';
 import { ScrapeLogService } from './scrape-log.service';
 
 @ApiBearerAuth()
-@Roles(RoleEnum.admin)
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'), MenuAccessGuard)
 @ApiTags('ScrapeLog')
 @Controller({
   path: 'scrape-log',
@@ -31,6 +29,7 @@ export class ScrapeLogController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  @MenuPaths('/scrape-logs')
   async findAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,

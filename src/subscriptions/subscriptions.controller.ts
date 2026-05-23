@@ -22,9 +22,9 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { Roles } from '../roles/roles.decorator';
-import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
+import { MenuAccessGuard } from '../menus/menu-access.guard';
+import { MenuPaths } from '../menus/menu-paths.decorator';
 
 import {
   InfinityPaginationResponse,
@@ -33,11 +33,10 @@ import {
 import { NullableType } from '../utils/types/nullable.type';
 import { Subscription } from './domain/subscription';
 import { SubscriptionsService } from './subscriptions.service';
-import { RolesGuard } from '../roles/roles.guard';
 import { infinityPagination } from '../utils/infinity-pagination';
 
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), MenuAccessGuard)
 @ApiTags('Subscriptions')
 @Controller({
   path: 'subscriptions',
@@ -70,6 +69,7 @@ export class SubscriptionsController {
   })
   @Get()
   @HttpCode(HttpStatus.OK)
+  @MenuPaths('/subscriptions')
   async findAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
@@ -173,8 +173,7 @@ export class SubscriptionsController {
     required: true,
   })
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Roles(RoleEnum.admin)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @MenuPaths('/subscriptions')
   remove(@Param('id') id: Subscription['id']): Promise<void> {
     return this.subscriptionsService.remove(id);
   }

@@ -18,10 +18,9 @@ import {
 import { CreateConsumptionDto } from './dto/consumption.dto';
 import { FilterPaymentFlowDto } from './dto/query-payment-flow.dto';
 import { FilterConsumptionDto } from './dto/query-consumption.dto';
-import { Roles } from '../roles/roles.decorator';
-import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from '../roles/roles.guard';
+import { MenuAccessGuard } from '../menus/menu-access.guard';
+import { MenuPaths } from '../menus/menu-paths.decorator';
 import { infinityPagination } from '../utils/infinity-pagination';
 import { PaginatedApiResponseDto } from '../utils/dto/infinity-pagination-response.dto';
 import { NullableType } from '../utils/types/nullable.type';
@@ -31,8 +30,7 @@ import { BillsService } from './bills.service';
 import { ConsumptionsService } from './consumptions.service';
 
 @ApiBearerAuth()
-@Roles(RoleEnum.admin)
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'), MenuAccessGuard)
 @ApiTags('Bills')
 @Controller({
   path: 'bills',
@@ -54,6 +52,7 @@ export class BillsController {
 
   @Get('flows')
   @HttpCode(HttpStatus.OK)
+  @MenuPaths('/bills/flows')
   async findAllFlows(
     @Query('page') page?: number,
     @Query('limit') limit?: number,

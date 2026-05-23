@@ -9,6 +9,7 @@ import { NullableType } from '../utils/types/nullable.type';
 import { FilterUserDto, SortUserDto } from './dto/query-user.dto';
 import { UserRepository } from './infrastructure/persistence/user.repository';
 import { UserMenuRepository } from './infrastructure/persistence/user-menu.repository';
+import { UserRoleRepository } from './infrastructure/persistence/user-role.repository';
 import { PlanMenuRepository } from '../plans/infrastructure/persistence/plan-menu.repository';
 import { MenuRepository } from '../menus/infrastructure/persistence/menu.repository';
 import { User } from './domain/user';
@@ -30,6 +31,7 @@ export class UsersService {
     private readonly usersRepository: UserRepository,
     private readonly filesService: FilesService,
     private readonly userMenuRepository: UserMenuRepository,
+    private readonly userRoleRepository: UserRoleRepository,
     private readonly planMenuRepository: PlanMenuRepository,
     private readonly menuRepository: MenuRepository,
   ) {}
@@ -320,6 +322,18 @@ export class UsersService {
     await this.userMenuRepository.assignMenuToUser(userId, menuId, expiresAt);
   }
 
+  async assignExtraMenus(userId: number, menuIds: string[]): Promise<void> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    // Delete all existing extra menus for user and insert new ones
+    await this.userMenuRepository.deleteByUserId(userId);
+    for (const menuId of menuIds) {
+      await this.userMenuRepository.assignMenuToUser(userId, menuId);
+    }
+  }
+
   async removeExtraMenu(userId: number, menuId: string): Promise<void> {
     await this.userMenuRepository.removeMenuFromUser(userId, menuId);
   }
@@ -339,15 +353,48 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
+    console.log('[getUserAllMenus] Debug:', {
+      userId,
+      userRoleId: user.role?.id,
+      userCurrentPlanId: user.currentPlanId,
+    });
+
+    // Super admin (roleId === 1) gets all menus
+    if (user.role?.id === 1) {
+      return this.menuRepository.findTree();
+    }
+
     const allMenuIds = new Set<string>();
 
-    // 1. Get menus from role
-    if (user.role?.id) {
-      const roleId =
-        typeof user.role.id === 'string'
-          ? parseInt(user.role.id, 10)
-          : user.role.id;
+    // 1. Get menus from user_roles (new multi-role system)
+    const userRoleIds = await this.getUserRoles(userId);
+    console.log('[getUserAllMenus] userRoleIds:', userRoleIds);
+    for (const roleId of userRoleIds) {
       const roleMenus = await this.menuRepository.getMenusByRoleId(roleId);
+      console.log(
+        '[getUserAllMenus] roleMenus from roleId',
+        roleId,
+        ':',
+        roleMenus.map((m) => m.id),
+      );
+      roleMenus.forEach((m) => allMenuIds.add(m.id));
+    }
+
+    // Fallback: If user_roles table is empty, try the old roleId on user table
+    if (
+      userRoleIds.length === 0 &&
+      user.role?.id &&
+      Number(user.role.id) !== 1
+    ) {
+      const roleMenus = await this.menuRepository.getMenusByRoleId(
+        Number(user.role.id),
+      );
+      console.log(
+        '[getUserAllMenus] roleMenus from user.role.id',
+        user.role.id,
+        ':',
+        roleMenus.map((m) => m.id),
+      );
       roleMenus.forEach((m) => allMenuIds.add(m.id));
     }
 
@@ -356,19 +403,81 @@ export class UsersService {
       const planMenus = await this.planMenuRepository.findByPlanId(
         user.currentPlanId,
       );
+      console.log(
+        '[getUserAllMenus] planMenus:',
+        planMenus.map((pm) => pm.menuId),
+      );
       planMenus.forEach((pm) => allMenuIds.add(pm.menuId));
+    } else {
+      console.log('[getUserAllMenus] No currentPlanId for user');
     }
 
     // 3. Get user extra menus (valid ones only - not expired)
     const userExtraMenus =
       await this.userMenuRepository.findValidByUserId(userId);
+    console.log(
+      '[getUserAllMenus] userExtraMenus:',
+      userExtraMenus.map((um) => um.menuId),
+    );
     userExtraMenus.forEach((um) => allMenuIds.add(um.menuId));
+
+    console.log('[getUserAllMenus] allMenuIds:', [...allMenuIds]);
 
     if (allMenuIds.size === 0) {
       return [];
     }
 
-    // Return all menus with their full details
-    return this.menuRepository.findByIds([...allMenuIds]);
+    // Get all menus as flat list and build tree structure
+    const allMenus = await this.menuRepository.findByIds([...allMenuIds]);
+    console.log(
+      '[getUserAllMenus] allMenus paths:',
+      allMenus.map((m) => m.path),
+    );
+    return this.buildMenuTree(allMenus);
+  }
+
+  private buildMenuTree(menus: Menu[]): Menu[] {
+    const menuMap = new Map<string, Menu>();
+    const roots: Menu[] = [];
+
+    menus.forEach((menu) => {
+      menuMap.set(menu.id, { ...menu, children: [] });
+    });
+
+    menus.forEach((menu) => {
+      const domainMenu = menuMap.get(menu.id)!;
+      if (menu.parentId && menuMap.has(menu.parentId)) {
+        const parent = menuMap.get(menu.parentId)!;
+        parent.children!.push(domainMenu);
+      } else {
+        roots.push(domainMenu);
+      }
+    });
+
+    return roots;
+  }
+
+  async getUserRoles(userId: number): Promise<number[]> {
+    const userRoles = await this.userRoleRepository.findByUserId(userId);
+    return userRoles.map((ur) => ur.roleId);
+  }
+
+  async assignRoles(userId: number, roleIds: number[]): Promise<void> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.userRoleRepository.delete({ userId });
+    if (roleIds.length > 0) {
+      const userRoles = roleIds.map((roleId) =>
+        this.userRoleRepository.create({ userId, roleId }),
+      );
+      await this.userRoleRepository.save(userRoles);
+    }
+  }
+
+  async removeRole(userId: number, roleId: number): Promise<void> {
+    await this.userRoleRepository.delete({ userId, roleId });
   }
 }

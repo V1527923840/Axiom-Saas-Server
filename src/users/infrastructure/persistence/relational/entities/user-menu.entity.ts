@@ -22,25 +22,25 @@ export class UserMenuEntity extends EntityRelationalHelper {
   id: string;
 
   @Index()
-  @Column({ type: 'int', nullable: false })
+  @Column({ type: 'int', nullable: false, name: 'user_id' })
   userId: number;
 
   @ManyToOne(() => UserEntity, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'user_id' })
   user?: UserEntity;
 
   @Index()
-  @Column({ type: 'uuid', nullable: false })
+  @Column({ type: 'uuid', nullable: false, name: 'menu_id' })
   menuId: string;
 
   @ManyToOne(() => MenuEntity, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'menuId' })
+  @JoinColumn({ name: 'menu_id' })
   menu?: MenuEntity;
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ type: 'timestamptz', name: 'purchased_at' })
   purchasedAt: Date;
 
   @Index()
-  @Column({ type: 'timestamptz', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true, name: 'expires_at' })
   expiresAt: Date | null;
 }

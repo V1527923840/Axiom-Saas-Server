@@ -22,9 +22,9 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { Roles } from '../roles/roles.decorator';
-import { RoleEnum } from '../roles/roles.enum';
 import { AuthGuard } from '@nestjs/passport';
+import { MenuAccessGuard } from '../menus/menu-access.guard';
+import { MenuPaths } from '../menus/menu-paths.decorator';
 
 import {
   InfinityPaginationResponse,
@@ -33,14 +33,12 @@ import {
 import { NullableType } from '../utils/types/nullable.type';
 import { Plan } from './domain/plan';
 import { PlansService } from './plans.service';
-import { RolesGuard } from '../roles/roles.guard';
 import { infinityPagination } from '../utils/infinity-pagination';
 import { AssignMenusDto } from '../menus/dto/menu.dto';
 import { Menu } from '../menus/domain/menu';
 
 @ApiBearerAuth()
-@Roles(RoleEnum.admin)
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'), MenuAccessGuard)
 @ApiTags('Plans')
 @Controller({
   path: 'plans',
@@ -69,6 +67,7 @@ export class PlansController {
   })
   @Get()
   @HttpCode(HttpStatus.OK)
+  @MenuPaths('/plans')
   async findAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,

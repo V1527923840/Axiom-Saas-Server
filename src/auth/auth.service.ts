@@ -98,6 +98,7 @@ export class AuthService {
       role: user.role,
       sessionId: session.id,
       hash,
+      roleIds: await this.usersService.getUserRoles(Number(user.id)),
     });
 
     return {
@@ -183,6 +184,7 @@ export class AuthService {
       role: user.role,
       sessionId: session.id,
       hash,
+      roleIds: await this.usersService.getUserRoles(Number(user.id)),
     });
 
     return {
@@ -523,6 +525,7 @@ export class AuthService {
       },
       sessionId: session.id,
       hash,
+      roleIds: await this.usersService.getUserRoles(Number(user.id)),
     });
 
     return {
@@ -545,6 +548,7 @@ export class AuthService {
     role: User['role'];
     sessionId: Session['id'];
     hash: Session['hash'];
+    roleIds?: number[];
   }) {
     const tokenExpiresIn = this.configService.getOrThrow('auth.expires', {
       infer: true,
@@ -558,6 +562,7 @@ export class AuthService {
           id: data.id,
           role: data.role,
           sessionId: data.sessionId,
+          roleIds: data.roleIds,
         },
         {
           secret: this.configService.getOrThrow('auth.secret', { infer: true }),

@@ -22,6 +22,7 @@ export class RoleMenuEntity extends EntityRelationalHelper {
   @Column({ type: 'int', nullable: false })
   roleId: number;
 
+  @Index()
   @Column({ type: 'uuid', nullable: false })
   menuId: string;
 

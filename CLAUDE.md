@@ -700,6 +700,42 @@ async update(id: string, payload: Partial<User>): Promise<User | null> {
 }
 ```
 
+### 权限控制模式（MenuAccessGuard）
+
+MenuAccessGuard 提供基于菜单路径的动态权限控制，无需硬编码角色权限。
+
+**原理：**
+1. 控制器使用 `@UseGuards(AuthGuard('jwt'), MenuAccessGuard)`
+2. 如果接口有 `@MenuPaths('/xxx')`，使用显式路径
+3. 否则自动从 URL 推导（如 `/api/v1/plans/:id` → `/plans`）
+4. 检查用户是否拥有该菜单路径（从 role_menu、plan_menu、user_menu 三源合并）
+
+**子路径匹配：**
+拥有 `/versions` 菜单可访问 `/versions`、`/versions/sources`、`/versions/:id` 等所有子路由。
+
+**使用示例：**
+```typescript
+// 方式1：显式指定菜单路径
+@Get()
+@MenuPaths('/plans')
+async findAll() { ... }
+
+// 方式2：自动推导（URL /api/v1/roles → 推导 /roles）
+@Get()
+async findAll() { ... }
+```
+
+**数据库菜单分配：**
+菜单权限来自三个表：
+- `role_menu` - 角色分配的菜单
+- `plan_menu` - 套餐包含的菜单
+- `user_menu` - 用户额外单独分配的菜单
+
+用户可访问的菜单 = 三者并集（去重）
+
+**Admin 权限：**
+`role.id === 1` 的用户拥有绝对权限，绕过所有 MenuAccessGuard 检查。
+
 ---
 
 ## 开发注意事项

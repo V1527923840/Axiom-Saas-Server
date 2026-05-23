@@ -67,4 +67,36 @@ export class MenusService {
   async getMenusByRoleId(roleId: number): Promise<Menu[]> {
     return this.menuRepository.getMenusByRoleId(roleId);
   }
+
+  async getUserMenuPaths(
+    userId: number,
+    roleIds: number[],
+    currentPlanId?: string | null,
+  ): Promise<string[]> {
+    const allMenuIds = new Set<string>();
+
+    // 1. Get menus from user's roles
+    for (const roleId of roleIds) {
+      const roleMenus = await this.menuRepository.getMenusByRoleId(roleId);
+      roleMenus.forEach((m) => allMenuIds.add(m.id));
+    }
+
+    // 2. Get menus from plan
+    if (currentPlanId) {
+      const planMenus = this.menuRepository.getMenusByPlanId(currentPlanId);
+      planMenus.forEach((pm) => allMenuIds.add(pm.menuId));
+    }
+
+    // 3. Get user extra menus
+    const userExtraMenus = this.menuRepository.getUserExtraMenus(userId);
+    userExtraMenus.forEach((um) => allMenuIds.add(um.menuId));
+
+    if (allMenuIds.size === 0) {
+      return [];
+    }
+
+    // Get all menus and extract paths
+    const menus = await this.menuRepository.findByIds([...allMenuIds]);
+    return menus.map((m) => m.path).filter((p) => p) as string[];
+  }
 }

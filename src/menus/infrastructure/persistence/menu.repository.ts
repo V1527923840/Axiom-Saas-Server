@@ -31,5 +31,9 @@ export abstract class MenuRepository {
 
   abstract getMenusByRoleId(roleId: number): Promise<Menu[]>;
 
+  abstract getMenusByPlanId(planId: string): Promise<{ menuId: string }[]>;
+
+  abstract getUserExtraMenus(userId: number): Promise<{ menuId: string }[]>;
+
   abstract findByIds(ids: Menu['id'][]): Promise<Menu[]>;
 }

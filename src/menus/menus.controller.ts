@@ -68,27 +68,15 @@ export class MenusController {
     if (roleId) {
       return this.menusService.findTreeByRoleId(roleId);
     }
-    // If no roleId, return all menus without filtering
-    return this.menusService.findAll();
+    // If no roleId, return all menus as tree structure
+    return this.menusService.findTree();
   }
 
   @Get('my')
   @HttpCode(HttpStatus.OK)
-  async getMyMenus(
-    @CurrentUser('id') userId: number,
-    @CurrentUser('role') role: { id: number },
-  ): Promise<Menu[]> {
-    // Super admin (role id 1) gets all menus in tree structure
-    if (role.id === 1) {
-      return this.menusService.findTree();
-    }
-    // For other users, get currentPlanId from database
-    const user = await this.usersService.findById(userId);
-    if (user?.currentPlanId) {
-      return this.plansService.getPlanMenus(user.currentPlanId);
-    }
-    // If no plan assigned, return empty
-    return [];
+  async getMyMenus(@CurrentUser('id') userId: number): Promise<Menu[]> {
+    // Delegate to UsersService which merges role menus, plan menus, and user extra menus
+    return this.usersService.getUserAllMenus(userId);
   }
 
   @Get(':id')

@@ -9,6 +9,8 @@ import { ContentItemEntity } from '../content/infrastructure/persistence/relatio
 import { ContentCategoryEntity } from '../content/infrastructure/persistence/relational/entities/content-category.entity';
 import { EtlJobRepository } from './infrastructure/persistence/etl-job.repository';
 import { EtlJobRelationalRepository } from './infrastructure/persistence/relational/repositories/etl-job.repository';
+import { MenusModule } from '../menus/menus.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { EtlJobRelationalRepository } from './infrastructure/persistence/relatio
       ContentItemEntity,
       ContentCategoryEntity,
     ]),
+    MenusModule,
+    UsersModule,
   ],
   controllers: [EtlController],
   providers: [

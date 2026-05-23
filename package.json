@@ -38,7 +38,7 @@
     "start:dev": "env-cmd -f .env.dev nest start --watch",
     "start:debug": "env-cmd -f .env.dev nest start --debug --watch",
     "start:release": "nest start --configuration release",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/src/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",

@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { MenusController } from './menus.controller';
 import { MenusService } from './menus.service';
+import { MenuAccessGuard } from './menu-access.guard';
 import { RelationalMenuPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
 import databaseConfig from '../database/config/database.config';
 import { DatabaseConfig } from '../database/config/database-config.type';
@@ -19,7 +20,7 @@ const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
     forwardRef(() => UsersModule),
   ],
   controllers: [MenusController],
-  providers: [MenusService],
-  exports: [MenusService, infrastructurePersistenceModule],
+  providers: [MenusService, MenuAccessGuard],
+  exports: [MenusService, MenuAccessGuard, infrastructurePersistenceModule],
 })
 export class MenusModule {}
