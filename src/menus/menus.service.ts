@@ -83,12 +83,13 @@ export class MenusService {
 
     // 2. Get menus from plan
     if (currentPlanId) {
-      const planMenus = this.menuRepository.getMenusByPlanId(currentPlanId);
+      const planMenus =
+        await this.menuRepository.getMenusByPlanId(currentPlanId);
       planMenus.forEach((pm) => allMenuIds.add(pm.menuId));
     }
 
     // 3. Get user extra menus
-    const userExtraMenus = this.menuRepository.getUserExtraMenus(userId);
+    const userExtraMenus = await this.menuRepository.getUserExtraMenus(userId);
     userExtraMenus.forEach((um) => allMenuIds.add(um.menuId));
 
     if (allMenuIds.size === 0) {

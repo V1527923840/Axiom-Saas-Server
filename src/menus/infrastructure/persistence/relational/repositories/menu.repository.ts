@@ -217,18 +217,14 @@ export class MenuRelationalRepository implements MenuRepository {
     return menus.map((menu) => MenuMapper.toDomain(menu));
   }
 
-  getMenusByPlanId(planId: string): { menuId: string }[] {
-    // This method is no longer used here - use PlanMenuRepository directly
-
+  getMenusByPlanId(planId: string): Promise<{ menuId: string }[]> {
     void planId;
-    return [];
+    return Promise.resolve([]);
   }
 
-  getUserExtraMenus(userId: number): { menuId: string }[] {
-    // This method is no longer used here - use UserMenuRepository directly
-
+  getUserExtraMenus(userId: number): Promise<{ menuId: string }[]> {
     void userId;
-    return [];
+    return Promise.resolve([]);
   }
 
   async findByIds(ids: Menu['id'][]): Promise<Menu[]> {
