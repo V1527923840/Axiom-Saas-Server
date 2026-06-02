@@ -1,18 +1,18 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddOssBrowserMenu1778747586494 implements MigrationInterface {
+export class AddIntelligenceMenu1780194635192 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Insert OSS Browser menu
+    // Insert intelligence menu
     await queryRunner.query(`
       INSERT INTO menu (id, name, code, icon, path, "parentId", "sortOrder", status, "createdAt", "updatedAt")
       VALUES (
         gen_random_uuid()::uuid,
-        '文件管理',
-        'oss-browser',
-        'Folder',
-        '/oss-browser',
+        '情报精选',
+        'intelligence',
+        'Star',
+        '/content/intelligence',
         NULL,
-        4,
+        5,
         'active',
         NOW(),
         NOW()
@@ -21,6 +21,8 @@ export class AddOssBrowserMenu1778747586494 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DELETE FROM menu WHERE code = 'oss-browser'`);
+    await queryRunner.query(`
+      DELETE FROM menu WHERE code = 'intelligence'
+    `);
   }
 }
