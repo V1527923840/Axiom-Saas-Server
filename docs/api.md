@@ -461,7 +461,7 @@ Authorization: Bearer <token>
 
 ### Token 刷新机制
 
-访问令牌有效期为 15 分钟 (`AUTH_JWT_TOKEN_EXPIRES_IN=15m`)。
+访问令牌有效期为 7 天 (`AUTH_JWT_TOKEN_EXPIRES_IN=7d`)。
 
 当令牌过期时，使用 `/api/v1/auth/refresh` 接口获取新的访问令牌。
 

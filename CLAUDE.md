@@ -232,7 +232,7 @@ DATABASE_SSL_ENABLED=false
 
 # ============ 认证配置 ============
 AUTH_JWT_SECRET=your-jwt-secret
-AUTH_JWT_TOKEN_EXPIRES_IN=15m
+AUTH_JWT_TOKEN_EXPIRES_IN=7d
 AUTH_REFRESH_SECRET=your-refresh-secret
 AUTH_REFRESH_TOKEN_EXPIRES_IN=7d
 AUTH_FORGOT_SECRET=your-forgot-secret
@@ -271,7 +271,7 @@ MAIL_PASSWORD=your-password
 |------|------|--------|
 | `DATABASE_URL` 或数据库分别配置 | PostgreSQL 连接信息 | - |
 | `AUTH_JWT_SECRET` | JWT 签名密钥 | - |
-| `AUTH_JWT_TOKEN_EXPIRES_IN` | Access Token 过期时间 | `15m` |
+| `AUTH_JWT_TOKEN_EXPIRES_IN` | Access Token 过期时间 | `7d` |
 | `AUTH_REFRESH_SECRET` | Refresh Token 密钥 | - |
 | `AUTH_REFRESH_TOKEN_EXPIRES_IN` | Refresh Token 过期时间 | `7d` |
 | `FILE_DRIVER` | 文件存储驱动 | `local` |
