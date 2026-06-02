@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateZsxqClassificationTable1780196060202 implements MigrationInterface {
+export class CreateZsxqClassificationTable1781000001000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS zsxq_posts (
@@ -14,6 +14,7 @@ export class CreateZsxqClassificationTable1780196060202 implements MigrationInte
         summary TEXT,
         title TEXT,
         original_text TEXT NOT NULL,
+        original_text_raw TEXT,
         author VARCHAR(200),
         group_name VARCHAR(200),
         like_count INTEGER DEFAULT 0,
