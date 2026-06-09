@@ -33,6 +33,13 @@ export class ResearchAnalysisEntity extends EntityRelationalHelper {
   sourceFileKey?: string | null;
 
   @Index()
+  @Column({ type: String, length: 500, nullable: true, name: 'oss_url' })
+  ossUrl?: string | null;
+
+  @Column({ type: String, length: 500, nullable: true, name: 'local_path' })
+  localPath?: string | null;
+
+  @Index()
   @Column({ type: String, length: 50, nullable: true, name: 'scrape_log_id' })
   scrapeLogId?: string | null;
 

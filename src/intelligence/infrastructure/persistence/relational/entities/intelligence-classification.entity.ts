@@ -48,6 +48,14 @@ export class IntelligenceClassificationEntity extends EntityRelationalHelper {
   @Column({ type: 'text', name: 'original_text_raw', nullable: true })
   originalTextRaw?: string | null;
 
+  @Column({
+    type: 'jsonb',
+    name: 'image_urls',
+    nullable: true,
+    default: () => "'[]'::jsonb",
+  })
+  imageUrls?: string[] | null;
+
   @Column({ type: String, length: 200, nullable: true })
   author?: string | null;
 

@@ -15,6 +15,7 @@ export class IntelligenceClassificationMapper {
       title: entity.title,
       originalText: entity.originalText,
       originalTextRaw: entity.originalTextRaw,
+      imageUrls: entity.imageUrls ?? [],
       author: entity.author,
       groupName: entity.groupName,
       likeCount: entity.likeCount,
@@ -50,6 +51,7 @@ export class IntelligenceClassificationMapper {
     entity.title = domain.title;
     entity.originalText = domain.originalText;
     entity.originalTextRaw = domain.originalTextRaw;
+    entity.imageUrls = domain.imageUrls ?? [];
     entity.author = domain.author;
     entity.groupName = domain.groupName;
     entity.likeCount = domain.likeCount;

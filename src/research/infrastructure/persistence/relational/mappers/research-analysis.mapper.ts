@@ -9,6 +9,8 @@ export class ResearchAnalysisMapper {
       documentName: entity.documentName,
       docType: entity.docType,
       sourceFileKey: entity.sourceFileKey,
+      ossUrl: entity.ossUrl,
+      localPath: entity.localPath,
       scrapeLogId: entity.scrapeLogId,
       analyzedAt: entity.analyzedAt,
       categoryL1: entity.categoryL1,
@@ -49,6 +51,8 @@ export class ResearchAnalysisMapper {
     entity.documentName = domain.documentName;
     entity.docType = domain.docType;
     entity.sourceFileKey = domain.sourceFileKey;
+    entity.ossUrl = domain.ossUrl;
+    entity.localPath = domain.localPath;
     entity.scrapeLogId = domain.scrapeLogId;
     entity.analyzedAt = domain.analyzedAt;
     entity.categoryL1 = domain.categoryL1;

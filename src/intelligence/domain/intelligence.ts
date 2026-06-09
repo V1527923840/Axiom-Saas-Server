@@ -10,6 +10,7 @@ export interface Intelligence {
   title?: string | null;
   originalText: string;
   originalTextRaw?: string | null;
+  imageUrls?: string[] | null;
   author?: string | null;
   groupName?: string | null;
   likeCount: number;

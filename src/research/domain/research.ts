@@ -4,6 +4,8 @@ export interface ResearchAnalysis {
   documentName: string;
   docType?: string | null;
   sourceFileKey?: string | null;
+  ossUrl?: string | null;
+  localPath?: string | null;
   scrapeLogId?: string | null;
   analyzedAt?: Date | null;
   categoryL1?: string | null;
