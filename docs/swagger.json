@@ -53,8 +53,12 @@
             "required": true,
             "in": "query",
             "schema": {
-              "type": "number"
-            }
+              "type": "number",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
+            },
+            "description": "1-based page number."
           },
           {
             "name": "limit",
@@ -94,15 +98,21 @@
             "in": "query",
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "Column to sort by. Use a domain field name."
           },
           {
             "name": "sortOrder",
             "required": true,
             "in": "query",
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            },
+            "description": "Sort direction. Applied when sortBy is set."
           },
           {
             "in": "header",
@@ -617,8 +627,12 @@
             "required": true,
             "in": "query",
             "schema": {
-              "type": "number"
-            }
+              "type": "number",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
+            },
+            "description": "1-based page number."
           },
           {
             "name": "limit",
@@ -998,8 +1012,12 @@
             "required": true,
             "in": "query",
             "schema": {
-              "type": "number"
-            }
+              "type": "number",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
+            },
+            "description": "1-based page number."
           },
           {
             "name": "limit",
@@ -1039,15 +1057,21 @@
             "in": "query",
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "Column to sort by. Use a domain field name."
           },
           {
             "name": "sortOrder",
             "required": true,
             "in": "query",
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            },
+            "description": "Sort direction. Applied when sortBy is set."
           },
           {
             "in": "header",
@@ -1865,16 +1889,25 @@
             "required": false,
             "in": "query",
             "schema": {
-              "type": "number"
-            }
+              "type": "number",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
+            },
+            "description": "1-based page number."
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
             "schema": {
-              "type": "number"
-            }
+              "type": "number",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 20
+            },
+            "description": "Items per page (1-100)."
           },
           {
             "name": "filters",
@@ -2082,8 +2115,12 @@
             "required": true,
             "in": "query",
             "schema": {
-              "type": "number"
-            }
+              "type": "number",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
+            },
+            "description": "1-based page number."
           },
           {
             "name": "limit",
@@ -2115,15 +2152,21 @@
             "in": "query",
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "Column to sort by. Use a domain field name."
           },
           {
             "name": "sortOrder",
             "required": true,
             "in": "query",
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            },
+            "description": "Sort direction. Applied when sortBy is set."
           },
           {
             "in": "header",
@@ -2231,8 +2274,12 @@
             "required": true,
             "in": "query",
             "schema": {
-              "type": "number"
-            }
+              "type": "number",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
+            },
+            "description": "1-based page number."
           },
           {
             "name": "limit",
@@ -2388,8 +2435,12 @@
             "required": true,
             "in": "query",
             "schema": {
-              "type": "number"
-            }
+              "type": "number",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
+            },
+            "description": "1-based page number."
           },
           {
             "name": "limit",
@@ -2461,15 +2512,21 @@
             "in": "query",
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "Column to sort by. Use a domain field name."
           },
           {
             "name": "sortOrder",
             "required": true,
             "in": "query",
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            },
+            "description": "Sort direction. Applied when sortBy is set."
           },
           {
             "in": "header",
@@ -2620,8 +2677,12 @@
             "required": true,
             "in": "query",
             "schema": {
-              "type": "number"
-            }
+              "type": "number",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
+            },
+            "description": "1-based page number."
           },
           {
             "name": "limit",
@@ -2677,15 +2738,21 @@
             "in": "query",
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "Column to sort by. Use a domain field name."
           },
           {
             "name": "sortOrder",
             "required": true,
             "in": "query",
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            },
+            "description": "Sort direction. Applied when sortBy is set."
           },
           {
             "in": "header",
@@ -3044,10 +3111,12 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "description": "Page number",
+            "description": "1-based page number.",
             "schema": {
-              "example": 1,
-              "type": "number"
+              "type": "number",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
             }
           },
           {
@@ -3382,18 +3451,25 @@
             "required": false,
             "in": "query",
             "schema": {
-              "example": 1,
-              "type": "number"
-            }
+              "type": "number",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
+            },
+            "description": "1-based page number."
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
             "schema": {
-              "example": 20,
-              "type": "number"
-            }
+              "type": "number",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 20
+            },
+            "description": "Items per page (1-100)."
           },
           {
             "name": "status",
@@ -3492,7 +3568,7 @@
             "name": "path",
             "required": false,
             "in": "query",
-            "description": "目录路径，默认 /",
+            "description": "\u76ee\u5f55\u8def\u5f84\uff0c\u9ed8\u8ba4 /",
             "schema": {
               "type": "string"
             }
@@ -3501,7 +3577,7 @@
             "name": "marker",
             "required": false,
             "in": "query",
-            "description": "分页游标",
+            "description": "\u5206\u9875\u6e38\u6807",
             "schema": {
               "type": "string"
             }
@@ -3510,7 +3586,7 @@
             "name": "max_keys",
             "required": false,
             "in": "query",
-            "description": "最大返回数量，默认 100",
+            "description": "\u6700\u5927\u8fd4\u56de\u6570\u91cf\uff0c\u9ed8\u8ba4 100",
             "schema": {
               "type": "number"
             }
@@ -3698,8 +3774,12 @@
             "required": true,
             "in": "query",
             "schema": {
-              "type": "number"
-            }
+              "type": "number",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
+            },
+            "description": "1-based page number."
           },
           {
             "name": "limit",
@@ -3797,10 +3877,12 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "description": "Page number",
+            "description": "1-based page number.",
             "schema": {
+              "type": "number",
+              "minimum": 1,
               "default": 1,
-              "type": "number"
+              "example": 1
             }
           },
           {
@@ -4105,18 +4187,25 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "description": "Page number (default: 1)",
+            "description": "1-based page number.",
             "schema": {
-              "type": "number"
+              "type": "number",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
             }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "description": "Page size (default: 10)",
+            "description": "Items per page (1-100).",
             "schema": {
-              "type": "number"
+              "type": "number",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 20
             }
           },
           {
@@ -4145,7 +4234,7 @@
             "in": "query",
             "description": "Value rating filter",
             "schema": {
-              "example": "高",
+              "example": "\u9ad8",
               "type": "string"
             }
           },
@@ -4155,7 +4244,7 @@
             "in": "query",
             "description": "Company name search",
             "schema": {
-              "example": "海光信息",
+              "example": "\u6d77\u5149\u4fe1\u606f",
               "type": "string"
             }
           },
@@ -4193,9 +4282,8 @@
             "name": "sortBy",
             "required": false,
             "in": "query",
-            "description": "Sort field",
+            "description": "Column to sort by. Use a domain field name.",
             "schema": {
-              "example": "postDate",
               "type": "string"
             }
           },
@@ -4203,10 +4291,13 @@
             "name": "sortOrder",
             "required": false,
             "in": "query",
-            "description": "Sort order",
+            "description": "Sort direction. Applied when sortBy is set.",
             "schema": {
-              "example": "desc",
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
             }
           },
           {
@@ -4269,18 +4360,25 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "description": "Page number (default: 1)",
+            "description": "1-based page number.",
             "schema": {
-              "type": "number"
+              "type": "number",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
             }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "description": "Page size (default: 10)",
+            "description": "Items per page (1-100).",
             "schema": {
-              "type": "number"
+              "type": "number",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 20
             }
           },
           {
@@ -4309,7 +4407,7 @@
             "in": "query",
             "description": "Value rating filter",
             "schema": {
-              "example": "高",
+              "example": "\u9ad8",
               "type": "string"
             }
           },
@@ -4347,9 +4445,8 @@
             "name": "sortBy",
             "required": false,
             "in": "query",
-            "description": "Sort field",
+            "description": "Column to sort by. Use a domain field name.",
             "schema": {
-              "example": "analyzedAt",
               "type": "string"
             }
           },
@@ -4357,10 +4454,13 @@
             "name": "sortOrder",
             "required": false,
             "in": "query",
-            "description": "Sort order",
+            "description": "Sort direction. Applied when sortBy is set.",
             "schema": {
-              "example": "desc",
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
             }
           },
           {
@@ -4836,7 +4936,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "仪表盘"
+            "example": "\u4eea\u8868\u76d8"
           },
           "code": {
             "type": "string",
@@ -4876,7 +4976,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "仪表盘"
+            "example": "\u4eea\u8868\u76d8"
           },
           "code": {
             "type": "string",
@@ -4929,7 +5029,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "基础套餐/月"
+            "example": "\u57fa\u7840\u5957\u9910/\u6708"
           },
           "tier": {
             "type": "string",
@@ -4957,7 +5057,7 @@
           },
           "description": {
             "type": "string",
-            "example": "基础订阅套餐，适合日常使用"
+            "example": "\u57fa\u7840\u8ba2\u9605\u5957\u9910\uff0c\u9002\u5408\u65e5\u5e38\u4f7f\u7528"
           },
           "status": {
             "type": "string",
@@ -4982,7 +5082,7 @@
           },
           "name": {
             "type": "string",
-            "example": "基础套餐/月"
+            "example": "\u57fa\u7840\u5957\u9910/\u6708"
           },
           "tier": {
             "type": "string",
@@ -5010,7 +5110,7 @@
           },
           "description": {
             "type": "string",
-            "example": "基础订阅套餐，适合日常使用"
+            "example": "\u57fa\u7840\u8ba2\u9605\u5957\u9910\uff0c\u9002\u5408\u65e5\u5e38\u4f7f\u7528"
           },
           "status": {
             "type": "string",
@@ -5067,7 +5167,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "基础套餐/月"
+            "example": "\u57fa\u7840\u5957\u9910/\u6708"
           },
           "tier": {
             "type": "string",
@@ -5095,7 +5195,7 @@
           },
           "description": {
             "type": "string",
-            "example": "基础订阅套餐，适合日常使用"
+            "example": "\u57fa\u7840\u8ba2\u9605\u5957\u9910\uff0c\u9002\u5408\u65e5\u5e38\u4f7f\u7528"
           },
           "status": {
             "type": "string",
@@ -5298,15 +5398,15 @@
         "properties": {
           "title": {
             "type": "string",
-            "example": "金融行业每日动态"
+            "example": "\u91d1\u878d\u884c\u4e1a\u6bcf\u65e5\u52a8\u6001"
           },
           "summary": {
             "type": "string",
-            "example": "今日金融市场呈现上涨趋势..."
+            "example": "\u4eca\u65e5\u91d1\u878d\u5e02\u573a\u5448\u73b0\u4e0a\u6da8\u8d8b\u52bf..."
           },
           "originalContent": {
             "type": "string",
-            "example": "原文内容..."
+            "example": "\u539f\u6587\u5185\u5bb9..."
           },
           "images": {
             "example": [
@@ -5323,7 +5423,7 @@
           },
           "transcript": {
             "type": "string",
-            "example": "音频转文字的解析原文..."
+            "example": "\u97f3\u9891\u8f6c\u6587\u5b57\u7684\u89e3\u6790\u539f\u6587..."
           },
           "publishedAt": {
             "type": "string",
@@ -5366,7 +5466,7 @@
           },
           "planName": {
             "type": "string",
-            "example": "基础套餐/年"
+            "example": "\u57fa\u7840\u5957\u9910/\u5e74"
           },
           "price": {
             "type": "number",
@@ -5397,7 +5497,7 @@
           },
           "planName": {
             "type": "string",
-            "example": "基础套餐/年"
+            "example": "\u57fa\u7840\u5957\u9910/\u5e74"
           },
           "cycle": {
             "type": "string",
@@ -5475,7 +5575,7 @@
           },
           "newPlanName": {
             "type": "string",
-            "example": "高级套餐"
+            "example": "\u9ad8\u7ea7\u5957\u9910"
           },
           "newPrice": {
             "type": "number",
@@ -5675,7 +5775,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "行业深度"
+            "example": "\u884c\u4e1a\u6df1\u5ea6"
           },
           "code": {
             "type": "string",
@@ -5693,7 +5793,7 @@
           },
           "description": {
             "type": "string",
-            "example": "行业深度研究报告"
+            "example": "\u884c\u4e1a\u6df1\u5ea6\u7814\u7a76\u62a5\u544a"
           },
           "sortOrder": {
             "type": "number",
@@ -5715,7 +5815,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "行业深度报告"
+            "example": "\u884c\u4e1a\u6df1\u5ea6\u62a5\u544a"
           },
           "layer": {
             "type": "string",
@@ -5727,7 +5827,7 @@
           },
           "description": {
             "type": "string",
-            "example": "行业深度研究报告"
+            "example": "\u884c\u4e1a\u6df1\u5ea6\u7814\u7a76\u62a5\u544a"
           },
           "sortOrder": {
             "type": "number",
@@ -5782,7 +5882,7 @@
         "type": "object",
         "properties": {
           "keys": {
-            "description": "要删除的文件路径列表",
+            "description": "\u8981\u5220\u9664\u7684\u6587\u4ef6\u8def\u5f84\u5217\u8868",
             "type": "array",
             "items": {
               "type": "string"
@@ -5798,7 +5898,7 @@
         "properties": {
           "path": {
             "type": "string",
-            "description": "文件存储路径"
+            "description": "\u6587\u4ef6\u5b58\u50a8\u8def\u5f84"
           },
           "content_type": {
             "type": "string",
@@ -5814,7 +5914,7 @@
         "properties": {
           "path": {
             "type": "string",
-            "description": "目录路径"
+            "description": "\u76ee\u5f55\u8def\u5f84"
           }
         },
         "required": [
