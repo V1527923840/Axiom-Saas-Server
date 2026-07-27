@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiParam } from '@nestjs/swagger';
 import { CreateMenuDto, UpdateMenuDto, AssignMenusDto } from './dto/menu.dto';
+import { QueryMenuDto } from './dto/query-menu.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { NullableType } from '../utils/types/nullable.type';
 import { Menu } from './domain/menu';
@@ -38,14 +39,10 @@ export class MenusController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query() query: QueryMenuDto,
   ): Promise<{ data: Menu[]; total: number; page: number; pageSize: number }> {
-    const pageNum = page ?? 1;
-    let limitNum = limit ?? 50;
-    if (limitNum > 100) {
-      limitNum = 100;
-    }
+    const pageNum = query.page ?? 1;
+    const limitNum = query.pageSize ?? 50;
 
     const result = await this.menusService.findMenusWithPagination({
       paginationOptions: {

@@ -30,7 +30,7 @@ import {
   PaginatedApiResponseDto,
 } from '../utils/dto/infinity-pagination-response.dto';
 import { NullableType } from '../utils/types/nullable.type';
-import { FilterUserDto } from './dto/query-user.dto';
+import { FilterUserDto, QueryUserDto } from './dto/query-user.dto';
 import { User } from './domain/user';
 import { UsersService } from './users.service';
 import { infinityPagination } from '../utils/infinity-pagination';
@@ -76,27 +76,23 @@ export class UsersController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('role') role?: string,
-    @Query('status') status?: string,
-    @Query('tier') tier?: string,
-    @Query('sortBy') sortBy?: string,
-    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
+    @Query() query: QueryUserDto,
   ): Promise<PaginatedApiResponseDto<User>> {
-    const pageNum = page ?? 1;
-    let limitNum = limit ?? 10;
-    if (limitNum > 50) {
-      limitNum = 50;
-    }
+    const pageNum = query.page ?? 1;
+    const limitNum = query.pageSize ?? 10;
 
     const filters: FilterUserDto = {};
-    if (role) filters.roles = [{ id: role }];
-    if (status) filters.status = status;
-    if (tier) filters.tier = tier;
+    if (query.role) filters.roles = [{ id: query.role }];
+    if (query.status) filters.status = query.status;
+    if (query.tier) filters.tier = query.tier;
 
-    const sort = sortBy
-      ? [{ orderBy: sortBy as keyof User, order: sortOrder ?? 'ASC' }]
+    const sort = query.sortBy
+      ? [
+          {
+            orderBy: query.sortBy as keyof User,
+            order: query.sortOrder ?? 'ASC',
+          },
+        ]
       : undefined;
 
     const result = await this.usersService.findManyWithPagination({

@@ -1,13 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsNumber,
-  IsOptional,
-  IsString,
-  IsIn,
-  ValidateNested,
-} from 'class-validator';
-import { Transform, Type, plainToInstance } from 'class-transformer';
+import { IsIn, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
 import { Subscription } from '../domain/subscription';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 export class FilterSubscriptionDto {
   @ApiPropertyOptional({ example: 'active', type: String })
@@ -32,38 +27,14 @@ export class SortSubscriptionDto {
   order: string;
 }
 
-export class QuerySubscriptionDto {
-  @ApiPropertyOptional()
-  @Transform(({ value }) => (value ? Number(value) : 1))
-  @IsNumber()
+export class QuerySubscriptionDto extends PaginationQueryDto {
+  @ApiPropertyOptional({ example: 'active', type: String })
   @IsOptional()
-  page?: number;
+  @IsIn(['active', 'expired', 'cancelled'])
+  status?: string;
 
-  @ApiPropertyOptional()
-  @Transform(({ value }) => (value ? Number(value) : 10))
-  @IsNumber()
+  @ApiPropertyOptional({ example: 'user-uuid', type: String })
   @IsOptional()
-  limit?: number;
-
-  @ApiPropertyOptional({ type: String })
-  @IsOptional()
-  @Transform(({ value }) =>
-    value
-      ? plainToInstance(FilterSubscriptionDto, JSON.parse(value))
-      : undefined,
-  )
-  @ValidateNested()
-  @Type(() => FilterSubscriptionDto)
-  filters?: FilterSubscriptionDto | null;
-
-  @ApiPropertyOptional({ type: String })
-  @IsOptional()
-  @Transform(({ value }) => {
-    return value
-      ? plainToInstance(SortSubscriptionDto, JSON.parse(value))
-      : undefined;
-  })
-  @ValidateNested({ each: true })
-  @Type(() => SortSubscriptionDto)
-  sort?: SortSubscriptionDto[] | null;
+  @IsString()
+  userId?: string;
 }

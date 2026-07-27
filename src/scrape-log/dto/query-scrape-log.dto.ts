@@ -1,15 +1,8 @@
+import { IsIn, IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsIn } from 'class-validator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
-export class QueryScrapeLogDto {
-  @ApiPropertyOptional()
-  @IsOptional()
-  page?: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  limit?: number;
-
+export class QueryScrapeLogDto extends PaginationQueryDto {
   @ApiPropertyOptional({ enum: ['pending', 'running', 'success', 'failed'] })
   @IsOptional()
   @IsIn(['pending', 'running', 'success', 'failed'])

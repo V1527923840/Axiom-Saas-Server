@@ -1,13 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsNumber,
-  IsOptional,
-  IsString,
-  IsIn,
-  ValidateNested,
-} from 'class-validator';
-import { Transform, Type, plainToInstance } from 'class-transformer';
+import { IsIn, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
 import { Plan } from '../domain/plan';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 export class FilterPlanDto {
   @ApiPropertyOptional({ example: 'monthly', type: String })
@@ -37,34 +32,19 @@ export class SortPlanDto {
   order: string;
 }
 
-export class QueryPlanDto {
-  @ApiPropertyOptional()
-  @Transform(({ value }) => (value ? Number(value) : 1))
-  @IsNumber()
+export class QueryPlanDto extends PaginationQueryDto {
+  @ApiPropertyOptional({ example: 'monthly', type: String })
   @IsOptional()
-  page?: number;
+  @IsIn(['monthly', 'yearly'])
+  cycle?: string;
 
-  @ApiPropertyOptional()
-  @Transform(({ value }) => (value ? Number(value) : 10))
-  @IsNumber()
+  @ApiPropertyOptional({ example: 'Lv1', type: String })
   @IsOptional()
-  limit?: number;
+  @IsIn(['Lv0', 'Lv1', 'Lv2', 'Lv3'])
+  tier?: string;
 
-  @ApiPropertyOptional({ type: String })
+  @ApiPropertyOptional({ example: 'active', type: String })
   @IsOptional()
-  @Transform(({ value }) =>
-    value ? plainToInstance(FilterPlanDto, JSON.parse(value)) : undefined,
-  )
-  @ValidateNested()
-  @Type(() => FilterPlanDto)
-  filters?: FilterPlanDto | null;
-
-  @ApiPropertyOptional({ type: String })
-  @IsOptional()
-  @Transform(({ value }) => {
-    return value ? plainToInstance(SortPlanDto, JSON.parse(value)) : undefined;
-  })
-  @ValidateNested({ each: true })
-  @Type(() => SortPlanDto)
-  sort?: SortPlanDto[] | null;
+  @IsIn(['active', 'inactive'])
+  status?: string;
 }

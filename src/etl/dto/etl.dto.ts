@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 export class ScanFileDto {
   @ApiProperty({
@@ -181,23 +182,7 @@ export class JobStatusDto {
   createdAt: Date;
 }
 
-export class JobListQueryDto {
-  @ApiPropertyOptional({
-    type: Number,
-    example: 1,
-  })
-  @IsOptional()
-  @IsNumber()
-  page?: number;
-
-  @ApiPropertyOptional({
-    type: Number,
-    example: 20,
-  })
-  @IsOptional()
-  @IsNumber()
-  pageSize?: number;
-
+export class JobListQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     type: String,
     example: 'completed',

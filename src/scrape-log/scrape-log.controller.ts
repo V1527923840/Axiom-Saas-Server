@@ -16,6 +16,7 @@ import { PaginatedApiResponseDto } from '../utils/dto/infinity-pagination-respon
 import { NullableType } from '../utils/types/nullable.type';
 import { ScrapeLog } from './domain/scrape-log';
 import { ScrapeLogService } from './scrape-log.service';
+import { QueryScrapeLogDto } from './dto/query-scrape-log.dto';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), MenuAccessGuard)
@@ -31,14 +32,10 @@ export class ScrapeLogController {
   @HttpCode(HttpStatus.OK)
   @MenuPaths('/scrape-logs')
   async findAll(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query() query: QueryScrapeLogDto,
   ): Promise<PaginatedApiResponseDto<ScrapeLog>> {
-    const pageNum = page ?? 1;
-    let limitNum = limit ?? 10;
-    if (limitNum > 100) {
-      limitNum = 100;
-    }
+    const pageNum = query.page ?? 1;
+    const limitNum = query.pageSize ?? 10;
 
     const result = await this.scrapeLogService.findAllWithPagination({
       paginationOptions: {

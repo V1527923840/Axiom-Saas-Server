@@ -1,20 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString, IsDateString } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsDateString, IsOptional, IsString } from 'class-validator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
-export class QueryIntelligenceDto {
-  @ApiPropertyOptional({ description: 'Page number (default: 1)' })
-  @Transform(({ value }) => (value ? Number(value) : 1))
-  @IsNumber()
-  @IsOptional()
-  page?: number;
-
-  @ApiPropertyOptional({ description: 'Page size (default: 10)' })
-  @Transform(({ value }) => (value ? Number(value) : 10))
-  @IsNumber()
-  @IsOptional()
-  pageSize?: number;
-
+export class QueryIntelligenceDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     type: String,
     description: 'Level 1 category filter',
@@ -77,22 +65,4 @@ export class QueryIntelligenceDto {
   @IsOptional()
   @IsDateString()
   dateTo?: string;
-
-  @ApiPropertyOptional({
-    type: String,
-    description: 'Sort field',
-    example: 'postDate',
-  })
-  @IsOptional()
-  @IsString()
-  sortBy?: 'postDate' | 'createdAt' | 'totalScore';
-
-  @ApiPropertyOptional({
-    type: String,
-    description: 'Sort order',
-    example: 'desc',
-  })
-  @IsOptional()
-  @IsString()
-  sortOrder?: 'asc' | 'desc';
 }

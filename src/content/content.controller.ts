@@ -54,8 +54,7 @@ export class ContentController {
     pageSize: number;
   }> {
     const pageNum = query.page ?? 1;
-    let limitNum = query.pageSize ?? 50;
-    if (limitNum > 100) limitNum = 100;
+    const limitNum = query.pageSize ?? 50;
 
     const result = await this.contentService.getContentList(categoryCode, {
       page: pageNum,
@@ -139,8 +138,7 @@ export class ContentController {
   async deleteContent(
     @Param('categoryCode') categoryCode: string,
     @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<{ success: boolean }> {
+  ): Promise<void> {
     await this.contentService.deleteContent(categoryCode, id);
-    return { success: true };
   }
 }

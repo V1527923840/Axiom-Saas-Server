@@ -16,8 +16,14 @@ import {
   UpdatePaymentFlowDto,
 } from './dto/payment-flow.dto';
 import { CreateConsumptionDto } from './dto/consumption.dto';
-import { FilterPaymentFlowDto } from './dto/query-payment-flow.dto';
-import { FilterConsumptionDto } from './dto/query-consumption.dto';
+import {
+  FilterPaymentFlowDto,
+  QueryPaymentFlowDto,
+} from './dto/query-payment-flow.dto';
+import {
+  FilterConsumptionDto,
+  QueryConsumptionDto,
+} from './dto/query-consumption.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { MenuAccessGuard } from '../menus/menu-access.guard';
 import { MenuPaths } from '../menus/menu-paths.decorator';
@@ -54,37 +60,27 @@ export class BillsController {
   @HttpCode(HttpStatus.OK)
   @MenuPaths('/bills/flows')
   async findAllFlows(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('userName') userName?: string,
-    @Query('userEmail') userEmail?: string,
-    @Query('type') type?: string,
-    @Query('paymentMethod') paymentMethod?: string,
-    @Query('status') status?: string,
-    @Query('dateFrom') dateFrom?: string,
-    @Query('dateTo') dateTo?: string,
-    @Query('sortBy') sortBy?: string,
-    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
+    @Query() query: QueryPaymentFlowDto,
   ): Promise<PaginatedApiResponseDto<PaymentFlow>> {
-    const pageNum = page ?? 1;
-    let limitNum = limit ?? 10;
-    if (limitNum > 100) {
-      limitNum = 100;
-    }
+    const pageNum = query.page ?? 1;
+    const limitNum = query.pageSize ?? 10;
 
     const filters: FilterPaymentFlowDto = {};
-    if (userName) filters.userName = userName;
-    if (userEmail) filters.userEmail = userEmail;
-    if (type) filters.type = type as FilterPaymentFlowDto['type'];
-    if (paymentMethod)
-      filters.paymentMethod =
-        paymentMethod as FilterPaymentFlowDto['paymentMethod'];
-    if (status) filters.status = status as FilterPaymentFlowDto['status'];
-    if (dateFrom) filters.dateFrom = dateFrom;
-    if (dateTo) filters.dateTo = dateTo;
+    if (query.userName) filters.userName = query.userName;
+    if (query.userEmail) filters.userEmail = query.userEmail;
+    if (query.type) filters.type = query.type;
+    if (query.paymentMethod) filters.paymentMethod = query.paymentMethod;
+    if (query.status) filters.status = query.status;
+    if (query.dateFrom) filters.dateFrom = query.dateFrom;
+    if (query.dateTo) filters.dateTo = query.dateTo;
 
-    const sort = sortBy
-      ? [{ orderBy: sortBy as keyof PaymentFlow, order: sortOrder ?? 'ASC' }]
+    const sort = query.sortBy
+      ? [
+          {
+            orderBy: query.sortBy as keyof PaymentFlow,
+            order: query.sortOrder ?? 'ASC',
+          },
+        ]
       : undefined;
 
     const result = await this.billsService.findPaymentFlowsWithPagination({
@@ -135,32 +131,25 @@ export class BillsController {
   @Get('consumptions')
   @HttpCode(HttpStatus.OK)
   async findAllConsumptions(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('userName') userName?: string,
-    @Query('userEmail') userEmail?: string,
-    @Query('consumeType') consumeType?: string,
-    @Query('dateFrom') dateFrom?: string,
-    @Query('dateTo') dateTo?: string,
-    @Query('sortBy') sortBy?: string,
-    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
+    @Query() query: QueryConsumptionDto,
   ): Promise<PaginatedApiResponseDto<Consumption>> {
-    const pageNum = page ?? 1;
-    let limitNum = limit ?? 10;
-    if (limitNum > 100) {
-      limitNum = 100;
-    }
+    const pageNum = query.page ?? 1;
+    const limitNum = query.pageSize ?? 10;
 
     const filters: FilterConsumptionDto = {};
-    if (userName) filters.userName = userName;
-    if (userEmail) filters.userEmail = userEmail;
-    if (consumeType)
-      filters.consumeType = consumeType as FilterConsumptionDto['consumeType'];
-    if (dateFrom) filters.dateFrom = dateFrom;
-    if (dateTo) filters.dateTo = dateTo;
+    if (query.userName) filters.userName = query.userName;
+    if (query.userEmail) filters.userEmail = query.userEmail;
+    if (query.consumeType) filters.consumeType = query.consumeType;
+    if (query.dateFrom) filters.dateFrom = query.dateFrom;
+    if (query.dateTo) filters.dateTo = query.dateTo;
 
-    const sort = sortBy
-      ? [{ orderBy: sortBy as keyof Consumption, order: sortOrder ?? 'ASC' }]
+    const sort = query.sortBy
+      ? [
+          {
+            orderBy: query.sortBy as keyof Consumption,
+            order: query.sortOrder ?? 'ASC',
+          },
+        ]
       : undefined;
 
     const result =

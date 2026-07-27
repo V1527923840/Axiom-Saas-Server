@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsIn, IsNumber } from 'class-validator';
-import { Type, plainToInstance, Transform } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
+import { IsNumber, IsOptional, IsString, IsIn } from 'class-validator';
+import { Type } from 'class-transformer';
 import { Consumption } from '../domain/consumption';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 export class FilterConsumptionDto {
   @ApiPropertyOptional({ type: Number })
@@ -47,38 +47,29 @@ export class SortConsumptionDto {
   order: 'ASC' | 'DESC';
 }
 
-export class QueryConsumptionDto {
-  @ApiPropertyOptional()
+export class QueryConsumptionDto extends PaginationQueryDto {
+  @ApiPropertyOptional({ type: String })
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  page?: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  limit?: number;
+  @IsString()
+  userName?: string;
 
   @ApiPropertyOptional({ type: String })
   @IsOptional()
-  @Transform(({ value }) =>
-    value
-      ? plainToInstance(FilterConsumptionDto, JSON.parse(value))
-      : undefined,
-  )
-  @ValidateNested()
-  @Type(() => FilterConsumptionDto)
-  filters?: FilterConsumptionDto | null;
+  @IsString()
+  userEmail?: string;
+
+  @ApiPropertyOptional({ enum: ['chat', 'redeem', 'other'] })
+  @IsOptional()
+  @IsIn(['chat', 'redeem', 'other'])
+  consumeType?: 'chat' | 'redeem' | 'other';
 
   @ApiPropertyOptional({ type: String })
   @IsOptional()
-  @Transform(({ value }) => {
-    return value
-      ? plainToInstance(SortConsumptionDto, JSON.parse(value))
-      : undefined;
-  })
-  @ValidateNested({ each: true })
-  @Type(() => SortConsumptionDto)
-  sort?: SortConsumptionDto[] | null;
+  @IsString()
+  dateFrom?: string;
+
+  @ApiPropertyOptional({ type: String })
+  @IsOptional()
+  @IsString()
+  dateTo?: string;
 }

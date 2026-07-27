@@ -31,8 +31,7 @@ export class IntelligenceController {
     pageSize: number;
   }> {
     const pageNum = query.page ?? 1;
-    let pageSizeNum = query.pageSize ?? 10;
-    if (pageSizeNum > 100) pageSizeNum = 100;
+    const pageSizeNum = query.pageSize ?? 10;
 
     const result = await this.intelligenceService.getIntelligenceList({
       ...query,

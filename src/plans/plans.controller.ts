@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
-import { FilterPlanDto } from './dto/query-plan.dto';
+import { FilterPlanDto, QueryPlanDto } from './dto/query-plan.dto';
 import {
   ApiBearerAuth,
   ApiCreatedResponse,
@@ -69,27 +69,23 @@ export class PlansController {
   @HttpCode(HttpStatus.OK)
   @MenuPaths('/plans')
   async findAll(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('cycle') cycle?: string,
-    @Query('tier') tier?: string,
-    @Query('status') status?: string,
-    @Query('sortBy') sortBy?: string,
-    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
+    @Query() query: QueryPlanDto,
   ): Promise<PaginatedApiResponseDto<Plan>> {
-    const pageNum = page ?? 1;
-    let limitNum = limit ?? 10;
-    if (limitNum > 50) {
-      limitNum = 50;
-    }
+    const pageNum = query.page ?? 1;
+    const limitNum = query.pageSize ?? 10;
 
     const filters: FilterPlanDto = {};
-    if (cycle) filters.cycle = cycle;
-    if (tier) filters.tier = tier;
-    if (status) filters.status = status;
+    if (query.cycle) filters.cycle = query.cycle;
+    if (query.tier) filters.tier = query.tier;
+    if (query.status) filters.status = query.status;
 
-    const sort = sortBy
-      ? [{ orderBy: sortBy as keyof Plan, order: sortOrder ?? 'ASC' }]
+    const sort = query.sortBy
+      ? [
+          {
+            orderBy: query.sortBy as keyof Plan,
+            order: query.sortOrder ?? 'ASC',
+          },
+        ]
       : undefined;
 
     const result = await this.plansService.findManyWithPagination({

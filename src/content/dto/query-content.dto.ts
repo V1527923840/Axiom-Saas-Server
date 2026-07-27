@@ -1,13 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsNumber,
+  IsDateString,
   IsOptional,
   IsString,
   ValidateNested,
-  IsDateString,
 } from 'class-validator';
-import { Transform, Type, plainToInstance } from 'class-transformer';
+import { Type, Transform, plainToInstance } from 'class-transformer';
 import { ContentItem } from '../domain/content-item';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 export class SortContentDto {
   @ApiPropertyOptional()
@@ -93,24 +93,13 @@ export class FilterContentDto {
   parser?: string;
 }
 
-export class QueryContentDto {
-  @ApiPropertyOptional()
-  @Transform(({ value }) => (value ? Number(value) : 1))
-  @IsNumber()
-  @IsOptional()
-  page?: number;
-
-  @ApiPropertyOptional()
-  @Transform(({ value }) => (value ? Number(value) : 10))
-  @IsNumber()
-  @IsOptional()
-  pageSize?: number;
-
+export class QueryContentDto extends PaginationQueryDto {
   @ApiPropertyOptional({ type: String })
   @IsOptional()
   @Transform((value: unknown) => {
-    if (typeof value === 'string') {
-      return plainToInstance(FilterContentDto, JSON.parse(value));
+    const v = (value as { value?: unknown })?.value ?? value;
+    if (typeof v === 'string') {
+      return plainToInstance(FilterContentDto, JSON.parse(v));
     }
     return undefined;
   })
@@ -121,8 +110,9 @@ export class QueryContentDto {
   @ApiPropertyOptional({ type: String })
   @IsOptional()
   @Transform((value: unknown) => {
-    if (typeof value === 'string') {
-      return plainToInstance(SortContentDto, JSON.parse(value));
+    const v = (value as { value?: unknown })?.value ?? value;
+    if (typeof v === 'string') {
+      return plainToInstance(SortContentDto, JSON.parse(v));
     }
     return undefined;
   })

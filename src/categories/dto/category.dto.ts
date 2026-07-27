@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 export class CreateCategoryDto {
   @ApiProperty({
@@ -115,25 +116,7 @@ export class UpdateCategoryDto {
   metadata?: Record<string, any>;
 }
 
-export class QueryCategoryDto {
-  @ApiPropertyOptional({
-    type: Number,
-    example: 1,
-    description: 'Page number',
-  })
-  @IsOptional()
-  @IsNumber()
-  page?: number;
-
-  @ApiPropertyOptional({
-    type: Number,
-    example: 50,
-    description: 'Items per page',
-  })
-  @IsOptional()
-  @IsNumber()
-  limit?: number;
-
+export class QueryCategoryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     type: String,
     example: 'info_type',

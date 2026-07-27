@@ -51,8 +51,7 @@ export class CategoriesController {
     pageSize: number;
   }> {
     const pageNum = query.page ?? 1;
-    let limitNum = query.limit ?? 50;
-    if (limitNum > 100) limitNum = 100;
+    const limitNum = query.pageSize ?? 50;
 
     const result = await this.categoriesService.findAllWithPagination({
       paginationOptions: { page: pageNum, limit: limitNum },

@@ -14,7 +14,10 @@ import {
 } from '@nestjs/common';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpgradeSubscriptionDto } from './dto/upgrade-subscription.dto';
-import { FilterSubscriptionDto } from './dto/query-subscription.dto';
+import {
+  FilterSubscriptionDto,
+  QuerySubscriptionDto,
+} from './dto/query-subscription.dto';
 import {
   ApiBearerAuth,
   ApiCreatedResponse,
@@ -71,25 +74,22 @@ export class SubscriptionsController {
   @HttpCode(HttpStatus.OK)
   @MenuPaths('/subscriptions')
   async findAll(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('status') status?: string,
-    @Query('userId') userId?: string,
-    @Query('sortBy') sortBy?: string,
-    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
+    @Query() query: QuerySubscriptionDto,
   ): Promise<PaginatedApiResponseDto<Subscription>> {
-    const pageNum = page ?? 1;
-    let limitNum = limit ?? 10;
-    if (limitNum > 50) {
-      limitNum = 50;
-    }
+    const pageNum = query.page ?? 1;
+    const limitNum = query.pageSize ?? 10;
 
     const filters: FilterSubscriptionDto = {};
-    if (status) filters.status = status;
-    if (userId) filters.userId = userId;
+    if (query.status) filters.status = query.status;
+    if (query.userId) filters.userId = query.userId;
 
-    const sort = sortBy
-      ? [{ orderBy: sortBy as keyof Subscription, order: sortOrder ?? 'ASC' }]
+    const sort = query.sortBy
+      ? [
+          {
+            orderBy: query.sortBy as keyof Subscription,
+            order: query.sortOrder ?? 'ASC',
+          },
+        ]
       : undefined;
 
     const result = await this.subscriptionsService.findManyWithPagination({
@@ -129,15 +129,11 @@ export class SubscriptionsController {
   @HttpCode(HttpStatus.OK)
   async getHistory(
     @Request() req: any,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query() query: QuerySubscriptionDto,
   ): Promise<PaginatedApiResponseDto<Subscription>> {
     const userId = req.user.id;
-    const pageNum = page ?? 1;
-    let limitNum = limit ?? 10;
-    if (limitNum > 50) {
-      limitNum = 50;
-    }
+    const pageNum = query.page ?? 1;
+    const limitNum = query.pageSize ?? 10;
 
     const result = await this.subscriptionsService.findByUserId(userId);
     return infinityPagination(
