@@ -18,21 +18,17 @@ export class IntelligenceClassificationMapper {
       imageUrls: entity.imageUrls ?? [],
       author: entity.author,
       groupName: entity.groupName,
-      likeCount: entity.likeCount,
-      commentCount: entity.commentCount,
-      sourceCredibility: entity.sourceCredibility,
-      timelinessScore: entity.timelinessScore,
-      dataDensity: entity.dataDensity,
-      differentiationScore: entity.differentiationScore,
-      actionability: entity.actionability,
-      riskDisclosure: entity.riskDisclosure,
-      confidenceFactor: entity.confidenceFactor,
-      totalScore: entity.totalScore,
-      valueRating: entity.valueRating,
       swIndustryTag: entity.swIndustryTag,
       stockMapping: entity.stockMapping,
       expectationGap: entity.expectationGap,
-      summaryPoints: entity.summaryPoints,
+      classificationMethod: entity.classificationMethod,
+      rawFacts: entity.rawFacts,
+      inductionGroups: entity.inductionGroups,
+      baseView: entity.baseView,
+      midView: entity.midView,
+      coreView: entity.coreView,
+      pyramidJudgement: entity.pyramidJudgement,
+      pyramidVersion: entity.pyramidVersion,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };
@@ -54,21 +50,17 @@ export class IntelligenceClassificationMapper {
     entity.imageUrls = domain.imageUrls ?? [];
     entity.author = domain.author;
     entity.groupName = domain.groupName;
-    entity.likeCount = domain.likeCount;
-    entity.commentCount = domain.commentCount;
-    entity.sourceCredibility = domain.sourceCredibility;
-    entity.timelinessScore = domain.timelinessScore;
-    entity.dataDensity = domain.dataDensity;
-    entity.differentiationScore = domain.differentiationScore;
-    entity.actionability = domain.actionability;
-    entity.riskDisclosure = domain.riskDisclosure;
-    entity.confidenceFactor = domain.confidenceFactor;
-    entity.totalScore = domain.totalScore;
-    entity.valueRating = domain.valueRating;
     entity.swIndustryTag = domain.swIndustryTag;
     entity.stockMapping = domain.stockMapping;
     entity.expectationGap = domain.expectationGap;
-    entity.summaryPoints = domain.summaryPoints;
+    entity.classificationMethod = domain.classificationMethod;
+    entity.rawFacts = domain.rawFacts;
+    entity.inductionGroups = domain.inductionGroups;
+    entity.baseView = domain.baseView;
+    entity.midView = domain.midView;
+    entity.coreView = domain.coreView;
+    entity.pyramidJudgement = domain.pyramidJudgement;
+    entity.pyramidVersion = domain.pyramidVersion;
     entity.createdAt = domain.createdAt;
     entity.updatedAt = domain.updatedAt;
     return entity;

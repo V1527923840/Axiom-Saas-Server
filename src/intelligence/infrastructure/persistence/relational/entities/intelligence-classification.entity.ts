@@ -62,49 +62,6 @@ export class IntelligenceClassificationEntity extends EntityRelationalHelper {
   @Column({ type: String, length: 200, nullable: true, name: 'group_name' })
   groupName?: string | null;
 
-  @Column({ type: 'int', default: 0, name: 'like_count' })
-  likeCount: number;
-
-  @Column({ type: 'int', default: 0, name: 'comment_count' })
-  commentCount: number;
-
-  // 6维度评分 (0-10)
-  @Column({ type: 'smallint', nullable: true, name: 'source_credibility' })
-  sourceCredibility?: number | null;
-
-  @Column({ type: 'smallint', nullable: true, name: 'timeliness_score' })
-  timelinessScore?: number | null;
-
-  @Column({ type: 'smallint', nullable: true, name: 'data_density' })
-  dataDensity?: number | null;
-
-  @Column({ type: 'smallint', nullable: true, name: 'differentiation_score' })
-  differentiationScore?: number | null;
-
-  @Column({ type: 'smallint', nullable: true })
-  actionability?: number | null;
-
-  @Column({ type: 'smallint', nullable: true, name: 'risk_disclosure' })
-  riskDisclosure?: number | null;
-
-  // 综合评分
-  @Column({
-    type: 'decimal',
-    precision: 3,
-    scale: 2,
-    nullable: true,
-    name: 'confidence_factor',
-  })
-  confidenceFactor?: number | null;
-
-  @Column({ type: 'smallint', nullable: true, name: 'total_score' })
-  totalScore?: number | null;
-
-  @Index()
-  @Column({ type: String, length: 10, nullable: true, name: 'value_rating' })
-  valueRating?: string | null;
-
-  // JSONB字段
   @Column({ type: 'jsonb', nullable: true, name: 'sw_industry_tag' })
   swIndustryTag?: string[] | null;
 
@@ -114,10 +71,48 @@ export class IntelligenceClassificationEntity extends EntityRelationalHelper {
   @Column({ type: 'jsonb', nullable: true, name: 'expectation_gap' })
   expectationGap?: Record<string, any> | null;
 
-  @Column({ type: 'jsonb', nullable: true, name: 'summary_points' })
-  summaryPoints?: string[] | null;
+  // ============================================================
+  // Pyramid-view columns (replaces 6-dimension scoring)
+  // ============================================================
+  @Column({
+    type: String,
+    length: 20,
+    nullable: true,
+    name: 'classification_method',
+    default: () => "'llm'",
+  })
+  classificationMethod?: string | null;
 
-  // 时间戳
+  @Column({ type: 'jsonb', nullable: true, name: 'raw_facts' })
+  rawFacts?: Record<string, any> | null;
+
+  @Column({ type: 'jsonb', nullable: true, name: 'induction_groups' })
+  inductionGroups?: Record<string, any> | null;
+
+  @Column({ type: 'jsonb', nullable: true, name: 'base_view' })
+  baseView?: Record<string, any> | null;
+
+  @Column({ type: 'jsonb', nullable: true, name: 'mid_view' })
+  midView?: Record<string, any> | null;
+
+  @Column({ type: 'jsonb', nullable: true, name: 'core_view' })
+  coreView?: Record<string, any> | null;
+
+  @Column({ type: 'jsonb', nullable: true, name: 'pyramid_judgement' })
+  pyramidJudgement?: Record<string, any> | null;
+
+  @Column({
+    type: String,
+    length: 10,
+    nullable: true,
+    name: 'pyramid_version',
+    default: () => "'v2.0'",
+  })
+  pyramidVersion?: string | null;
+
+  // ============================================================
+  // Timestamps
+  // ============================================================
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

@@ -13,21 +13,20 @@ export interface Intelligence {
   imageUrls?: string[] | null;
   author?: string | null;
   groupName?: string | null;
-  likeCount: number;
-  commentCount: number;
-  sourceCredibility?: number | null;
-  timelinessScore?: number | null;
-  dataDensity?: number | null;
-  differentiationScore?: number | null;
-  actionability?: number | null;
-  riskDisclosure?: number | null;
-  confidenceFactor?: number | null;
-  totalScore?: number | null;
-  valueRating?: string | null;
   swIndustryTag?: string[] | null;
   stockMapping?: { mentionedStocks?: { name: string }[] } | null;
   expectationGap?: Record<string, any> | null;
-  summaryPoints?: string[] | null;
+
+  // Pyramid-view fields
+  classificationMethod?: string | null;
+  rawFacts?: Record<string, any> | null;
+  inductionGroups?: Record<string, any> | null;
+  baseView?: Record<string, any> | null;
+  midView?: Record<string, any> | null;
+  coreView?: Record<string, any> | null;
+  pyramidJudgement?: Record<string, any> | null;
+  pyramidVersion?: string | null;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,9 +42,10 @@ export type IntelligenceListItem = Pick<
   | 'createdAt'
   | 'categoryL1'
   | 'categoryL2'
-  | 'valueRating'
-  | 'totalScore'
   | 'swIndustryTag'
   | 'stockMapping'
+  | 'coreView'
+  | 'pyramidVersion'
+  | 'classificationMethod'
   | 'originalTextRaw'
 >;
