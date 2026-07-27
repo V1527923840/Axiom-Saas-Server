@@ -1,4 +1,6 @@
 import 'dotenv/config';
+import * as fs from 'fs';
+import * as path from 'path';
 import {
   ClassSerializerInterceptor,
   ValidationPipe,
@@ -57,6 +59,14 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('docs', app, document);
+
+  // Export the raw OpenAPI spec to disk on bootstrap for client-side codegen.
+  const outDir = path.resolve(process.cwd(), 'docs');
+  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(outDir, 'swagger.json'),
+    JSON.stringify(document, null, 2),
+  );
 
   await app.listen(configService.getOrThrow('app.port', { infer: true }));
 }

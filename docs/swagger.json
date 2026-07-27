@@ -1,0 +1,5865 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/users": {
+      "post": {
+        "operationId": "UsersController_create_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      },
+      "get": {
+        "operationId": "UsersController_findAll_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "role",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tier",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InfinityPaginationUserResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "operationId": "UsersController_findOne_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_update_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_remove_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/menus": {
+      "get": {
+        "operationId": "UsersController_getUserAllMenus_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Menu"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/extra-menus": {
+      "get": {
+        "operationId": "UsersController_getUserExtraMenus_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Menu"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      },
+      "post": {
+        "operationId": "UsersController_assignExtraMenu_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignExtraMenusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/extra-menus/{menuId}": {
+      "delete": {
+        "operationId": "UsersController_removeExtraMenu_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "menuId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/roles": {
+      "get": {
+        "operationId": "UsersController_getUserRoles_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      },
+      "post": {
+        "operationId": "UsersController_assignRoles_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/roles/{roleId}": {
+      "delete": {
+        "operationId": "UsersController_removeRole_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "roleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/files/upload": {
+      "post": {
+        "operationId": "FilesLocalController_uploadFile_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Files"
+        ]
+      }
+    },
+    "/api/v1/menus": {
+      "get": {
+        "operationId": "MenusController_findAll_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Menus"
+        ]
+      },
+      "post": {
+        "operationId": "MenusController_create_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMenuDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Menus"
+        ]
+      }
+    },
+    "/api/v1/menus/tree": {
+      "get": {
+        "operationId": "MenusController_findTree_v1",
+        "parameters": [
+          {
+            "name": "roleId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Menus"
+        ]
+      }
+    },
+    "/api/v1/menus/my": {
+      "get": {
+        "operationId": "MenusController_getMyMenus_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Menus"
+        ]
+      }
+    },
+    "/api/v1/menus/{id}": {
+      "get": {
+        "operationId": "MenusController_findOne_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Menus"
+        ]
+      },
+      "patch": {
+        "operationId": "MenusController_update_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMenuDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Menus"
+        ]
+      },
+      "delete": {
+        "operationId": "MenusController_remove_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Menus"
+        ]
+      }
+    },
+    "/api/v1/menus/roles/{roleId}/menus": {
+      "get": {
+        "operationId": "MenusController_getRoleMenus_v1",
+        "parameters": [
+          {
+            "name": "roleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Menus"
+        ]
+      },
+      "post": {
+        "operationId": "MenusController_assignMenus_v1",
+        "parameters": [
+          {
+            "name": "roleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignMenusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Menus"
+        ]
+      }
+    },
+    "/api/v1/plans": {
+      "post": {
+        "operationId": "PlansController_create_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Plan"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Plans"
+        ]
+      },
+      "get": {
+        "operationId": "PlansController_findAll_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "cycle",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tier",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InfinityPaginationPlanResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Plans"
+        ]
+      }
+    },
+    "/api/v1/plans/{id}": {
+      "get": {
+        "operationId": "PlansController_findOne_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Plan"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Plans"
+        ]
+      },
+      "patch": {
+        "operationId": "PlansController_update_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Plan"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Plans"
+        ]
+      },
+      "delete": {
+        "operationId": "PlansController_remove_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Plans"
+        ]
+      }
+    },
+    "/api/v1/plans/{id}/menus": {
+      "get": {
+        "operationId": "PlansController_getPlanMenus_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Menu"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Plans"
+        ]
+      },
+      "post": {
+        "operationId": "PlansController_assignMenusToPlan_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignMenusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Menu"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Plans"
+        ]
+      }
+    },
+    "/api/v1/auth/email/login": {
+      "post": {
+        "operationId": "AuthController_login_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthEmailLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/email/register": {
+      "post": {
+        "operationId": "AuthController_register_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRegisterLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/email/confirm": {
+      "post": {
+        "operationId": "AuthController_confirmEmail_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthConfirmEmailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/email/confirm/new": {
+      "post": {
+        "operationId": "AuthController_confirmNewEmail_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthConfirmEmailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/forgot/password": {
+      "post": {
+        "operationId": "AuthController_forgotPassword_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthForgotPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/reset/password": {
+      "post": {
+        "operationId": "AuthController_resetPassword_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_me_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      },
+      "patch": {
+        "operationId": "AuthController_update_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      },
+      "delete": {
+        "operationId": "AuthController_delete_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/facebook/login": {
+      "post": {
+        "operationId": "AuthFacebookController_login_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthFacebookLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/google/login": {
+      "post": {
+        "operationId": "AuthGoogleController_login_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthGoogleLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/apple/login": {
+      "post": {
+        "operationId": "AuthAppleController_login_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthAppleLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/": {
+      "get": {
+        "operationId": "HomeController_appInfo",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Home"
+        ]
+      }
+    },
+    "/api/v1/content/categories": {
+      "get": {
+        "operationId": "ContentController_getCategories_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all content categories",
+        "tags": [
+          "Content"
+        ]
+      }
+    },
+    "/api/v1/content/{categoryCode}": {
+      "get": {
+        "operationId": "ContentController_getContentList_v1",
+        "parameters": [
+          {
+            "name": "categoryCode",
+            "required": true,
+            "in": "path",
+            "description": "Category code: daily-news, audio-interpretation, institution-reports",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "filters",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get content list by category code",
+        "tags": [
+          "Content"
+        ]
+      },
+      "post": {
+        "operationId": "ContentController_createContent_v1",
+        "parameters": [
+          {
+            "name": "categoryCode",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create new content in category",
+        "tags": [
+          "Content"
+        ]
+      }
+    },
+    "/api/v1/content/{categoryCode}/{id}": {
+      "get": {
+        "operationId": "ContentController_getContentDetail_v1",
+        "parameters": [
+          {
+            "name": "categoryCode",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get content detail by category code and id",
+        "tags": [
+          "Content"
+        ]
+      },
+      "delete": {
+        "operationId": "ContentController_deleteContent_v1",
+        "parameters": [
+          {
+            "name": "categoryCode",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Soft delete content by category code and id",
+        "tags": [
+          "Content"
+        ]
+      }
+    },
+    "/api/v1/subscriptions": {
+      "post": {
+        "operationId": "SubscriptionsController_create_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubscriptionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Subscription"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Subscriptions"
+        ]
+      },
+      "get": {
+        "operationId": "SubscriptionsController_findAll_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InfinityPaginationSubscriptionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
+    "/api/v1/subscriptions/current": {
+      "get": {
+        "operationId": "SubscriptionsController_getCurrentSubscription_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
+    "/api/v1/subscriptions/upgrade": {
+      "post": {
+        "operationId": "SubscriptionsController_upgrade_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpgradeSubscriptionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
+    "/api/v1/subscriptions/history": {
+      "get": {
+        "operationId": "SubscriptionsController_getHistory_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
+    "/api/v1/subscriptions/{id}": {
+      "get": {
+        "operationId": "SubscriptionsController_findOne_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Subscription"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Subscriptions"
+        ]
+      },
+      "delete": {
+        "operationId": "SubscriptionsController_remove_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
+    "/api/v1/bills/flows": {
+      "post": {
+        "operationId": "BillsController_createFlow_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaymentFlowDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bills"
+        ]
+      },
+      "get": {
+        "operationId": "BillsController_findAllFlows_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "userName",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userEmail",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentMethod",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bills"
+        ]
+      }
+    },
+    "/api/v1/bills/flows/{id}": {
+      "get": {
+        "operationId": "BillsController_findOneFlow_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bills"
+        ]
+      },
+      "patch": {
+        "operationId": "BillsController_updateFlow_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePaymentFlowDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bills"
+        ]
+      }
+    },
+    "/api/v1/bills/consumptions": {
+      "post": {
+        "operationId": "BillsController_createConsumption_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateConsumptionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bills"
+        ]
+      },
+      "get": {
+        "operationId": "BillsController_findAllConsumptions_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "userName",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userEmail",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "consumeType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bills"
+        ]
+      }
+    },
+    "/api/v1/bills/consumptions/{id}": {
+      "get": {
+        "operationId": "BillsController_findOneConsumption_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bills"
+        ]
+      }
+    },
+    "/api/v1/roles": {
+      "get": {
+        "operationId": "RolesController_findAll_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoleEntity"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Roles"
+        ]
+      },
+      "post": {
+        "operationId": "RolesController_create_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleEntity"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Roles"
+        ]
+      }
+    },
+    "/api/v1/roles/{id}": {
+      "get": {
+        "operationId": "RolesController_findOne_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleEntity"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Roles"
+        ]
+      },
+      "patch": {
+        "operationId": "RolesController_update_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleEntity"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Roles"
+        ]
+      },
+      "delete": {
+        "operationId": "RolesController_delete_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Roles"
+        ]
+      }
+    },
+    "/api/v1/roles/{roleId}/users": {
+      "post": {
+        "operationId": "RolesController_assignUsers_v1",
+        "parameters": [
+          {
+            "name": "roleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignUsersDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Roles"
+        ]
+      },
+      "get": {
+        "operationId": "RolesController_getRoleUsers_v1",
+        "parameters": [
+          {
+            "name": "roleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Roles"
+        ]
+      }
+    },
+    "/api/v1/categories": {
+      "get": {
+        "operationId": "CategoriesController_findAll_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "example": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "layer",
+            "required": false,
+            "in": "query",
+            "description": "Filter by layer: carrier, info_type, financial",
+            "schema": {
+              "example": "info_type",
+              "type": "string"
+            }
+          },
+          {
+            "name": "parentCode",
+            "required": false,
+            "in": "query",
+            "description": "Filter by parent category code",
+            "schema": {
+              "example": "RESEARCH_REPORT",
+              "type": "string"
+            }
+          },
+          {
+            "name": "isActive",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all categories with optional filters",
+        "tags": [
+          "Categories"
+        ]
+      },
+      "post": {
+        "operationId": "CategoriesController_create_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new category",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/api/v1/categories/{id}": {
+      "get": {
+        "operationId": "CategoriesController_findOne_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get category by ID",
+        "tags": [
+          "Categories"
+        ]
+      },
+      "patch": {
+        "operationId": "CategoriesController_update_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a category",
+        "tags": [
+          "Categories"
+        ]
+      },
+      "delete": {
+        "operationId": "CategoriesController_delete_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a category",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/api/v1/categories/{id}/children": {
+      "get": {
+        "operationId": "CategoriesController_findChildren_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get children of a category",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/api/v1/etl/files": {
+      "get": {
+        "operationId": "EtlController_scanFiles_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Scan pending import files in output_v2 directory",
+        "tags": [
+          "ETL"
+        ]
+      }
+    },
+    "/api/v1/etl/import": {
+      "post": {
+        "operationId": "EtlController_importFiles_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Execute import for selected files",
+        "tags": [
+          "ETL"
+        ]
+      }
+    },
+    "/api/v1/etl/jobs": {
+      "get": {
+        "operationId": "EtlController_getJobHistory_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "completed",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2026-05-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2026-05-13",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get import job history",
+        "tags": [
+          "ETL"
+        ]
+      }
+    },
+    "/api/v1/etl/jobs/{id}": {
+      "get": {
+        "operationId": "EtlController_getJobStatus_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get job status by ID",
+        "tags": [
+          "ETL"
+        ]
+      }
+    },
+    "/api/v1/oss/list": {
+      "get": {
+        "operationId": "OssController_list_v1",
+        "parameters": [
+          {
+            "name": "path",
+            "required": false,
+            "in": "query",
+            "description": "目录路径，默认 /",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "marker",
+            "required": false,
+            "in": "query",
+            "description": "分页游标",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "max_keys",
+            "required": false,
+            "in": "query",
+            "description": "最大返回数量，默认 100",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "OSS"
+        ]
+      }
+    },
+    "/api/v1/oss/download/{key}": {
+      "get": {
+        "operationId": "OssController_download_v1",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "OSS"
+        ]
+      }
+    },
+    "/api/v1/oss/delete": {
+      "post": {
+        "operationId": "OssController_delete_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OssDeleteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "OSS"
+        ]
+      }
+    },
+    "/api/v1/oss/upload/presign": {
+      "post": {
+        "operationId": "OssController_getUploadPresignedUrl_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OssUploadPresignDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "OSS"
+        ]
+      }
+    },
+    "/api/v1/oss/mkdir": {
+      "post": {
+        "operationId": "OssController_mkdir_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OssMkdirDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "OSS"
+        ]
+      }
+    },
+    "/api/v1/scrape-log": {
+      "get": {
+        "operationId": "ScrapeLogController_findAll_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "ScrapeLog"
+        ]
+      }
+    },
+    "/api/v1/scrape-log/{id}": {
+      "get": {
+        "operationId": "ScrapeLogController_findOne_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "ScrapeLog"
+        ]
+      }
+    },
+    "/api/v1/parse/tasks": {
+      "get": {
+        "operationId": "ParseTaskController_findAll_v1",
+        "parameters": [
+          {
+            "name": "source",
+            "required": false,
+            "in": "query",
+            "description": "Filter by source",
+            "schema": {
+              "example": "zsxq",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by status",
+            "schema": {
+              "example": "pending",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "default": 50,
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "ParseTasks"
+        ]
+      },
+      "post": {
+        "operationId": "ParseTaskController_create_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateParseTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "ParseTasks"
+        ]
+      }
+    },
+    "/api/v1/parse/tasks/{id}": {
+      "get": {
+        "operationId": "ParseTaskController_findOne_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "ParseTasks"
+        ]
+      },
+      "delete": {
+        "operationId": "ParseTaskController_delete_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "ParseTasks"
+        ]
+      }
+    },
+    "/api/v1/parse/tasks/{id}/execute": {
+      "post": {
+        "operationId": "ParseTaskController_execute_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteParseTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "ParseTasks"
+        ]
+      }
+    },
+    "/api/v1/versions": {
+      "get": {
+        "operationId": "VersionController_findAll_v1",
+        "parameters": [
+          {
+            "name": "source",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Versions"
+        ]
+      }
+    },
+    "/api/v1/versions/sources": {
+      "get": {
+        "operationId": "VersionController_getSources_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Versions"
+        ]
+      }
+    },
+    "/api/v1/versions/{source}/files": {
+      "get": {
+        "operationId": "VersionController_getVersionFiles_v1",
+        "parameters": [
+          {
+            "name": "source",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Versions"
+        ]
+      }
+    },
+    "/api/v1/intelligence": {
+      "get": {
+        "operationId": "IntelligenceController_getIntelligenceList_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (default: 1)",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Page size (default: 10)",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "categoryL1",
+            "required": false,
+            "in": "query",
+            "description": "Level 1 category filter",
+            "schema": {
+              "example": "INDUSTRY",
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryL2",
+            "required": false,
+            "in": "query",
+            "description": "Level 2 category filter",
+            "schema": {
+              "example": "INDUSTRY_NEWS",
+              "type": "string"
+            }
+          },
+          {
+            "name": "valueRating",
+            "required": false,
+            "in": "query",
+            "description": "Value rating filter",
+            "schema": {
+              "example": "高",
+              "type": "string"
+            }
+          },
+          {
+            "name": "company",
+            "required": false,
+            "in": "query",
+            "description": "Company name search",
+            "schema": {
+              "example": "海光信息",
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search",
+            "schema": {
+              "example": "AI",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (YYYY-MM-DD)",
+            "schema": {
+              "example": "2026-05-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (YYYY-MM-DD)",
+            "schema": {
+              "example": "2026-05-31",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Sort field",
+            "schema": {
+              "example": "postDate",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort order",
+            "schema": {
+              "example": "desc",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get intelligence list",
+        "tags": [
+          "Intelligence"
+        ]
+      }
+    },
+    "/api/v1/intelligence/{id}": {
+      "get": {
+        "operationId": "IntelligenceController_getIntelligenceDetail_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get intelligence detail by id",
+        "tags": [
+          "Intelligence"
+        ]
+      }
+    },
+    "/api/v1/research-analysis": {
+      "get": {
+        "operationId": "ResearchController_getResearchList_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (default: 1)",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Page size (default: 10)",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "categoryL1",
+            "required": false,
+            "in": "query",
+            "description": "Level 1 category filter",
+            "schema": {
+              "example": "INDUSTRY",
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryL2",
+            "required": false,
+            "in": "query",
+            "description": "Level 2 category filter",
+            "schema": {
+              "example": "INDUSTRY_NEWS",
+              "type": "string"
+            }
+          },
+          {
+            "name": "valueRating",
+            "required": false,
+            "in": "query",
+            "description": "Value rating filter",
+            "schema": {
+              "example": "高",
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search in document name",
+            "schema": {
+              "example": "AI",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (YYYY-MM-DD)",
+            "schema": {
+              "example": "2026-05-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (YYYY-MM-DD)",
+            "schema": {
+              "example": "2026-05-31",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Sort field",
+            "schema": {
+              "example": "analyzedAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort order",
+            "schema": {
+              "example": "desc",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get research analysis list",
+        "tags": [
+          "Research"
+        ]
+      }
+    },
+    "/api/v1/research-analysis/{id}": {
+      "get": {
+        "operationId": "ResearchController_getResearchDetail_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get research analysis detail by id",
+        "tags": [
+          "Research"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "API",
+    "description": "API docs",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "FileDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "RoleDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "StatusDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "test1@example.com"
+          },
+          "password": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "photo": {
+            "$ref": "#/components/schemas/FileDto"
+          },
+          "role": {
+            "$ref": "#/components/schemas/RoleDto"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusDto"
+          },
+          "tier": {
+            "type": "string",
+            "example": "Lv0"
+          },
+          "currentPlanId": {
+            "type": "string",
+            "example": "plan-uuid"
+          },
+          "pointsBalance": {
+            "type": "number",
+            "example": 0
+          },
+          "chatQuotaUsed": {
+            "type": "number",
+            "example": 0
+          },
+          "chatQuotaTotal": {
+            "type": "number",
+            "example": 0
+          },
+          "subscriptionExpiredAt": {
+            "type": "string",
+            "example": "2026-06-11T00:00:00Z"
+          },
+          "registeredAt": {
+            "type": "string",
+            "example": "2026-01-01T00:00:00Z"
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "example": "2026-05-10T00:00:00Z"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "firstName",
+          "lastName"
+        ]
+      },
+      "FileType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cbcfa8b8-3a25-4adb-a9c6-e325f0d0f3ae"
+          },
+          "path": {
+            "type": "string",
+            "example": "https://example.com/path/to/file.jpg"
+          }
+        },
+        "required": [
+          "id",
+          "path"
+        ]
+      },
+      "Role": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string",
+            "example": "admin"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "Status": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string",
+            "example": "active"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "email": {
+            "type": "string",
+            "example": "john.doe@example.com"
+          },
+          "provider": {
+            "type": "string",
+            "example": "email"
+          },
+          "socialId": {
+            "type": "string",
+            "example": "1234567890"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "photo": {
+            "$ref": "#/components/schemas/FileType"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "deletedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "tier": {
+            "type": "string",
+            "example": "Lv0"
+          },
+          "currentPlanId": {
+            "type": "object",
+            "example": "plan-uuid"
+          },
+          "pointsBalance": {
+            "type": "number",
+            "example": 100
+          },
+          "chatQuotaUsed": {
+            "type": "number",
+            "example": 50
+          },
+          "chatQuotaTotal": {
+            "type": "number",
+            "example": 100
+          },
+          "subscriptionExpiredAt": {
+            "type": "object",
+            "example": "2026-06-11T00:00:00Z"
+          },
+          "registeredAt": {
+            "type": "object",
+            "example": "2026-01-01T00:00:00Z"
+          },
+          "lastLoginAt": {
+            "type": "object",
+            "example": "2026-05-10T00:00:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "provider",
+          "socialId",
+          "firstName",
+          "lastName",
+          "photo",
+          "role",
+          "status",
+          "createdAt",
+          "updatedAt",
+          "deletedAt",
+          "tier",
+          "pointsBalance",
+          "chatQuotaUsed",
+          "chatQuotaTotal"
+        ]
+      },
+      "InfinityPaginationUserResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          },
+          "hasNextPage": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "data",
+          "hasNextPage"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "test1@example.com"
+          },
+          "password": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "photo": {
+            "$ref": "#/components/schemas/FileDto"
+          },
+          "role": {
+            "$ref": "#/components/schemas/RoleDto"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusDto"
+          },
+          "tier": {
+            "type": "string",
+            "example": "Lv0"
+          },
+          "currentPlanId": {
+            "type": "string",
+            "example": "plan-uuid"
+          },
+          "pointsBalance": {
+            "type": "number",
+            "example": 100
+          },
+          "chatQuotaUsed": {
+            "type": "number",
+            "example": 50
+          },
+          "chatQuotaTotal": {
+            "type": "number",
+            "example": 100
+          },
+          "subscriptionExpiredAt": {
+            "type": "string",
+            "example": "2026-06-11T00:00:00Z"
+          },
+          "registeredAt": {
+            "type": "string",
+            "example": "2026-01-01T00:00:00Z"
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "example": "2026-05-10T00:00:00Z"
+          }
+        }
+      },
+      "Menu": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string",
+            "nullable": true
+          },
+          "path": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive"
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "code",
+          "icon",
+          "path",
+          "parentId",
+          "sortOrder",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "AssignExtraMenusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "FileResponseDto": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "$ref": "#/components/schemas/FileType"
+          }
+        },
+        "required": [
+          "file"
+        ]
+      },
+      "CreateMenuDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "仪表盘"
+          },
+          "code": {
+            "type": "string",
+            "example": "dashboard"
+          },
+          "icon": {
+            "type": "string",
+            "example": "LayoutDashboard"
+          },
+          "path": {
+            "type": "string",
+            "example": "/dashboard"
+          },
+          "parentId": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "number",
+            "example": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "code",
+          "path"
+        ]
+      },
+      "UpdateMenuDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "仪表盘"
+          },
+          "code": {
+            "type": "string",
+            "example": "dashboard"
+          },
+          "icon": {
+            "type": "string",
+            "example": "LayoutDashboard"
+          },
+          "path": {
+            "type": "string",
+            "example": "/dashboard"
+          },
+          "parentId": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "number",
+            "example": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive"
+            ]
+          }
+        }
+      },
+      "AssignMenusDto": {
+        "type": "object",
+        "properties": {
+          "menuIds": {
+            "example": [
+              "menu-id-1",
+              "menu-id-2"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "menuIds"
+        ]
+      },
+      "CreatePlanDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "基础套餐/月"
+          },
+          "tier": {
+            "type": "string",
+            "example": "Lv1"
+          },
+          "cycle": {
+            "type": "string",
+            "example": "monthly"
+          },
+          "pointsQuota": {
+            "type": "number",
+            "example": 100
+          },
+          "chatQuota": {
+            "type": "number",
+            "example": 50
+          },
+          "price": {
+            "type": "number",
+            "example": 29
+          },
+          "promotionalPrice": {
+            "type": "number",
+            "example": 19
+          },
+          "description": {
+            "type": "string",
+            "example": "基础订阅套餐，适合日常使用"
+          },
+          "status": {
+            "type": "string",
+            "example": "active"
+          }
+        },
+        "required": [
+          "name",
+          "tier",
+          "cycle",
+          "pointsQuota",
+          "chatQuota",
+          "price",
+          "status"
+        ]
+      },
+      "Plan": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string",
+            "example": "基础套餐/月"
+          },
+          "tier": {
+            "type": "string",
+            "example": "Lv1"
+          },
+          "cycle": {
+            "type": "string",
+            "example": "monthly"
+          },
+          "pointsQuota": {
+            "type": "number",
+            "example": 100
+          },
+          "chatQuota": {
+            "type": "number",
+            "example": 50
+          },
+          "price": {
+            "type": "number",
+            "example": 29
+          },
+          "promotionalPrice": {
+            "type": "number",
+            "example": 19
+          },
+          "description": {
+            "type": "string",
+            "example": "基础订阅套餐，适合日常使用"
+          },
+          "status": {
+            "type": "string",
+            "example": "active"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "deletedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "tier",
+          "cycle",
+          "pointsQuota",
+          "chatQuota",
+          "price",
+          "status",
+          "createdAt",
+          "updatedAt",
+          "deletedAt"
+        ]
+      },
+      "InfinityPaginationPlanResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Plan"
+            }
+          },
+          "hasNextPage": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "data",
+          "hasNextPage"
+        ]
+      },
+      "UpdatePlanDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "基础套餐/月"
+          },
+          "tier": {
+            "type": "string",
+            "example": "Lv1"
+          },
+          "cycle": {
+            "type": "string",
+            "example": "monthly"
+          },
+          "pointsQuota": {
+            "type": "number",
+            "example": 100
+          },
+          "chatQuota": {
+            "type": "number",
+            "example": 50
+          },
+          "price": {
+            "type": "number",
+            "example": 29
+          },
+          "promotionalPrice": {
+            "type": "number",
+            "example": 19
+          },
+          "description": {
+            "type": "string",
+            "example": "基础订阅套餐，适合日常使用"
+          },
+          "status": {
+            "type": "string",
+            "example": "active"
+          }
+        }
+      },
+      "AuthEmailLoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "test1@example.com"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "LoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "tokenExpires": {
+            "type": "number"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "token",
+          "refreshToken",
+          "tokenExpires",
+          "user"
+        ]
+      },
+      "AuthRegisterLoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "test1@example.com"
+          },
+          "password": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "firstName",
+          "lastName"
+        ]
+      },
+      "AuthConfirmEmailDto": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "hash"
+        ]
+      },
+      "AuthForgotPasswordDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "test1@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "AuthResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string"
+          },
+          "hash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "password",
+          "hash"
+        ]
+      },
+      "RefreshResponseDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "tokenExpires": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "token",
+          "refreshToken",
+          "tokenExpires"
+        ]
+      },
+      "AuthUpdateDto": {
+        "type": "object",
+        "properties": {
+          "photo": {
+            "$ref": "#/components/schemas/FileDto"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "new.email@example.com"
+          },
+          "password": {
+            "type": "string"
+          },
+          "oldPassword": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthFacebookLoginDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "example": "abc"
+          }
+        },
+        "required": [
+          "accessToken"
+        ]
+      },
+      "AuthGoogleLoginDto": {
+        "type": "object",
+        "properties": {
+          "idToken": {
+            "type": "string",
+            "example": "abc"
+          }
+        },
+        "required": [
+          "idToken"
+        ]
+      },
+      "AuthAppleLoginDto": {
+        "type": "object",
+        "properties": {
+          "idToken": {
+            "type": "string",
+            "example": "abc"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "idToken"
+        ]
+      },
+      "CreateContentDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "金融行业每日动态"
+          },
+          "summary": {
+            "type": "string",
+            "example": "今日金融市场呈现上涨趋势..."
+          },
+          "originalContent": {
+            "type": "string",
+            "example": "原文内容..."
+          },
+          "images": {
+            "example": [
+              "https://example.com/image1.jpg"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "audioUrl": {
+            "type": "string",
+            "example": "https://minio-url/audio.mp3"
+          },
+          "transcript": {
+            "type": "string",
+            "example": "音频转文字的解析原文..."
+          },
+          "publishedAt": {
+            "type": "string",
+            "example": "2026-04-29T10:00:00Z"
+          },
+          "metadata": {
+            "type": "object",
+            "example": {
+              "source": "agent",
+              "author": "John"
+            }
+          },
+          "sourceFileUrl": {
+            "type": "string",
+            "example": "https://minio-url/source.pdf"
+          },
+          "jsonFileUrl": {
+            "type": "string",
+            "example": "https://minio-url/data.json"
+          },
+          "summaryFileUrl": {
+            "type": "string",
+            "example": "https://minio-url/summary.md"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "CreateSubscriptionDto": {
+        "type": "object",
+        "properties": {
+          "planId": {
+            "type": "string",
+            "example": "plan-uuid"
+          },
+          "userId": {
+            "type": "string",
+            "example": "user-uuid"
+          },
+          "planName": {
+            "type": "string",
+            "example": "基础套餐/年"
+          },
+          "price": {
+            "type": "number",
+            "example": 299
+          },
+          "cycle": {
+            "type": "string",
+            "example": "yearly"
+          }
+        },
+        "required": [
+          "planId"
+        ]
+      },
+      "Subscription": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "userId": {
+            "type": "number",
+            "example": 1
+          },
+          "planId": {
+            "type": "string",
+            "example": "plan-uuid"
+          },
+          "planName": {
+            "type": "string",
+            "example": "基础套餐/年"
+          },
+          "cycle": {
+            "type": "string",
+            "example": "yearly"
+          },
+          "price": {
+            "type": "number",
+            "example": 299
+          },
+          "subscribedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expiredAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "example": "active"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "deletedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "planId",
+          "planName",
+          "cycle",
+          "price",
+          "subscribedAt",
+          "expiredAt",
+          "status",
+          "createdAt",
+          "updatedAt",
+          "deletedAt"
+        ]
+      },
+      "InfinityPaginationSubscriptionResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Subscription"
+            }
+          },
+          "hasNextPage": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "data",
+          "hasNextPage"
+        ]
+      },
+      "UpgradeSubscriptionDto": {
+        "type": "object",
+        "properties": {
+          "newPlanId": {
+            "type": "string",
+            "example": "new-plan-uuid"
+          },
+          "newPlanName": {
+            "type": "string",
+            "example": "高级套餐"
+          },
+          "newPrice": {
+            "type": "number",
+            "example": 99
+          }
+        },
+        "required": [
+          "newPlanId"
+        ]
+      },
+      "CreatePaymentFlowDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "number"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "userEmail": {
+            "type": "string"
+          },
+          "orderNo": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "recharge",
+              "refund"
+            ]
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "wechat",
+              "alipay",
+              "bankcard",
+              "other"
+            ]
+          },
+          "amount": {
+            "type": "number"
+          },
+          "points": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "completed",
+              "failed",
+              "refunded"
+            ]
+          },
+          "metadata": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "userId",
+          "userName",
+          "userEmail",
+          "orderNo",
+          "type",
+          "paymentMethod",
+          "amount",
+          "points"
+        ]
+      },
+      "UpdatePaymentFlowDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "completed",
+              "failed",
+              "refunded"
+            ]
+          },
+          "metadata": {
+            "type": "object"
+          }
+        }
+      },
+      "CreateConsumptionDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "number"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "userEmail": {
+            "type": "string"
+          },
+          "consumeType": {
+            "type": "string",
+            "enum": [
+              "chat",
+              "redeem",
+              "other"
+            ]
+          },
+          "points": {
+            "type": "number"
+          },
+          "balance": {
+            "type": "number"
+          },
+          "businessId": {
+            "type": "string"
+          },
+          "businessType": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "userName",
+          "userEmail",
+          "consumeType",
+          "points",
+          "balance"
+        ]
+      },
+      "RoleEntity": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateRoleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Editor"
+          },
+          "code": {
+            "type": "string",
+            "example": "editor"
+          },
+          "description": {
+            "type": "string",
+            "example": "Can edit content"
+          }
+        },
+        "required": [
+          "name",
+          "code"
+        ]
+      },
+      "UpdateRoleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Editor"
+          },
+          "code": {
+            "type": "string",
+            "example": "editor"
+          },
+          "description": {
+            "type": "string",
+            "example": "Can edit content"
+          }
+        }
+      },
+      "AssignUsersDto": {
+        "type": "object",
+        "properties": {
+          "userIds": {
+            "example": [
+              1,
+              2,
+              3
+            ],
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "userIds"
+        ]
+      },
+      "CreateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "行业深度"
+          },
+          "code": {
+            "type": "string",
+            "example": "INDUSTRY_DEEP"
+          },
+          "layer": {
+            "type": "string",
+            "example": "info_type",
+            "description": "Layer: carrier, info_type, or financial"
+          },
+          "parentCode": {
+            "type": "string",
+            "example": "RESEARCH_REPORT",
+            "description": "Parent category code"
+          },
+          "description": {
+            "type": "string",
+            "example": "行业深度研究报告"
+          },
+          "sortOrder": {
+            "type": "number",
+            "example": 2
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "name",
+          "code",
+          "layer"
+        ]
+      },
+      "UpdateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "行业深度报告"
+          },
+          "layer": {
+            "type": "string",
+            "example": "info_type"
+          },
+          "parentCode": {
+            "type": "string",
+            "example": "RESEARCH_REPORT"
+          },
+          "description": {
+            "type": "string",
+            "example": "行业深度研究报告"
+          },
+          "sortOrder": {
+            "type": "number",
+            "example": 3
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "metadata": {
+            "type": "object",
+            "example": {}
+          }
+        }
+      },
+      "ImportOptionsDto": {
+        "type": "object",
+        "properties": {
+          "dryRun": {
+            "type": "boolean",
+            "example": false,
+            "description": "Preview mode without actual import"
+          },
+          "batchSize": {
+            "type": "number",
+            "example": 100,
+            "description": "Batch size for import"
+          }
+        }
+      },
+      "ImportRequestDto": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "example": [
+              "zsxq_all_20260504093821_extracted.json"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "options": {
+            "$ref": "#/components/schemas/ImportOptionsDto"
+          }
+        },
+        "required": [
+          "files"
+        ]
+      },
+      "OssDeleteDto": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "description": "要删除的文件路径列表",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "keys"
+        ]
+      },
+      "OssUploadPresignDto": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "文件存储路径"
+          },
+          "content_type": {
+            "type": "string",
+            "description": "Content-Type"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "OssMkdirDto": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "目录路径"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "CreateParseTaskDto": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "Data source identifier",
+            "example": "zsxq"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version string",
+            "example": "20260515-202605151455-04"
+          },
+          "sourceFileKey": {
+            "type": "string",
+            "description": "Source file key in MinIO",
+            "example": "zsxq/20260515-202605151455-04/zsxq_all.md"
+          },
+          "executeImmediately": {
+            "type": "boolean",
+            "description": "Whether to execute immediately",
+            "default": false
+          }
+        },
+        "required": [
+          "source",
+          "version"
+        ]
+      },
+      "ExecuteParseTaskDto": {
+        "type": "object",
+        "properties": {
+          "parser": {
+            "type": "string",
+            "description": "Parser to use",
+            "example": "zsxq-parser"
+          }
+        }
+      }
+    }
+  }
+}

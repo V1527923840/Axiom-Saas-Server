@@ -1,0 +1,2 @@
+# keep swagger.json tracked; ignore local caches only
+*.cache
