@@ -42,7 +42,7 @@ export class MenusController {
     @Query() query: QueryMenuDto,
   ): Promise<{ data: Menu[]; total: number; page: number; pageSize: number }> {
     const pageNum = query.page ?? 1;
-    const limitNum = query.pageSize ?? 50;
+    const limitNum = query.pageSize ?? 10;
 
     const result = await this.menusService.findMenusWithPagination({
       paginationOptions: {

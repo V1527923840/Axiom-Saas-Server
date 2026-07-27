@@ -54,7 +54,7 @@ export class ContentController {
     pageSize: number;
   }> {
     const pageNum = query.page ?? 1;
-    const limitNum = query.pageSize ?? 50;
+    const limitNum = query.pageSize ?? 10;
 
     const result = await this.contentService.getContentList(categoryCode, {
       page: pageNum,

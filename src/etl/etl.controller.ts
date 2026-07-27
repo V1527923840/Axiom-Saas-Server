@@ -68,7 +68,7 @@ export class EtlController {
     pageSize: number;
   }> {
     const pageNum = query.page ?? 1;
-    const limitNum = query.pageSize ?? 50;
+    const limitNum = query.pageSize ?? 10;
 
     const result = await this.etlService.getJobHistory({
       ...query,
