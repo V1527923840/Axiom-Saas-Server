@@ -105,7 +105,7 @@ export class SubscriptionsController {
       result.data,
       { page: pageNum, limit: limitNum },
       result.total,
-    ) as PaginatedApiResponseDto<Subscription>;
+    );
   }
 
   @Get('current')
@@ -140,7 +140,7 @@ export class SubscriptionsController {
       result.data,
       { page: pageNum, limit: limitNum },
       result.total,
-    ) as PaginatedApiResponseDto<Subscription>;
+    );
   }
 
   @ApiOkResponse({

@@ -48,7 +48,7 @@ export class ScrapeLogController {
       result.data,
       { page: pageNum, limit: limitNum },
       result.total,
-    ) as PaginatedApiResponseDto<ScrapeLog>;
+    );
   }
 
   @Get(':id')

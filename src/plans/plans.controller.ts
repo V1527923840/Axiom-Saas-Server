@@ -101,7 +101,7 @@ export class PlansController {
       result.data,
       { page: pageNum, limit: limitNum },
       result.total,
-    ) as PaginatedApiResponseDto<Plan>;
+    );
   }
 
   @ApiOkResponse({

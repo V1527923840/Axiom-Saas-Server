@@ -61,7 +61,7 @@ export class ParseTaskController {
       result.data,
       { page: pageNum, limit: limitNum },
       result.total,
-    ) as PaginatedApiResponseDto<ParseTask>;
+    );
   }
 
   @Get(':id')

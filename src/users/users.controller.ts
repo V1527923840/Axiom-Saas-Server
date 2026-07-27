@@ -108,7 +108,7 @@ export class UsersController {
       result.data,
       { page: pageNum, limit: limitNum },
       result.total,
-    ) as PaginatedApiResponseDto<User>;
+    );
   }
 
   @ApiOkResponse({

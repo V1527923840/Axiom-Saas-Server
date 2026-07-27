@@ -66,7 +66,7 @@ export class CategoriesController {
       result.data,
       { page: pageNum, limit: limitNum },
       result.total,
-    ) as { data: Category[]; total: number; page: number; pageSize: number };
+    );
   }
 
   @Get(':id')

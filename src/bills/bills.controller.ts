@@ -96,7 +96,7 @@ export class BillsController {
       result.data,
       { page: pageNum, limit: limitNum },
       result.total,
-    ) as PaginatedApiResponseDto<PaymentFlow>;
+    );
   }
 
   @Get('flows/:id')
@@ -166,7 +166,7 @@ export class BillsController {
       result.data,
       { page: pageNum, limit: limitNum },
       result.total,
-    ) as PaginatedApiResponseDto<Consumption>;
+    );
   }
 
   @Get('consumptions/:id')
