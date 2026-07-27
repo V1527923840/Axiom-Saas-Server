@@ -50,69 +50,87 @@
         "parameters": [
           {
             "name": "page",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "default": 1,
-              "example": 1
-            },
-            "description": "1-based page number."
-          },
-          {
-            "name": "limit",
-            "required": true,
-            "in": "query",
-            "schema": {
+              "example": 1,
               "type": "number"
             }
           },
           {
-            "name": "role",
-            "required": true,
+            "name": "pageSize",
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "status",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "tier",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 20,
+              "type": "number"
             }
           },
           {
             "name": "sortBy",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Column to sort by. Use a domain field name.",
             "schema": {
+              "example": "createdAt",
               "type": "string"
-            },
-            "description": "Column to sort by. Use a domain field name."
+            }
           },
           {
             "name": "sortOrder",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Sort direction. Applied when `sortBy` is set.",
             "schema": {
+              "example": "DESC",
               "type": "string",
               "enum": [
                 "ASC",
                 "DESC"
               ]
-            },
-            "description": "Sort direction. Applied when sortBy is set."
+            }
+          },
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "role-id",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "active",
+              "type": "string",
+              "enum": [
+                "active",
+                "disabled"
+              ]
+            }
+          },
+          {
+            "name": "tier",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "Lv1",
+              "type": "string",
+              "enum": [
+                "Lv0",
+                "Lv1",
+                "Lv2",
+                "Lv3"
+              ]
+            }
           },
           {
             "in": "header",
@@ -624,22 +642,49 @@
         "parameters": [
           {
             "name": "page",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "default": 1,
-              "example": 1
-            },
-            "description": "1-based page number."
+              "example": 1,
+              "type": "number"
+            }
           },
           {
-            "name": "limit",
-            "required": true,
+            "name": "pageSize",
+            "required": false,
             "in": "query",
             "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 20,
               "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by. Use a domain field name.",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction. Applied when `sortBy` is set.",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
             }
           },
           {
@@ -1009,69 +1054,77 @@
         "parameters": [
           {
             "name": "page",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "default": 1,
-              "example": 1
-            },
-            "description": "1-based page number."
-          },
-          {
-            "name": "limit",
-            "required": true,
-            "in": "query",
-            "schema": {
+              "example": 1,
               "type": "number"
             }
           },
           {
-            "name": "cycle",
-            "required": true,
+            "name": "pageSize",
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "tier",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "status",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 20,
+              "type": "number"
             }
           },
           {
             "name": "sortBy",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Column to sort by. Use a domain field name.",
             "schema": {
+              "example": "createdAt",
               "type": "string"
-            },
-            "description": "Column to sort by. Use a domain field name."
+            }
           },
           {
             "name": "sortOrder",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Sort direction. Applied when `sortBy` is set.",
             "schema": {
+              "example": "DESC",
               "type": "string",
               "enum": [
                 "ASC",
                 "DESC"
               ]
-            },
-            "description": "Sort direction. Applied when sortBy is set."
+            }
+          },
+          {
+            "name": "cycle",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "monthly",
+              "type": "string"
+            }
+          },
+          {
+            "name": "tier",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "Lv1",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "active",
+              "type": "string"
+            }
           },
           {
             "in": "header",
@@ -1889,25 +1942,47 @@
             "required": false,
             "in": "query",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "default": 1,
-              "example": 1
-            },
-            "description": "1-based page number."
+              "example": 1,
+              "type": "number"
+            }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "maximum": 100,
               "default": 10,
-              "example": 20
-            },
-            "description": "Items per page (1-100)."
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by. Use a domain field name.",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction. Applied when `sortBy` is set.",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
           },
           {
             "name": "filters",
@@ -2112,61 +2187,68 @@
         "parameters": [
           {
             "name": "page",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "default": 1,
-              "example": 1
-            },
-            "description": "1-based page number."
-          },
-          {
-            "name": "limit",
-            "required": true,
-            "in": "query",
-            "schema": {
+              "example": 1,
               "type": "number"
             }
           },
           {
-            "name": "status",
-            "required": true,
+            "name": "pageSize",
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "userId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 20,
+              "type": "number"
             }
           },
           {
             "name": "sortBy",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Column to sort by. Use a domain field name.",
             "schema": {
+              "example": "createdAt",
               "type": "string"
-            },
-            "description": "Column to sort by. Use a domain field name."
+            }
           },
           {
             "name": "sortOrder",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Sort direction. Applied when `sortBy` is set.",
             "schema": {
+              "example": "DESC",
               "type": "string",
               "enum": [
                 "ASC",
                 "DESC"
               ]
-            },
-            "description": "Sort direction. Applied when sortBy is set."
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "active",
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "user-uuid",
+              "type": "string"
+            }
           },
           {
             "in": "header",
@@ -2271,22 +2353,67 @@
         "parameters": [
           {
             "name": "page",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "default": 1,
-              "example": 1
-            },
-            "description": "1-based page number."
+              "example": 1,
+              "type": "number"
+            }
           },
           {
-            "name": "limit",
-            "required": true,
+            "name": "pageSize",
+            "required": false,
             "in": "query",
             "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 20,
               "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by. Use a domain field name.",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction. Applied when `sortBy` is set.",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "active",
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "user-uuid",
+              "type": "string"
             }
           },
           {
@@ -2432,27 +2559,54 @@
         "parameters": [
           {
             "name": "page",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "default": 1,
-              "example": 1
-            },
-            "description": "1-based page number."
-          },
-          {
-            "name": "limit",
-            "required": true,
-            "in": "query",
-            "schema": {
+              "example": 1,
               "type": "number"
             }
           },
           {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by. Use a domain field name.",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction. Applied when `sortBy` is set.",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          },
+          {
             "name": "userName",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2460,7 +2614,7 @@
           },
           {
             "name": "userEmail",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2468,31 +2622,47 @@
           },
           {
             "name": "type",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "recharge",
+                "refund"
+              ]
             }
           },
           {
             "name": "paymentMethod",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "wechat",
+                "alipay",
+                "bankcard",
+                "other"
+              ]
             }
           },
           {
             "name": "status",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "pending",
+                "completed",
+                "failed",
+                "refunded"
+              ]
             }
           },
           {
             "name": "dateFrom",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2500,33 +2670,11 @@
           },
           {
             "name": "dateTo",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "sortBy",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Column to sort by. Use a domain field name."
-          },
-          {
-            "name": "sortOrder",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "ASC",
-                "DESC"
-              ]
-            },
-            "description": "Sort direction. Applied when sortBy is set."
           },
           {
             "in": "header",
@@ -2674,27 +2822,54 @@
         "parameters": [
           {
             "name": "page",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "default": 1,
-              "example": 1
-            },
-            "description": "1-based page number."
-          },
-          {
-            "name": "limit",
-            "required": true,
-            "in": "query",
-            "schema": {
+              "example": 1,
               "type": "number"
             }
           },
           {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by. Use a domain field name.",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction. Applied when `sortBy` is set.",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          },
+          {
             "name": "userName",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2702,7 +2877,7 @@
           },
           {
             "name": "userEmail",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2710,15 +2885,20 @@
           },
           {
             "name": "consumeType",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "chat",
+                "redeem",
+                "other"
+              ]
             }
           },
           {
             "name": "dateFrom",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2726,33 +2906,11 @@
           },
           {
             "name": "dateTo",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "sortBy",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Column to sort by. Use a domain field name."
-          },
-          {
-            "name": "sortOrder",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "ASC",
-                "DESC"
-              ]
-            },
-            "description": "Sort direction. Applied when sortBy is set."
           },
           {
             "in": "header",
@@ -3111,22 +3269,47 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "description": "1-based page number.",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "default": 1,
-              "example": 1
+              "example": 1,
+              "type": "number"
             }
           },
           {
-            "name": "limit",
+            "name": "pageSize",
             "required": false,
             "in": "query",
-            "description": "Items per page",
             "schema": {
-              "example": 50,
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 20,
               "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by. Use a domain field name.",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction. Applied when `sortBy` is set.",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
             }
           },
           {
@@ -3451,25 +3634,47 @@
             "required": false,
             "in": "query",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "default": 1,
-              "example": 1
-            },
-            "description": "1-based page number."
+              "example": 1,
+              "type": "number"
+            }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "maximum": 100,
               "default": 10,
-              "example": 20
-            },
-            "description": "Items per page (1-100)."
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by. Use a domain field name.",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction. Applied when `sortBy` is set.",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
           },
           {
             "name": "status",
@@ -3568,7 +3773,7 @@
             "name": "path",
             "required": false,
             "in": "query",
-            "description": "\u76ee\u5f55\u8def\u5f84\uff0c\u9ed8\u8ba4 /",
+            "description": "目录路径，默认 /",
             "schema": {
               "type": "string"
             }
@@ -3577,7 +3782,7 @@
             "name": "marker",
             "required": false,
             "in": "query",
-            "description": "\u5206\u9875\u6e38\u6807",
+            "description": "分页游标",
             "schema": {
               "type": "string"
             }
@@ -3586,7 +3791,7 @@
             "name": "max_keys",
             "required": false,
             "in": "query",
-            "description": "\u6700\u5927\u8fd4\u56de\u6570\u91cf\uff0c\u9ed8\u8ba4 100",
+            "description": "最大返回数量，默认 100",
             "schema": {
               "type": "number"
             }
@@ -3771,22 +3976,71 @@
         "parameters": [
           {
             "name": "page",
-            "required": true,
+            "required": false,
             "in": "query",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "default": 1,
-              "example": 1
-            },
-            "description": "1-based page number."
+              "example": 1,
+              "type": "number"
+            }
           },
           {
-            "name": "limit",
-            "required": true,
+            "name": "pageSize",
+            "required": false,
             "in": "query",
             "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 20,
               "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by. Use a domain field name.",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction. Applied when `sortBy` is set.",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "running",
+                "success",
+                "failed"
+              ]
+            }
+          },
+          {
+            "name": "source",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -3877,12 +4131,10 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "description": "1-based page number.",
+            "description": "Page number",
             "schema": {
-              "type": "number",
-              "minimum": 1,
               "default": 1,
-              "example": 1
+              "type": "number"
             }
           },
           {
@@ -4187,25 +4439,47 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "description": "1-based page number.",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "default": 1,
-              "example": 1
+              "example": 1,
+              "type": "number"
             }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "description": "Items per page (1-100).",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "maximum": 100,
               "default": 10,
-              "example": 20
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by. Use a domain field name.",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction. Applied when `sortBy` is set.",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
             }
           },
           {
@@ -4234,7 +4508,7 @@
             "in": "query",
             "description": "Value rating filter",
             "schema": {
-              "example": "\u9ad8",
+              "example": "高",
               "type": "string"
             }
           },
@@ -4244,7 +4518,7 @@
             "in": "query",
             "description": "Company name search",
             "schema": {
-              "example": "\u6d77\u5149\u4fe1\u606f",
+              "example": "海光信息",
               "type": "string"
             }
           },
@@ -4276,28 +4550,6 @@
             "schema": {
               "example": "2026-05-31",
               "type": "string"
-            }
-          },
-          {
-            "name": "sortBy",
-            "required": false,
-            "in": "query",
-            "description": "Column to sort by. Use a domain field name.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "sortOrder",
-            "required": false,
-            "in": "query",
-            "description": "Sort direction. Applied when sortBy is set.",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "ASC",
-                "DESC"
-              ]
             }
           },
           {
@@ -4360,25 +4612,47 @@
             "name": "page",
             "required": false,
             "in": "query",
-            "description": "1-based page number.",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "default": 1,
-              "example": 1
+              "example": 1,
+              "type": "number"
             }
           },
           {
             "name": "pageSize",
             "required": false,
             "in": "query",
-            "description": "Items per page (1-100).",
             "schema": {
-              "type": "number",
               "minimum": 1,
               "maximum": 100,
               "default": 10,
-              "example": 20
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by. Use a domain field name.",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction. Applied when `sortBy` is set.",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
             }
           },
           {
@@ -4407,7 +4681,7 @@
             "in": "query",
             "description": "Value rating filter",
             "schema": {
-              "example": "\u9ad8",
+              "example": "高",
               "type": "string"
             }
           },
@@ -4439,28 +4713,6 @@
             "schema": {
               "example": "2026-05-31",
               "type": "string"
-            }
-          },
-          {
-            "name": "sortBy",
-            "required": false,
-            "in": "query",
-            "description": "Column to sort by. Use a domain field name.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "sortOrder",
-            "required": false,
-            "in": "query",
-            "description": "Sort direction. Applied when sortBy is set.",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "ASC",
-                "DESC"
-              ]
             }
           },
           {
@@ -4936,7 +5188,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "\u4eea\u8868\u76d8"
+            "example": "仪表盘"
           },
           "code": {
             "type": "string",
@@ -4976,7 +5228,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "\u4eea\u8868\u76d8"
+            "example": "仪表盘"
           },
           "code": {
             "type": "string",
@@ -5029,7 +5281,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "\u57fa\u7840\u5957\u9910/\u6708"
+            "example": "基础套餐/月"
           },
           "tier": {
             "type": "string",
@@ -5057,7 +5309,7 @@
           },
           "description": {
             "type": "string",
-            "example": "\u57fa\u7840\u8ba2\u9605\u5957\u9910\uff0c\u9002\u5408\u65e5\u5e38\u4f7f\u7528"
+            "example": "基础订阅套餐，适合日常使用"
           },
           "status": {
             "type": "string",
@@ -5082,7 +5334,7 @@
           },
           "name": {
             "type": "string",
-            "example": "\u57fa\u7840\u5957\u9910/\u6708"
+            "example": "基础套餐/月"
           },
           "tier": {
             "type": "string",
@@ -5110,7 +5362,7 @@
           },
           "description": {
             "type": "string",
-            "example": "\u57fa\u7840\u8ba2\u9605\u5957\u9910\uff0c\u9002\u5408\u65e5\u5e38\u4f7f\u7528"
+            "example": "基础订阅套餐，适合日常使用"
           },
           "status": {
             "type": "string",
@@ -5167,7 +5419,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "\u57fa\u7840\u5957\u9910/\u6708"
+            "example": "基础套餐/月"
           },
           "tier": {
             "type": "string",
@@ -5195,7 +5447,7 @@
           },
           "description": {
             "type": "string",
-            "example": "\u57fa\u7840\u8ba2\u9605\u5957\u9910\uff0c\u9002\u5408\u65e5\u5e38\u4f7f\u7528"
+            "example": "基础订阅套餐，适合日常使用"
           },
           "status": {
             "type": "string",
@@ -5398,15 +5650,15 @@
         "properties": {
           "title": {
             "type": "string",
-            "example": "\u91d1\u878d\u884c\u4e1a\u6bcf\u65e5\u52a8\u6001"
+            "example": "金融行业每日动态"
           },
           "summary": {
             "type": "string",
-            "example": "\u4eca\u65e5\u91d1\u878d\u5e02\u573a\u5448\u73b0\u4e0a\u6da8\u8d8b\u52bf..."
+            "example": "今日金融市场呈现上涨趋势..."
           },
           "originalContent": {
             "type": "string",
-            "example": "\u539f\u6587\u5185\u5bb9..."
+            "example": "原文内容..."
           },
           "images": {
             "example": [
@@ -5423,7 +5675,7 @@
           },
           "transcript": {
             "type": "string",
-            "example": "\u97f3\u9891\u8f6c\u6587\u5b57\u7684\u89e3\u6790\u539f\u6587..."
+            "example": "音频转文字的解析原文..."
           },
           "publishedAt": {
             "type": "string",
@@ -5466,7 +5718,7 @@
           },
           "planName": {
             "type": "string",
-            "example": "\u57fa\u7840\u5957\u9910/\u5e74"
+            "example": "基础套餐/年"
           },
           "price": {
             "type": "number",
@@ -5497,7 +5749,7 @@
           },
           "planName": {
             "type": "string",
-            "example": "\u57fa\u7840\u5957\u9910/\u5e74"
+            "example": "基础套餐/年"
           },
           "cycle": {
             "type": "string",
@@ -5575,7 +5827,7 @@
           },
           "newPlanName": {
             "type": "string",
-            "example": "\u9ad8\u7ea7\u5957\u9910"
+            "example": "高级套餐"
           },
           "newPrice": {
             "type": "number",
@@ -5775,7 +6027,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "\u884c\u4e1a\u6df1\u5ea6"
+            "example": "行业深度"
           },
           "code": {
             "type": "string",
@@ -5793,7 +6045,7 @@
           },
           "description": {
             "type": "string",
-            "example": "\u884c\u4e1a\u6df1\u5ea6\u7814\u7a76\u62a5\u544a"
+            "example": "行业深度研究报告"
           },
           "sortOrder": {
             "type": "number",
@@ -5815,7 +6067,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "\u884c\u4e1a\u6df1\u5ea6\u62a5\u544a"
+            "example": "行业深度报告"
           },
           "layer": {
             "type": "string",
@@ -5827,7 +6079,7 @@
           },
           "description": {
             "type": "string",
-            "example": "\u884c\u4e1a\u6df1\u5ea6\u7814\u7a76\u62a5\u544a"
+            "example": "行业深度研究报告"
           },
           "sortOrder": {
             "type": "number",
@@ -5882,7 +6134,7 @@
         "type": "object",
         "properties": {
           "keys": {
-            "description": "\u8981\u5220\u9664\u7684\u6587\u4ef6\u8def\u5f84\u5217\u8868",
+            "description": "要删除的文件路径列表",
             "type": "array",
             "items": {
               "type": "string"
@@ -5898,7 +6150,7 @@
         "properties": {
           "path": {
             "type": "string",
-            "description": "\u6587\u4ef6\u5b58\u50a8\u8def\u5f84"
+            "description": "文件存储路径"
           },
           "content_type": {
             "type": "string",
@@ -5914,7 +6166,7 @@
         "properties": {
           "path": {
             "type": "string",
-            "description": "\u76ee\u5f55\u8def\u5f84"
+            "description": "目录路径"
           }
         },
         "required": [
