@@ -13,8 +13,8 @@ export class ResearchAnalysisEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: String, length: 50, nullable: true })
-  version?: string | null;
+  @Column({ type: String, length: 50 })
+  version: string;
 
   @Index()
   @Column({ type: String, length: 255, name: 'document_name' })
@@ -32,11 +32,10 @@ export class ResearchAnalysisEntity extends EntityRelationalHelper {
   })
   sourceFileKey?: string | null;
 
-  @Index()
-  @Column({ type: String, length: 500, nullable: true, name: 'oss_url' })
+  @Column({ type: 'text', nullable: true, name: 'oss_url' })
   ossUrl?: string | null;
 
-  @Column({ type: String, length: 500, nullable: true, name: 'local_path' })
+  @Column({ type: 'text', nullable: true, name: 'local_path' })
   localPath?: string | null;
 
   @Index()
@@ -64,92 +63,6 @@ export class ResearchAnalysisEntity extends EntityRelationalHelper {
   @Column({ type: 'text', nullable: true, name: 'key_thesis' })
   keyThesis?: string | null;
 
-  @Column({ type: 'jsonb', nullable: true, name: 'summary_points' })
-  summaryPoints?: string[] | null;
-
-  @Column({ type: 'jsonb', nullable: true, name: 'expectation_gap' })
-  expectationGap?: Record<string, any> | null;
-
-  // 6维度评分 (0-10)
-  @Column({ type: 'int', nullable: true, name: 'source_credibility' })
-  sourceCredibility?: number | null;
-
-  @Column({ type: 'int', nullable: true, name: 'timeliness_score' })
-  timelinessScore?: number | null;
-
-  @Column({ type: 'int', nullable: true, name: 'data_density' })
-  dataDensity?: number | null;
-
-  @Column({ type: 'int', nullable: true, name: 'differentiation_score' })
-  differentiationScore?: number | null;
-
-  @Column({ type: 'int', nullable: true, name: 'actionability' })
-  actionability?: number | null;
-
-  @Column({ type: 'int', nullable: true, name: 'risk_disclosure' })
-  riskDisclosure?: number | null;
-
-  // 综合评分
-  @Column({
-    type: 'decimal',
-    precision: 5,
-    scale: 3,
-    nullable: true,
-    name: 'confidence_factor',
-  })
-  confidenceFactor?: number | null;
-
-  @Index()
-  @Column({ type: 'int', nullable: true, name: 'overall_score' })
-  overallScore?: number | null;
-
-  @Index()
-  @Column({ type: String, length: 20, nullable: true, name: 'value_rating' })
-  valueRating?: string | null;
-
-  // 投资建议
-  @Index()
-  @Column({ type: String, length: 20, nullable: true })
-  recommendation?: string | null;
-
-  @Column({ type: String, length: 100, nullable: true, name: 'target_price' })
-  targetPrice?: string | null;
-
-  @Column({
-    type: String,
-    length: 20,
-    nullable: true,
-    name: 'investment_horizon',
-  })
-  investmentHorizon?: string | null;
-
-  // 风险
-  @Column({ type: 'jsonb', nullable: true, name: 'risks_warnings' })
-  risksWarnings?: Record<string, any>[] | null;
-
-  @Index()
-  @Column({ type: String, length: 20, nullable: true, name: 'impact_level' })
-  impactLevel?: string | null;
-
-  @Column({ type: 'jsonb', nullable: true, name: 'affected_sectors' })
-  affectedSectors?: Record<string, any>[] | null;
-
-  @Index()
-  @Column({
-    type: String,
-    length: 20,
-    nullable: true,
-    name: 'market_sentiment',
-  })
-  marketSentiment?: string | null;
-
-  // 原文
-  @Column({ type: 'text', nullable: true, name: 'original_text' })
-  originalText?: string | null;
-
-  @Column({ type: 'text', nullable: true, name: 'original_text_raw' })
-  originalTextRaw?: string | null;
-
   @Column({
     type: String,
     length: 20,
@@ -158,7 +71,39 @@ export class ResearchAnalysisEntity extends EntityRelationalHelper {
   })
   analysisVersion?: string | null;
 
-  // 时间戳
+  // ============================================================
+  // Pyramid-view columns (replaces scoring + investment + content)
+  // ============================================================
+  @Column({ type: 'jsonb', nullable: true, name: 'raw_facts' })
+  rawFacts?: Record<string, any> | null;
+
+  @Column({ type: 'jsonb', nullable: true, name: 'induction_groups' })
+  inductionGroups?: Record<string, any> | null;
+
+  @Column({ type: 'jsonb', nullable: true, name: 'base_view' })
+  baseView?: Record<string, any> | null;
+
+  @Column({ type: 'jsonb', nullable: true, name: 'mid_view' })
+  midView?: Record<string, any> | null;
+
+  @Column({ type: 'jsonb', nullable: true, name: 'core_view' })
+  coreView?: Record<string, any> | null;
+
+  @Column({ type: 'jsonb', nullable: true, name: 'pyramid_judgement' })
+  pyramidJudgement?: Record<string, any> | null;
+
+  @Column({
+    type: String,
+    length: 10,
+    nullable: true,
+    name: 'pyramid_version',
+    default: () => "'v2.0'",
+  })
+  pyramidVersion?: string | null;
+
+  // ============================================================
+  // Timestamps
+  // ============================================================
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

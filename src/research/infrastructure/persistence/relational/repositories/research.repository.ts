@@ -68,10 +68,6 @@ export class ResearchRelationalRepository implements ResearchRepository {
       where.categoryL2 = filterOptions.categoryL2;
     }
 
-    if (filterOptions?.valueRating) {
-      where.valueRating = filterOptions.valueRating;
-    }
-
     if (filterOptions?.keyword) {
       where.documentName = ILike(`%${filterOptions.keyword}%`);
     }
@@ -98,7 +94,6 @@ export class ResearchRelationalRepository implements ResearchRepository {
 
     const fieldMapping: Record<string, string> = {
       analyzedAt: 'analyzedAt',
-      overallScore: 'overallScore',
       createdAt: 'createdAt',
     };
 

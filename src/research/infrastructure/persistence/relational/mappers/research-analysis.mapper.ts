@@ -18,27 +18,14 @@ export class ResearchAnalysisMapper {
       swIndustryTag: entity.swIndustryTag,
       mentionedStocks: entity.mentionedStocks,
       keyThesis: entity.keyThesis,
-      summaryPoints: entity.summaryPoints,
-      expectationGap: entity.expectationGap,
-      sourceCredibility: entity.sourceCredibility,
-      timelinessScore: entity.timelinessScore,
-      dataDensity: entity.dataDensity,
-      differentiationScore: entity.differentiationScore,
-      actionability: entity.actionability,
-      riskDisclosure: entity.riskDisclosure,
-      confidenceFactor: entity.confidenceFactor,
-      overallScore: entity.overallScore,
-      valueRating: entity.valueRating,
-      recommendation: entity.recommendation,
-      targetPrice: entity.targetPrice,
-      investmentHorizon: entity.investmentHorizon,
-      risksWarnings: entity.risksWarnings,
-      impactLevel: entity.impactLevel,
-      affectedSectors: entity.affectedSectors,
-      marketSentiment: entity.marketSentiment,
-      originalText: entity.originalText,
-      originalTextRaw: entity.originalTextRaw,
       analysisVersion: entity.analysisVersion,
+      rawFacts: entity.rawFacts,
+      inductionGroups: entity.inductionGroups,
+      baseView: entity.baseView,
+      midView: entity.midView,
+      coreView: entity.coreView,
+      pyramidJudgement: entity.pyramidJudgement,
+      pyramidVersion: entity.pyramidVersion,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };
@@ -60,27 +47,14 @@ export class ResearchAnalysisMapper {
     entity.swIndustryTag = domain.swIndustryTag;
     entity.mentionedStocks = domain.mentionedStocks;
     entity.keyThesis = domain.keyThesis;
-    entity.summaryPoints = domain.summaryPoints;
-    entity.expectationGap = domain.expectationGap;
-    entity.sourceCredibility = domain.sourceCredibility;
-    entity.timelinessScore = domain.timelinessScore;
-    entity.dataDensity = domain.dataDensity;
-    entity.differentiationScore = domain.differentiationScore;
-    entity.actionability = domain.actionability;
-    entity.riskDisclosure = domain.riskDisclosure;
-    entity.confidenceFactor = domain.confidenceFactor;
-    entity.overallScore = domain.overallScore;
-    entity.valueRating = domain.valueRating;
-    entity.recommendation = domain.recommendation;
-    entity.targetPrice = domain.targetPrice;
-    entity.investmentHorizon = domain.investmentHorizon;
-    entity.risksWarnings = domain.risksWarnings;
-    entity.impactLevel = domain.impactLevel;
-    entity.affectedSectors = domain.affectedSectors;
-    entity.marketSentiment = domain.marketSentiment;
-    entity.originalText = domain.originalText;
-    entity.originalTextRaw = domain.originalTextRaw;
     entity.analysisVersion = domain.analysisVersion;
+    entity.rawFacts = domain.rawFacts;
+    entity.inductionGroups = domain.inductionGroups;
+    entity.baseView = domain.baseView;
+    entity.midView = domain.midView;
+    entity.coreView = domain.coreView;
+    entity.pyramidJudgement = domain.pyramidJudgement;
+    entity.pyramidVersion = domain.pyramidVersion;
     entity.createdAt = domain.createdAt;
     entity.updatedAt = domain.updatedAt;
     return entity;
