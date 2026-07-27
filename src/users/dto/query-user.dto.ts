@@ -29,9 +29,9 @@ export class SortUserDto {
   @IsString()
   orderBy: keyof User;
 
-  @ApiProperty()
-  @IsString()
-  order: string;
+  @ApiProperty({ enum: ['ASC', 'DESC'] })
+  @IsIn(['ASC', 'DESC'])
+  order: 'ASC' | 'DESC';
 }
 
 export class QueryUserDto extends PaginationQueryDto {
