@@ -1,52 +1,80 @@
+// src/utils/interceptors/transform-response.interceptor.ts
 import {
+  CallHandler,
+  ExecutionContext,
   Injectable,
   NestInterceptor,
-  ExecutionContext,
-  CallHandler,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-export interface SuccessResponse<T> {
+export interface EnvelopeResponse<T> {
   data: T;
-  total?: number;
-  page?: number;
-  pageSize?: number;
+  meta?: { total: number; page: number; pageSize: number };
+  message?: string;
+}
+
+interface PaginatedPayload<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+interface AlreadyEnvelopedPayload {
+  data: unknown;
+  message?: string;
+  [key: string]: unknown;
+}
+
+function isPaginated(value: unknown): value is PaginatedPayload<unknown> {
+  if (typeof value !== 'object' || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    Array.isArray(v.data) &&
+    typeof v.total === 'number' &&
+    typeof v.page === 'number' &&
+    typeof v.limit === 'number'
+  );
+}
+
+function isAlreadyEnveloped(value: unknown): value is AlreadyEnvelopedPayload {
+  if (typeof value !== 'object' || value === null) return false;
+  return 'data' in (value as Record<string, unknown>);
 }
 
 @Injectable()
 export class TransformResponseInterceptor<T> implements NestInterceptor<
   T,
-  SuccessResponse<T>
+  EnvelopeResponse<T>
 > {
   intercept(
-    context: ExecutionContext,
+    _: ExecutionContext,
     next: CallHandler,
-  ): Observable<SuccessResponse<T>> {
+  ): Observable<EnvelopeResponse<T>> {
     return next.handle().pipe(
-      map((data) => {
-        // Handle pagination response
-        if (
-          data &&
-          typeof data === 'object' &&
-          'data' in data &&
-          Array.isArray((data as Record<string, unknown>).data)
-        ) {
-          const d = data as Record<string, unknown>;
-          if ('total' in d && 'page' in d && 'pageSize' in d) {
-            const result: SuccessResponse<T> = {
-              data: d.data as T,
-              total: d.total as number,
-              page: d.page as number,
-              pageSize: d.pageSize as number,
-            };
-            return result;
-          }
+      map((payload: unknown) => {
+        if (payload === null || payload === undefined) {
+          return { data: payload as T };
         }
-
-        // Always wrap non-paginated responses for frontend consistency
-        const result: SuccessResponse<T> = { data: data as T };
-        return result;
+        if (isPaginated(payload)) {
+          return {
+            data: payload.data as T,
+            meta: {
+              total: payload.total,
+              page: payload.page,
+              pageSize: payload.limit,
+            },
+          };
+        }
+        if (isAlreadyEnveloped(payload)) {
+          // Pass through { data, message } shapes (controllers that explicitly return message).
+          return {
+            data: payload.data as T,
+            message: payload.message,
+          };
+        }
+        return { data: payload as T };
       }),
     );
   }
