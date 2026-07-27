@@ -70,10 +70,6 @@ export class IntelligenceRelationalRepository implements IntelligenceRepository 
       where.categoryL2 = filterOptions.categoryL2;
     }
 
-    if (filterOptions?.valueRating) {
-      where.valueRating = filterOptions.valueRating;
-    }
-
     if (filterOptions?.company) {
       // Search in stock_mapping JSONB for mentioned stocks
       where.stockMapping = ILike(`%${filterOptions.company}%`);
@@ -107,7 +103,6 @@ export class IntelligenceRelationalRepository implements IntelligenceRepository 
     const fieldMapping: Record<string, string> = {
       postDate: 'postDate',
       createdAt: 'createdAt',
-      totalScore: 'totalScore',
     };
 
     return {

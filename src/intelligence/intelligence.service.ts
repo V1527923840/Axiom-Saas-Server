@@ -47,10 +47,12 @@ export class IntelligenceService {
       createdAt: item.createdAt,
       categoryL1: item.categoryL1,
       categoryL2: item.categoryL2,
-      valueRating: item.valueRating,
-      totalScore: item.totalScore,
       swIndustryTag: item.swIndustryTag,
       stockMapping: item.stockMapping,
+      coreView: item.coreView,
+      pyramidVersion: item.pyramidVersion,
+      classificationMethod: item.classificationMethod,
+      originalTextRaw: item.originalTextRaw,
     }));
 
     return {
