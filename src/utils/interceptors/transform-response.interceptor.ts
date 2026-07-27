@@ -14,11 +14,17 @@ export interface EnvelopeResponse<T> {
   message?: string;
 }
 
+/**
+ * Internal paginated shape produced by controllers and `infinityPagination`.
+ * Accepts both the legacy `limit` field and the current `pageSize` field so
+ * the envelope is normalized regardless of which naming is in flight.
+ */
 interface PaginatedPayload<T> {
   data: T[];
   total: number;
   page: number;
-  limit: number;
+  pageSize?: number;
+  limit?: number;
 }
 
 interface AlreadyEnvelopedPayload {
@@ -34,7 +40,7 @@ function isPaginated(value: unknown): value is PaginatedPayload<unknown> {
     Array.isArray(v.data) &&
     typeof v.total === 'number' &&
     typeof v.page === 'number' &&
-    typeof v.limit === 'number'
+    (typeof v.pageSize === 'number' || typeof v.limit === 'number')
   );
 }
 
@@ -58,17 +64,25 @@ export class TransformResponseInterceptor<T> implements NestInterceptor<
           return { data: payload as T };
         }
         if (isPaginated(payload)) {
+          // Prefer the new `pageSize` field; fall back to legacy `limit`.
+          const pageSize =
+            typeof payload.pageSize === 'number'
+              ? payload.pageSize
+              : (payload.limit as number);
           return {
             data: payload.data as T,
             meta: {
               total: payload.total,
               page: payload.page,
-              pageSize: payload.limit,
+              pageSize,
             },
           };
         }
         if (isAlreadyEnveloped(payload)) {
-          // Pass through { data, message } shapes (controllers that explicitly return message).
+          // Pass through { data, message } shapes (controllers that
+          // explicitly return a message alongside data). Any unknown
+          // sibling keys are intentionally dropped — the envelope is
+          // the contract.
           return {
             data: payload.data as T,
             message: payload.message,
