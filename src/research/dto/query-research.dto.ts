@@ -23,15 +23,6 @@ export class QueryResearchDto extends PaginationQueryDto {
 
   @ApiPropertyOptional({
     type: String,
-    description: 'Value rating filter',
-    example: '高',
-  })
-  @IsOptional()
-  @IsString()
-  valueRating?: string;
-
-  @ApiPropertyOptional({
-    type: String,
     description: 'Keyword search in document name',
     example: 'AI',
   })

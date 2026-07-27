@@ -43,10 +43,10 @@ export class ResearchService {
       createdAt: item.createdAt,
       categoryL1: item.categoryL1,
       categoryL2: item.categoryL2,
-      valueRating: item.valueRating,
-      overallScore: item.overallScore,
       swIndustryTag: item.swIndustryTag,
       mentionedStocks: item.mentionedStocks,
+      coreView: item.coreView,
+      pyramidVersion: item.pyramidVersion,
     }));
 
     return {
