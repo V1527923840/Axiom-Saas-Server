@@ -4503,16 +4503,6 @@
             }
           },
           {
-            "name": "valueRating",
-            "required": false,
-            "in": "query",
-            "description": "Value rating filter",
-            "schema": {
-              "example": "高",
-              "type": "string"
-            }
-          },
-          {
             "name": "company",
             "required": false,
             "in": "query",
@@ -4672,16 +4662,6 @@
             "description": "Level 2 category filter",
             "schema": {
               "example": "INDUSTRY_NEWS",
-              "type": "string"
-            }
-          },
-          {
-            "name": "valueRating",
-            "required": false,
-            "in": "query",
-            "description": "Value rating filter",
-            "schema": {
-              "example": "高",
               "type": "string"
             }
           },
