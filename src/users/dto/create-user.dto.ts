@@ -6,9 +6,12 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   // decorators here
+  IsArray,
   IsEmail,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
+  IsString,
   MinLength,
 } from 'class-validator';
 import { FileDto } from '../../files/dto/file.dto';
@@ -23,7 +26,8 @@ export class CreateUserDto {
   @IsEmail()
   email: string | null;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @MinLength(6)
   password?: string;
 
@@ -35,9 +39,10 @@ export class CreateUserDto {
   @IsNotEmpty()
   firstName: string | null;
 
-  @ApiProperty({ example: 'Doe', type: String })
-  @IsNotEmpty()
-  lastName: string | null;
+  @ApiPropertyOptional({ example: 'Doe', type: String })
+  @IsOptional()
+  @IsString()
+  lastName?: string | null;
 
   @ApiPropertyOptional({ type: () => FileDto })
   @IsOptional()
@@ -47,6 +52,16 @@ export class CreateUserDto {
   @IsOptional()
   @Type(() => RoleDto)
   role?: RoleDto | null;
+
+  @ApiPropertyOptional({
+    type: [Number],
+    description: '角色 id 列表;留空将不写入 user_roles(若 role 不传则跳过)',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @Type(() => Number)
+  roleIds?: number[];
 
   @ApiPropertyOptional({ type: StatusDto })
   @IsOptional()

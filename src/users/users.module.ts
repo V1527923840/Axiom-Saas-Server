@@ -3,6 +3,7 @@ import {
   Module,
   forwardRef,
 } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { UsersController } from './users.controller';
 
@@ -14,6 +15,8 @@ import databaseConfig from '../database/config/database.config';
 import { FilesModule } from '../files/files.module';
 import { MenusModule } from '../menus/menus.module';
 import { PlansModule } from '../plans/plans.module';
+import { RolesModule } from '../roles/roles.module';
+import { RoleEntity } from '../roles/infrastructure/persistence/relational/entities/role.entity';
 
 // <database-block>
 const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
@@ -29,6 +32,8 @@ const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
     FilesModule,
     forwardRef(() => MenusModule),
     forwardRef(() => PlansModule),
+    forwardRef(() => RolesModule),
+    TypeOrmModule.forFeature([RoleEntity]),
   ],
   controllers: [UsersController],
   providers: [UsersService],

@@ -4,6 +4,8 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { NullableType } from '../utils/types/nullable.type';
 import { FilterUserDto, SortUserDto } from './dto/query-user.dto';
@@ -24,6 +26,7 @@ import { Role } from '../roles/domain/role';
 import { Status } from '../statuses/domain/status';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Menu } from '../menus/domain/menu';
+import { RoleEntity } from '../roles/infrastructure/persistence/relational/entities/role.entity';
 
 @Injectable()
 export class UsersService {
@@ -34,6 +37,8 @@ export class UsersService {
     private readonly userRoleRepository: UserRoleRepository,
     private readonly planMenuRepository: PlanMenuRepository,
     private readonly menuRepository: MenuRepository,
+    @InjectRepository(RoleEntity)
+    private readonly usersServiceRoleRepository: Repository<RoleEntity>,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -53,7 +58,9 @@ export class UsersService {
       const userObject = await this.usersRepository.findByEmail(
         createUserDto.email,
       );
-      if (userObject) {
+      // Only block when the email belongs to a LIVE user. A row that was
+      // soft-deleted in the past frees the email for re-use.
+      if (userObject && !userObject.deletedAt) {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
           errors: {
@@ -85,10 +92,13 @@ export class UsersService {
 
     let role: Role | undefined = undefined;
 
-    if (createUserDto.role?.id) {
-      const roleObject = Object.values(RoleEnum)
-        .map(String)
-        .includes(String(createUserDto.role.id));
+    if (
+      createUserDto.role?.id !== undefined &&
+      createUserDto.role?.id !== null
+    ) {
+      const roleObject = await this.usersServiceRoleRepository.findOne({
+        where: { id: Number(createUserDto.role.id) },
+      });
       if (!roleObject) {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -123,27 +133,95 @@ export class UsersService {
       };
     }
 
-    return this.usersRepository.create({
-      // Do not remove comment below.
-      // <creating-property-payload />
-      firstName: createUserDto.firstName,
-      lastName: createUserDto.lastName,
-      email: email,
-      password: password,
-      photo: photo,
-      role: role,
-      status: status,
-      provider: createUserDto.provider ?? AuthProvidersEnum.email,
-      socialId: createUserDto.socialId,
-      tier: createUserDto.tier ?? 'Lv0',
-      currentPlanId: createUserDto.currentPlanId ?? null,
-      pointsBalance: createUserDto.pointsBalance ?? 0,
-      chatQuotaUsed: createUserDto.chatQuotaUsed ?? 0,
-      chatQuotaTotal: createUserDto.chatQuotaTotal ?? 0,
-      subscriptionExpiredAt: createUserDto.subscriptionExpiredAt ?? null,
-      registeredAt: createUserDto.registeredAt ?? null,
-      lastLoginAt: createUserDto.lastLoginAt ?? null,
+    // (新) roleIds 多角色路径 — 校验全部 id 存在,然后持久化到 user_roles
+    const roleIds = createUserDto.roleIds ?? [];
+    const uniqueRoleIds = [...new Set(roleIds)];
+    if (uniqueRoleIds.length > 0) {
+      const foundRoles = await this.usersServiceRoleRepository.find({
+        where: { id: In(uniqueRoleIds) },
+      });
+      if (foundRoles.length !== uniqueRoleIds.length) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: { roleIds: 'roleNotExists' },
+        });
+      }
+    }
+
+    let createdUser: User;
+    try {
+      createdUser = await this.usersRepository.create({
+        // Do not remove comment below.
+        // <creating-property-payload />
+        firstName: createUserDto.firstName,
+        lastName: createUserDto.lastName ?? null,
+        email: email,
+        password: password,
+        photo: photo,
+        role: role,
+        status: status,
+        provider: createUserDto.provider ?? AuthProvidersEnum.email,
+        socialId: createUserDto.socialId,
+        tier: createUserDto.tier ?? 'Lv0',
+        currentPlanId: createUserDto.currentPlanId ?? null,
+        pointsBalance: createUserDto.pointsBalance ?? 0,
+        chatQuotaUsed: createUserDto.chatQuotaUsed ?? 0,
+        chatQuotaTotal: createUserDto.chatQuotaTotal ?? 0,
+        subscriptionExpiredAt: createUserDto.subscriptionExpiredAt ?? null,
+        registeredAt: createUserDto.registeredAt ?? null,
+        lastLoginAt: createUserDto.lastLoginAt ?? null,
+      });
+
+      // (新) 同步写入 user_roles — multi-role 身份生效
+      if (uniqueRoleIds.length > 0) {
+        const userId = Number(createdUser.id);
+        await this.userRoleRepository.save(
+          uniqueRoleIds.map((roleId) => ({ userId, roleId })) as any,
+        );
+      }
+    } catch (err) {
+      // Translate the partial-unique-index violation (live user already
+      // owns this email) into the same 422 emailAlreadyExists the explicit
+      // pre-check would have thrown. Without this the raw Postgres error
+      // bubbles up as a 500.
+      if (err instanceof Error) {
+        const pgCode = (err as unknown as { code?: string }).code;
+        if (
+          pgCode === '23505' /* PG unique_violation */ ||
+          /duplicate key/i.test(err.message)
+        ) {
+          throw new UnprocessableEntityException({
+            status: HttpStatus.UNPROCESSABLE_ENTITY,
+            errors: { email: 'emailAlreadyExists' },
+          });
+        }
+      }
+      throw err;
+    }
+
+    return createdUser;
+  }
+
+  /**
+   * Whether the user holds the super admin role anywhere — legacy
+   * `User.roleId` or the `user_roles` junction table.
+   *
+   * Public so `MenuAccessGuard` / other guards can short-circuit
+   * permission checks without poking into private repository fields.
+   * Returns `false` if the user does not exist.
+   */
+  async isSuperAdmin(userId: number): Promise<boolean> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) return false;
+    const ids = new Set<number>();
+    if (user.role?.id) ids.add(Number(user.role.id));
+    const junction = await this.userRoleRepository.findByUserId(userId);
+    for (const r of junction) ids.add(Number(r.roleId));
+    if (ids.size === 0) return false;
+    const roles = await this.usersServiceRoleRepository.find({
+      where: { id: In([...ids]) },
     });
+    return roles.some((r) => r.code === 'super_admin');
   }
 
   findManyWithPagination({
