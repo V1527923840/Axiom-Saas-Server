@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { RoleEntity } from './infrastructure/persistence/relational/entities/role.entity';
 import { UserRoleEntity } from './infrastructure/persistence/relational/entities/user-role.entity';
 import { CreateRoleDto, UpdateRoleDto } from './dto/role.dto';
@@ -23,6 +23,13 @@ export class RolesService {
   async findById(id: number): Promise<RoleEntity | null> {
     return this.roleRepository.findOne({
       where: { id },
+    });
+  }
+
+  async findByIds(ids: number[]): Promise<RoleEntity[]> {
+    if (ids.length === 0) return [];
+    return this.roleRepository.find({
+      where: { id: In(ids) },
     });
   }
 

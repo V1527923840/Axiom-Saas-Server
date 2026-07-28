@@ -22,7 +22,12 @@ import { MenuAccessGuard } from '../menus/menu-access.guard';
 import { MenuPaths } from '../menus/menu-paths.decorator';
 import { RoleEntity } from './infrastructure/persistence/relational/entities/role.entity';
 import { RolesService } from './roles.service';
-import { CreateRoleDto, UpdateRoleDto, AssignUsersDto } from './dto/role.dto';
+import {
+  CreateRoleDto,
+  UpdateRoleDto,
+  AssignUsersDto,
+  RoleResponseDto,
+} from './dto/role.dto';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), MenuAccessGuard)
@@ -35,14 +40,21 @@ export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @ApiOkResponse({
-    type: [RoleEntity],
+    type: [RoleResponseDto],
   })
   @Get()
   @HttpCode(HttpStatus.OK)
   @MenuPaths('/roles')
-  async findAll(): Promise<{ data: RoleEntity[] }> {
+  async findAll(): Promise<{ data: RoleResponseDto[] }> {
     const roles = await this.rolesService.findAll();
-    return { data: roles };
+    const data = roles.map((r) => ({
+      id: r.id,
+      name: r.name ?? '',
+      code: r.code ?? '',
+      description: r.description ?? undefined,
+      isSuperAdmin: r.code === 'super_admin',
+    }));
+    return { data };
   }
 
   @ApiOkResponse({

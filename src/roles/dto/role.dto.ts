@@ -50,3 +50,36 @@ export class AssignUsersDto {
   @IsNumber({}, { each: true })
   userIds: number[];
 }
+
+/**
+ * Wire shape for GET /v1/roles.
+ *
+ * `isSuperAdmin` is derived in the controller from `code === 'super_admin'`
+ * so the frontend never has to compare strings — it just renders
+ * destructive style for `isSuperAdmin===true`.
+ *
+ * Kept separate from the internal `RoleDto` (which is reused by
+ * user-create / user-update flows as a single-id payload) so the wire
+ * shape can grow without churning unrelated DTOs.
+ */
+export class RoleResponseDto {
+  @ApiProperty()
+  @IsNumber()
+  id: number;
+
+  @ApiProperty()
+  @IsString()
+  name: string;
+
+  @ApiProperty()
+  @IsString()
+  code: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({ description: '是否为超级管理员(由 code 计算)' })
+  isSuperAdmin: boolean;
+}
