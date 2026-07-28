@@ -18,7 +18,6 @@ import { User } from './domain/user';
 import bcrypt from 'bcryptjs';
 import { AuthProvidersEnum } from '../auth/auth-providers.enum';
 import { FilesService } from '../files/files.service';
-import { RoleEnum } from '../roles/roles.enum';
 import { StatusEnum } from '../statuses/statuses.enum';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { FileType } from '../files/domain/file';
@@ -325,10 +324,13 @@ export class UsersService {
 
     let role: Role | undefined = undefined;
 
-    if (updateUserDto.role?.id) {
-      const roleObject = Object.values(RoleEnum)
-        .map(String)
-        .includes(String(updateUserDto.role.id));
+    if (
+      updateUserDto.role?.id !== undefined &&
+      updateUserDto.role?.id !== null
+    ) {
+      const roleObject = await this.usersServiceRoleRepository.findOne({
+        where: { id: Number(updateUserDto.role.id) },
+      });
       if (!roleObject) {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -363,7 +365,23 @@ export class UsersService {
       };
     }
 
-    return this.usersRepository.update(id, {
+    // roleIds 多角色路径 — 校验全部 id 存在,空数组=清空 user_roles
+    const roleIds = updateUserDto.roleIds;
+    const uniqueRoleIds =
+      roleIds !== undefined ? [...new Set(roleIds)] : undefined;
+    if (uniqueRoleIds !== undefined && uniqueRoleIds.length > 0) {
+      const foundRoles = await this.usersServiceRoleRepository.find({
+        where: { id: In(uniqueRoleIds) },
+      });
+      if (foundRoles.length !== uniqueRoleIds.length) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: { roleIds: 'roleNotExists' },
+        });
+      }
+    }
+
+    const updated = await this.usersRepository.update(id, {
       // Do not remove comment below.
       // <updating-property-payload />
       firstName: updateUserDto.firstName,
@@ -382,6 +400,19 @@ export class UsersService {
       chatQuotaTotal: updateUserDto.chatQuotaTotal,
       subscriptionExpiredAt: updateUserDto.subscriptionExpiredAt,
     });
+
+    // 同步 user_roles — 单次批量 save(避免 create-in-map 的 floating-promise 缺陷)
+    if (updated && uniqueRoleIds !== undefined) {
+      const userId = Number(id);
+      await this.userRoleRepository.delete({ userId });
+      if (uniqueRoleIds.length > 0) {
+        await this.userRoleRepository.save(
+          uniqueRoleIds.map((rid) => ({ userId, roleId: rid })) as any,
+        );
+      }
+    }
+
+    return updated;
   }
 
   async remove(id: User['id']): Promise<void> {

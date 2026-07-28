@@ -1,7 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 import { Transform, Type } from 'class-transformer';
-import { IsEmail, IsOptional, MinLength } from 'class-validator';
+import {
+  IsArray,
+  IsEmail,
+  IsNumber,
+  IsOptional,
+  MinLength,
+} from 'class-validator';
 import { FileDto } from '../../files/dto/file.dto';
 import { RoleDto } from '../../roles/dto/role.dto';
 import { StatusDto } from '../../statuses/dto/status.dto';
@@ -40,6 +46,16 @@ export class UpdateUserDto {
   @IsOptional()
   @Type(() => RoleDto)
   role?: RoleDto | null;
+
+  @ApiPropertyOptional({
+    type: [Number],
+    description: '角色 id 列表;传空数组将清空 user_roles',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @Type(() => Number)
+  roleIds?: number[];
 
   @ApiPropertyOptional({ type: () => StatusDto })
   @IsOptional()
