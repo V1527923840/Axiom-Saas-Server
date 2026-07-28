@@ -8,6 +8,7 @@ import { RoleSeedModule } from './role/role-seed.module';
 import { StatusSeedModule } from './status/status-seed.module';
 import { UserSeedModule } from './user/user-seed.module';
 import { ContentSeedModule } from './content/content-seed.module';
+import { IndustryChainSeedModule } from './industry-chain/industry-chain-seed.module';
 import { MenuSeedModule } from './menu/menu-seed.module';
 import { ScrapeLogSeedModule } from './scrape_log/scrape-log-seed.module';
 import databaseConfig from '../../config/database.config';
@@ -19,6 +20,7 @@ import appConfig from '../../../config/app.config';
     StatusSeedModule,
     UserSeedModule,
     ContentSeedModule,
+    IndustryChainSeedModule,
     MenuSeedModule,
     ScrapeLogSeedModule,
     ConfigModule.forRoot({
