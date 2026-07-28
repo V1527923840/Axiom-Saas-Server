@@ -35,6 +35,7 @@ import { MenusModule } from './menus/menus.module';
 import { RolesModule } from './roles/roles.module';
 import { CategoriesModule } from './categories/categories.module';
 import { EtlModule } from './etl/etl.module';
+import { IndustryChainModule } from './industry-chain/industry-chain.module';
 import { OssModule } from './oss/oss.module';
 import { ScrapeLogModule } from './scrape-log/scrape-log.module';
 import { ParseTaskModule } from './parse-task/parse-task.module';
@@ -116,6 +117,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     RolesModule,
     CategoriesModule,
     EtlModule,
+    IndustryChainModule,
     OssModule,
     ScrapeLogModule,
     ParseTaskModule,
