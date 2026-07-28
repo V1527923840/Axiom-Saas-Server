@@ -468,8 +468,9 @@ export class UsersService {
       userCurrentPlanId: user.currentPlanId,
     });
 
-    // Super admin (roleId === 1) gets all menus
-    if (user.role?.id === 1) {
+    // Super admin: any role with code === 'super_admin' (legacy user.role.id
+    // or via the user_roles junction table) short-circuits to the full tree.
+    if (await this.isSuperAdmin(userId)) {
       return this.menuRepository.findTree();
     }
 
@@ -483,24 +484,6 @@ export class UsersService {
       console.log(
         '[getUserAllMenus] roleMenus from roleId',
         roleId,
-        ':',
-        roleMenus.map((m) => m.id),
-      );
-      roleMenus.forEach((m) => allMenuIds.add(m.id));
-    }
-
-    // Fallback: If user_roles table is empty, try the old roleId on user table
-    if (
-      userRoleIds.length === 0 &&
-      user.role?.id &&
-      Number(user.role.id) !== 1
-    ) {
-      const roleMenus = await this.menuRepository.getMenusByRoleId(
-        Number(user.role.id),
-      );
-      console.log(
-        '[getUserAllMenus] roleMenus from user.role.id',
-        user.role.id,
         ':',
         roleMenus.map((m) => m.id),
       );
