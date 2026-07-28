@@ -22,3 +22,18 @@ SELECT gen_random_uuid(), 2, m.id, NOW()
 FROM menu m
 WHERE m.code IN ('sentiment-posts', 'etl', 'categories')
 AND NOT EXISTS (SELECT 1 FROM role_menu WHERE role_id = 2 AND menu_id = m.id);
+
+-- 产业链 (Admin)
+INSERT INTO menu (id, name, code, icon, path, "parentId", "sortOrder", status, "createdAt", "updatedAt")
+SELECT gen_random_uuid(), '产业链', 'industry-chains', 'Factory',
+       '/content/industry-chains',
+       (SELECT id FROM menu WHERE code = 'content'),
+       4, 'active', NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM menu WHERE code = 'industry-chains');
+
+-- 将产业链菜单分配给 Admin 角色 (roleId = 2)
+INSERT INTO role_menu (id, "roleId", "menuId", "createdAt")
+SELECT gen_random_uuid(), 2, m.id, NOW()
+FROM menu m
+WHERE m.code = 'industry-chains'
+AND NOT EXISTS (SELECT 1 FROM role_menu WHERE "roleId" = 2 AND "menuId" = m.id);
