@@ -91,6 +91,7 @@ export class UsersService {
 
     let role: Role | undefined = undefined;
 
+    // 1. If client sent an explicit `role`, validate against the table.
     if (
       createUserDto.role?.id !== undefined &&
       createUserDto.role?.id !== null
@@ -110,6 +111,15 @@ export class UsersService {
       role = {
         id: createUserDto.role.id,
       };
+    }
+
+    // 2. If client didn't send `role`, fall back to the first roleId in roleIds
+    //    so the legacy `user.roleId` column stays in sync (refresh-token path
+    //    depends on it being non-null). The roleIds array is already validated
+    //    above (every id must exist in `role`), so we can safely look up the
+    //    first one.
+    if (!role && createUserDto.roleIds && createUserDto.roleIds.length > 0) {
+      role = { id: createUserDto.roleIds[0] };
     }
 
     let status: Status | undefined = undefined;
@@ -343,6 +353,14 @@ export class UsersService {
       role = {
         id: updateUserDto.role.id,
       };
+    }
+
+    // If client didn't send `role`, fall back to the first roleId in roleIds
+    // so the legacy `user.roleId` column stays in sync (refresh-token path
+    // depends on it being non-null). The roleIds array is already validated
+    // above (every id must exist in `role`).
+    if (!role && updateUserDto.roleIds && updateUserDto.roleIds.length > 0) {
+      role = { id: updateUserDto.roleIds[0] };
     }
 
     let status: Status | undefined = undefined;

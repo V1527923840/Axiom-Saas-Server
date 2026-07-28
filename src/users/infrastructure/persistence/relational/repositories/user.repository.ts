@@ -58,6 +58,7 @@ export class UsersRelationalRepository implements UserRepository {
         }),
         {},
       ),
+      relations: { userRoles: { role: true } },
     });
 
     return {
@@ -69,6 +70,7 @@ export class UsersRelationalRepository implements UserRepository {
   async findById(id: User['id']): Promise<NullableType<User>> {
     const entity = await this.usersRepository.findOne({
       where: { id: Number(id) },
+      relations: { userRoles: { role: true } },
     });
 
     return entity ? UserMapper.toDomain(entity) : null;
@@ -77,6 +79,7 @@ export class UsersRelationalRepository implements UserRepository {
   async findByIds(ids: User['id'][]): Promise<User[]> {
     const entities = await this.usersRepository.find({
       where: { id: In(ids) },
+      relations: { userRoles: { role: true } },
     });
 
     return entities.map((user) => UserMapper.toDomain(user));
@@ -85,8 +88,20 @@ export class UsersRelationalRepository implements UserRepository {
   async findByEmail(email: User['email']): Promise<NullableType<User>> {
     if (!email) return null;
 
+    // Include soft-deleted rows so the uniqueness check in service.create()
+    // can distinguish "email belongs to a live user" from "email was used
+    // by a previously deleted user". Without withDeleted, the lookup
+    // silently returns null and the insert later hits a 500 unique
+    // constraint violation instead of a clean 422 emailAlreadyExists.
+    //
+    // Load userRoles too so callers (e.g. /v1/auth/email/login which seeds
+    // the JWT payload from this User) immediately see multi-role support;
+    // an extra indexed LEFT JOIN per auth lookup is acceptable since the
+    // primary key is hit before any soft-delete scan gets expensive.
     const entity = await this.usersRepository.findOne({
       where: { email },
+      withDeleted: true,
+      relations: { userRoles: { role: true } },
     });
 
     return entity ? UserMapper.toDomain(entity) : null;

@@ -65,6 +65,13 @@ export class User {
   role?: Role | null;
 
   @ApiProperty({
+    type: () => [Role],
+    required: false,
+  })
+  @Expose({ groups: ['me', 'admin'] })
+  roles?: Role[];
+
+  @ApiProperty({
     type: () => Status,
   })
   status?: Status;

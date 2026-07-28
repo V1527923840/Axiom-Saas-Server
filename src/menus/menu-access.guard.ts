@@ -66,9 +66,14 @@ export class MenuAccessGuard implements CanActivate {
       throw new UnauthorizedException('Authentication required');
     }
 
-    // Admin (role.id === 1) has unrestricted access
-    if (user?.role?.id === 1) {
-      return true;
+    // Super admin — any role whose code === 'super_admin' (held either
+    // via legacy User.roleId or the user_roles junction) gets a green
+    // pass. Implemented as a single DB hit through UsersService so the
+    // guard does not poke into private repository fields.
+    const userId = Number(user?.id);
+    if (!Number.isNaN(userId)) {
+      const isSuper = await this.usersService.isSuperAdmin(userId);
+      if (isSuper) return true;
     }
 
     // Get explicitly set menu paths from decorator

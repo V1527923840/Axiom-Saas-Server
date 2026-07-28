@@ -1,5 +1,6 @@
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
 import { FileMapper } from '../../../../../files/infrastructure/persistence/relational/mappers/file.mapper';
+import { Role } from '../../../../../roles/domain/role';
 import { RoleEntity } from '../../../../../roles/infrastructure/persistence/relational/entities/role.entity';
 import { StatusEntity } from '../../../../../statuses/infrastructure/persistence/relational/entities/status.entity';
 import { User } from '../../../../domain/user';
@@ -20,6 +21,21 @@ export class UserMapper {
     }
     domainEntity.role = raw.role;
     domainEntity.status = raw.status;
+    domainEntity.roles =
+      raw.userRoles?.map((ur) => {
+        const re = ur.role as RoleEntity | undefined;
+        // Build a plain object carrying every wire field — the controller's
+        // @SerializeOptions({groups:['admin']}) only filters at the User
+        // boundary, so extra top-level keys here pass through to JSON.
+        // Cast to Role to satisfy the typed User.roles?: Role[].
+        return {
+          id: re?.id ?? ur.roleId,
+          name: re?.name,
+          code: re?.code,
+          description: re?.description,
+          isSuperAdmin: re?.code === 'super_admin',
+        } as unknown as Role;
+      }) ?? [];
     domainEntity.createdAt = raw.createdAt;
     domainEntity.updatedAt = raw.updatedAt;
     domainEntity.deletedAt = raw.deletedAt;
