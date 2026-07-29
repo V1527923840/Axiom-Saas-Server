@@ -91,34 +91,12 @@ export class UsersService {
 
     let role: Role | undefined = undefined;
 
-    // 1. If client sent an explicit `role`, validate against the table.
-    if (
-      createUserDto.role?.id !== undefined &&
-      createUserDto.role?.id !== null
-    ) {
-      const roleObject = await this.usersServiceRoleRepository.findOne({
-        where: { id: Number(createUserDto.role.id) },
-      });
-      if (!roleObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            role: 'roleNotExists',
-          },
-        });
-      }
-
-      role = {
-        id: createUserDto.role.id,
-      };
-    }
-
-    // 2. If client didn't send `role`, fall back to the first roleId in roleIds
-    //    so the legacy `user.roleId` column stays in sync (refresh-token path
-    //    depends on it being non-null). The roleIds array is already validated
-    //    above (every id must exist in `role`), so we can safely look up the
-    //    first one.
-    if (!role && createUserDto.roleIds && createUserDto.roleIds.length > 0) {
+    // Synthesize `role` from the first roleId in roleIds so the legacy
+    // `user.roleId` column stays in sync (the refresh-token path at
+    // auth.service.ts:516 rejects on `!user?.role`). The roleIds array is
+    // already validated above (every id must exist in `role`), so we can
+    // safely look up the first one.
+    if (createUserDto.roleIds && createUserDto.roleIds.length > 0) {
       role = { id: createUserDto.roleIds[0] };
     }
 
@@ -334,32 +312,10 @@ export class UsersService {
 
     let role: Role | undefined = undefined;
 
-    if (
-      updateUserDto.role?.id !== undefined &&
-      updateUserDto.role?.id !== null
-    ) {
-      const roleObject = await this.usersServiceRoleRepository.findOne({
-        where: { id: Number(updateUserDto.role.id) },
-      });
-      if (!roleObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            role: 'roleNotExists',
-          },
-        });
-      }
-
-      role = {
-        id: updateUserDto.role.id,
-      };
-    }
-
-    // If client didn't send `role`, fall back to the first roleId in roleIds
-    // so the legacy `user.roleId` column stays in sync (refresh-token path
-    // depends on it being non-null). The roleIds array is already validated
-    // above (every id must exist in `role`).
-    if (!role && updateUserDto.roleIds && updateUserDto.roleIds.length > 0) {
+    // Synthesize `role` from the first roleId in roleIds so the legacy
+    // `user.roleId` column stays in sync (refresh-token path rejects
+    // on `!user?.role`). The roleIds array is validated below.
+    if (updateUserDto.roleIds && updateUserDto.roleIds.length > 0) {
       role = { id: updateUserDto.roleIds[0] };
     }
 

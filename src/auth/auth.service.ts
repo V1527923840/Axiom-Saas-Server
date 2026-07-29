@@ -136,9 +136,6 @@ export class AuthService {
     } else if (userByEmail) {
       user = userByEmail;
     } else if (socialData.id) {
-      const role = {
-        id: RoleEnum.user,
-      };
       const status = {
         id: StatusEnum.active,
       };
@@ -149,7 +146,7 @@ export class AuthService {
         lastName: socialData.lastName ?? null,
         socialId: socialData.id,
         provider: authProvider,
-        role,
+        roleIds: [RoleEnum.user],
         status,
       });
 
@@ -199,9 +196,7 @@ export class AuthService {
     const user = await this.usersService.create({
       ...dto,
       email: dto.email,
-      role: {
-        id: RoleEnum.user,
-      },
+      roleIds: [RoleEnum.user],
       status: {
         id: StatusEnum.inactive,
       },

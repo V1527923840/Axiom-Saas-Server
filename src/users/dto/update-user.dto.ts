@@ -9,7 +9,6 @@ import {
   MinLength,
 } from 'class-validator';
 import { FileDto } from '../../files/dto/file.dto';
-import { RoleDto } from '../../roles/dto/role.dto';
 import { StatusDto } from '../../statuses/dto/status.dto';
 import { lowerCaseTransformer } from '../../utils/transformers/lower-case.transformer';
 
@@ -41,11 +40,6 @@ export class UpdateUserDto {
   @ApiPropertyOptional({ type: () => FileDto })
   @IsOptional()
   photo?: FileDto | null;
-
-  @ApiPropertyOptional({ type: () => RoleDto })
-  @IsOptional()
-  @Type(() => RoleDto)
-  role?: RoleDto | null;
 
   @ApiPropertyOptional({
     type: [Number],

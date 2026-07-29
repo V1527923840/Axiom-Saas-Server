@@ -15,7 +15,6 @@ import {
   MinLength,
 } from 'class-validator';
 import { FileDto } from '../../files/dto/file.dto';
-import { RoleDto } from '../../roles/dto/role.dto';
 import { StatusDto } from '../../statuses/dto/status.dto';
 import { lowerCaseTransformer } from '../../utils/transformers/lower-case.transformer';
 
@@ -48,14 +47,9 @@ export class CreateUserDto {
   @IsOptional()
   photo?: FileDto | null;
 
-  @ApiPropertyOptional({ type: RoleDto })
-  @IsOptional()
-  @Type(() => RoleDto)
-  role?: RoleDto | null;
-
   @ApiPropertyOptional({
     type: [Number],
-    description: '角色 id 列表;留空将不写入 user_roles(若 role 不传则跳过)',
+    description: '角色 id 列表;至少包含一项以保证刷新 token 可用',
   })
   @IsOptional()
   @IsArray()
