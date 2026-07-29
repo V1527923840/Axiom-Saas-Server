@@ -33,9 +33,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * The backfill is idempotent — running this migration twice still
  * produces a coherent table.
  */
-export class AddRoleIdSequenceAndCode1790200000000
-  implements MigrationInterface
-{
+export class AddRoleIdSequenceAndCode1790200000000 implements MigrationInterface {
   name = 'AddRoleIdSequenceAndCode1790200000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

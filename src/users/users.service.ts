@@ -277,7 +277,10 @@ export class UsersService {
         updateUserDto.email,
       );
 
-      if (userObject && userObject.id !== id) {
+      // `id` 来自 URL 是 string,`userObject.id` 在关系型数据库下是 number;
+      // 不归一化会导致 `2 !== "2"` 永远为 true,任何带 email 的 PATCH 都会 422。
+      // 这里用 `Number(...)` 把两边都归到 number,正确实现 "排除自身后查重" 的语义。
+      if (userObject && Number(userObject.id) !== Number(id)) {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
           errors: {

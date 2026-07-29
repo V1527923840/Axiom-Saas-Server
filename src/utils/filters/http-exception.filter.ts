@@ -28,6 +28,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
     let code = 'INTERNAL_SERVER_ERROR';
+    let errors: Record<string, unknown> | undefined;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -37,9 +38,21 @@ export class HttpExceptionFilter implements ExceptionFilter {
         message = exceptionResponse;
       } else if (typeof exceptionResponse === 'object') {
         const responseObj = exceptionResponse as Record<string, unknown>;
-        message = (responseObj.message as string) || message;
         if (Array.isArray(responseObj.message)) {
           message = responseObj.message.join(', ');
+        } else if (typeof responseObj.message === 'string') {
+          message = responseObj.message as string;
+        }
+        // NestJS validation pipe + custom service errors carry a
+        // { status, errors: { field: message } } payload. The frontend
+        // needs the per-field details — surface them as `errors` on the
+        // response so callers can render field-level errors.
+        if (
+          responseObj.errors &&
+          typeof responseObj.errors === 'object' &&
+          !Array.isArray(responseObj.errors)
+        ) {
+          errors = responseObj.errors as Record<string, unknown>;
         }
         code = (responseObj.error as string) || this.getErrorCode(status);
       }
@@ -55,6 +68,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       message,
       code,
       statusCode: status,
+      errors,
       timestamp: new Date().toISOString(),
       path: request.url,
     });
