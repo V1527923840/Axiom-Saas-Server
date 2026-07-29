@@ -12,7 +12,6 @@ export class ResearchAnalysisMapper {
       ossUrl: entity.ossUrl,
       localPath: entity.localPath,
       scrapeLogId: entity.scrapeLogId,
-      analyzedAt: entity.analyzedAt,
       categoryL1: entity.categoryL1,
       categoryL2: entity.categoryL2,
       swIndustryTag: entity.swIndustryTag,
@@ -41,7 +40,6 @@ export class ResearchAnalysisMapper {
     entity.ossUrl = domain.ossUrl;
     entity.localPath = domain.localPath;
     entity.scrapeLogId = domain.scrapeLogId;
-    entity.analyzedAt = domain.analyzedAt;
     entity.categoryL1 = domain.categoryL1;
     entity.categoryL2 = domain.categoryL2;
     entity.swIndustryTag = domain.swIndustryTag;

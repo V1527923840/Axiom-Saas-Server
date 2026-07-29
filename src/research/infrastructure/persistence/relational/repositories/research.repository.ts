@@ -73,14 +73,14 @@ export class ResearchRelationalRepository implements ResearchRepository {
     }
 
     if (filterOptions?.dateFrom && filterOptions?.dateTo) {
-      where.analyzedAt = Between(
+      where.createdAt = Between(
         new Date(filterOptions.dateFrom),
         new Date(filterOptions.dateTo),
       );
     } else if (filterOptions?.dateFrom) {
-      where.analyzedAt = MoreThanOrEqual(new Date(filterOptions.dateFrom));
+      where.createdAt = MoreThanOrEqual(new Date(filterOptions.dateFrom));
     } else if (filterOptions?.dateTo) {
-      where.analyzedAt = LessThanOrEqual(new Date(filterOptions.dateTo));
+      where.createdAt = LessThanOrEqual(new Date(filterOptions.dateTo));
     }
 
     return where;
@@ -93,7 +93,6 @@ export class ResearchRelationalRepository implements ResearchRepository {
     const sortOrder = filterOptions?.sortOrder || 'desc';
 
     const fieldMapping: Record<string, string> = {
-      analyzedAt: 'analyzedAt',
       createdAt: 'createdAt',
     };
 

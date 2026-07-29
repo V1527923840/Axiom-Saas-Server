@@ -39,7 +39,6 @@ export class ResearchService {
       id: item.id,
       documentName: item.documentName,
       keyThesis: item.keyThesis,
-      analyzedAt: item.analyzedAt,
       createdAt: item.createdAt,
       categoryL1: item.categoryL1,
       categoryL2: item.categoryL2,

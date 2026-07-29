@@ -43,10 +43,6 @@ export class ResearchAnalysisEntity extends EntityRelationalHelper {
   scrapeLogId?: string | null;
 
   @Index()
-  @Column({ type: 'timestamp', nullable: true, name: 'analyzed_at' })
-  analyzedAt?: Date | null;
-
-  @Index()
   @Column({ type: String, length: 50, nullable: true, name: 'category_l1' })
   categoryL1?: string | null;
 

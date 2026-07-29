@@ -7,7 +7,6 @@ export interface ResearchAnalysis {
   ossUrl?: string | null;
   localPath?: string | null;
   scrapeLogId?: string | null;
-  analyzedAt?: Date | null;
   categoryL1?: string | null;
   categoryL2?: string | null;
   swIndustryTag?: Record<string, any>[] | null;
@@ -33,7 +32,6 @@ export type ResearchAnalysisListItem = Pick<
   | 'id'
   | 'documentName'
   | 'keyThesis'
-  | 'analyzedAt'
   | 'createdAt'
   | 'categoryL1'
   | 'categoryL2'

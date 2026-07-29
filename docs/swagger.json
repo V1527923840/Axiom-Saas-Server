@@ -1385,6 +1385,295 @@
         ]
       }
     },
+    "/api/v1/roles": {
+      "get": {
+        "operationId": "RolesController_findAll_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoleResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Roles"
+        ]
+      },
+      "post": {
+        "operationId": "RolesController_create_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleEntity"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Roles"
+        ]
+      }
+    },
+    "/api/v1/roles/{id}": {
+      "get": {
+        "operationId": "RolesController_findOne_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleEntity"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Roles"
+        ]
+      },
+      "patch": {
+        "operationId": "RolesController_update_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleEntity"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Roles"
+        ]
+      },
+      "delete": {
+        "operationId": "RolesController_delete_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Roles"
+        ]
+      }
+    },
+    "/api/v1/roles/{roleId}/users": {
+      "post": {
+        "operationId": "RolesController_assignUsers_v1",
+        "parameters": [
+          {
+            "name": "roleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignUsersDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Roles"
+        ]
+      },
+      "get": {
+        "operationId": "RolesController_getRoleUsers_v1",
+        "parameters": [
+          {
+            "name": "roleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Roles"
+        ]
+      }
+    },
     "/api/v1/auth/email/login": {
       "post": {
         "operationId": "AuthController_login_v1",
@@ -2969,295 +3258,6 @@
         ],
         "tags": [
           "Bills"
-        ]
-      }
-    },
-    "/api/v1/roles": {
-      "get": {
-        "operationId": "RolesController_findAll_v1",
-        "parameters": [
-          {
-            "in": "header",
-            "required": false,
-            "name": "x-custom-lang",
-            "schema": {
-              "example": "en"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RoleEntity"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "Roles"
-        ]
-      },
-      "post": {
-        "operationId": "RolesController_create_v1",
-        "parameters": [
-          {
-            "in": "header",
-            "required": false,
-            "name": "x-custom-lang",
-            "schema": {
-              "example": "en"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateRoleDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RoleEntity"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "Roles"
-        ]
-      }
-    },
-    "/api/v1/roles/{id}": {
-      "get": {
-        "operationId": "RolesController_findOne_v1",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "in": "header",
-            "required": false,
-            "name": "x-custom-lang",
-            "schema": {
-              "example": "en"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RoleEntity"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "Roles"
-        ]
-      },
-      "patch": {
-        "operationId": "RolesController_update_v1",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "in": "header",
-            "required": false,
-            "name": "x-custom-lang",
-            "schema": {
-              "example": "en"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateRoleDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RoleEntity"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "Roles"
-        ]
-      },
-      "delete": {
-        "operationId": "RolesController_delete_v1",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "in": "header",
-            "required": false,
-            "name": "x-custom-lang",
-            "schema": {
-              "example": "en"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "Roles"
-        ]
-      }
-    },
-    "/api/v1/roles/{roleId}/users": {
-      "post": {
-        "operationId": "RolesController_assignUsers_v1",
-        "parameters": [
-          {
-            "name": "roleId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "in": "header",
-            "required": false,
-            "name": "x-custom-lang",
-            "schema": {
-              "example": "en"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AssignUsersDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "Roles"
-        ]
-      },
-      "get": {
-        "operationId": "RolesController_getRoleUsers_v1",
-        "parameters": [
-          {
-            "name": "roleId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "in": "header",
-            "required": false,
-            "name": "x-custom-lang",
-            "schema": {
-              "example": "en"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "Roles"
         ]
       }
     },
@@ -5106,17 +5106,6 @@
           "id"
         ]
       },
-      "RoleDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "object"
-          }
-        },
-        "required": [
-          "id"
-        ]
-      },
       "StatusDto": {
         "type": "object",
         "properties": {
@@ -5149,8 +5138,12 @@
           "photo": {
             "$ref": "#/components/schemas/FileDto"
           },
-          "role": {
-            "$ref": "#/components/schemas/RoleDto"
+          "roleIds": {
+            "description": "角色 id 列表;至少包含一项以保证刷新 token 可用",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
           },
           "status": {
             "$ref": "#/components/schemas/StatusDto"
@@ -5190,9 +5183,7 @@
         },
         "required": [
           "email",
-          "password",
-          "firstName",
-          "lastName"
+          "firstName"
         ]
       },
       "FileType": {
@@ -5275,6 +5266,12 @@
           },
           "role": {
             "$ref": "#/components/schemas/Role"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Role"
+            }
           },
           "status": {
             "$ref": "#/components/schemas/Status"
@@ -5383,8 +5380,12 @@
           "photo": {
             "$ref": "#/components/schemas/FileDto"
           },
-          "role": {
-            "$ref": "#/components/schemas/RoleDto"
+          "roleIds": {
+            "description": "角色 id 列表;传空数组将清空 user_roles",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
           },
           "status": {
             "$ref": "#/components/schemas/StatusDto"
@@ -5764,6 +5765,94 @@
             "example": "active"
           }
         }
+      },
+      "RoleResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "isSuperAdmin": {
+            "type": "boolean",
+            "description": "是否为超级管理员(由 code 计算)"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "code",
+          "isSuperAdmin"
+        ]
+      },
+      "RoleEntity": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateRoleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Editor"
+          },
+          "code": {
+            "type": "string",
+            "example": "editor"
+          },
+          "description": {
+            "type": "string",
+            "example": "Can edit content"
+          }
+        },
+        "required": [
+          "name",
+          "code"
+        ]
+      },
+      "UpdateRoleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Editor"
+          },
+          "code": {
+            "type": "string",
+            "example": "editor"
+          },
+          "description": {
+            "type": "string",
+            "example": "Can edit content"
+          }
+        }
+      },
+      "AssignUsersDto": {
+        "type": "object",
+        "properties": {
+          "userIds": {
+            "example": [
+              1,
+              2,
+              3
+            ],
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "userIds"
+        ]
       },
       "AuthEmailLoginDto": {
         "type": "object",
@@ -6269,67 +6358,6 @@
           "consumeType",
           "points",
           "balance"
-        ]
-      },
-      "RoleEntity": {
-        "type": "object",
-        "properties": {}
-      },
-      "CreateRoleDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Editor"
-          },
-          "code": {
-            "type": "string",
-            "example": "editor"
-          },
-          "description": {
-            "type": "string",
-            "example": "Can edit content"
-          }
-        },
-        "required": [
-          "name",
-          "code"
-        ]
-      },
-      "UpdateRoleDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Editor"
-          },
-          "code": {
-            "type": "string",
-            "example": "editor"
-          },
-          "description": {
-            "type": "string",
-            "example": "Can edit content"
-          }
-        }
-      },
-      "AssignUsersDto": {
-        "type": "object",
-        "properties": {
-          "userIds": {
-            "example": [
-              1,
-              2,
-              3
-            ],
-            "type": "array",
-            "items": {
-              "type": "number"
-            }
-          }
-        },
-        "required": [
-          "userIds"
         ]
       },
       "CreateCategoryDto": {
