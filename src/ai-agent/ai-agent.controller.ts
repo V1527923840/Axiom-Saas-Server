@@ -9,7 +9,10 @@ import {
   UseGuards,
   HttpStatus,
   HttpCode,
+  Sse,
+  MessageEvent,
 } from '@nestjs/common';
+import { Observable } from 'rxjs';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -113,6 +116,29 @@ export class AiAgentController {
       dto.content,
     );
     return { data: result };
+  }
+
+  @Get('sessions/:id/events')
+  @Sse()
+  events(
+    @CurrentUser() user: CurrentUserShape,
+    @Param('id') id: string,
+  ): Observable<MessageEvent> {
+    const ac = new AbortController();
+    // 客户端断开时 abort 上游流 —— 用 response 上的 close 事件
+    // 注意:@Sse() 装饰器不能直接拿 @Res(), 通过 Observable teardown 处理
+    return new Observable<MessageEvent>((subscriber) => {
+      const inner = this.aiAgentService.streamEvents(user.id, id, ac.signal);
+      const sub = inner.subscribe({
+        next: (v) => subscriber.next(v),
+        error: (e) => subscriber.error(e),
+        complete: () => subscriber.complete(),
+      });
+      return () => {
+        ac.abort();
+        sub.unsubscribe();
+      };
+    });
   }
 
   @Post('sessions/:id/cancel')
