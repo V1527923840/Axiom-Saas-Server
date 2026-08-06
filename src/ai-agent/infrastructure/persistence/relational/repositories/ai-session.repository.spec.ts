@@ -53,35 +53,35 @@ function buildMockRepo(): MockRepo {
     create: jest.fn((data: any) => {
       return { ...makeEntity(), ...(data as object) } as AiSessionEntity;
     }),
-    save: jest.fn(async (...args: any[]) => {
+    save: jest.fn((...args: any[]) => {
       // TypeORM's save is overloaded; collapse to a single entity for the test.
       const entity = (Array.isArray(args[0]) ? args[0][0] : args[0]) as
         | AiSessionEntity
         | undefined;
-      if (!entity) return entity as any;
+      if (!entity) return Promise.resolve(entity as any);
       if (!entity.id) entity.id = '22222222-2222-2222-2222-222222222222';
       const now = new Date();
       if (!entity.createdAt) entity.createdAt = now;
       entity.updatedAt = now;
       saved.push({ entity, returned: entity });
-      return entity as any;
+      return Promise.resolve(entity as any);
     }),
-    findOne: jest.fn(async (args: any) => {
+    findOne: jest.fn((args: any) => {
       const where = args?.where ?? {};
       for (let i = saved.length - 1; i >= 0; i--) {
         const row = saved[i].returned;
         if (row.deletedAt) continue;
-        if (matchRow(row, where)) return row;
+        if (matchRow(row, where)) return Promise.resolve(row);
       }
-      return null;
+      return Promise.resolve(null);
     }),
-    find: jest.fn(async (_args: any) => saved.map((s) => s.returned)),
-    softDelete: jest.fn(async (args: any) => {
+    find: jest.fn(() => Promise.resolve(saved.map((s) => s.returned))),
+    softDelete: jest.fn((args: any) => {
       const where = (args as object) ?? {};
       for (const s of saved) {
         if (matchRow(s.returned, where)) s.returned.deletedAt = new Date();
       }
-      return { raw: [], affected: 1 } as any;
+      return Promise.resolve({ raw: [], affected: 1 } as any);
     }),
   };
 }
@@ -129,7 +129,9 @@ describe('RelationalAiSessionRepository', () => {
     expect(created.userId).toBe(userId);
 
     const found = await repo.findById(created.id);
-    expect(mockRepo.findOne).toHaveBeenCalledWith({ where: { id: created.id } });
+    expect(mockRepo.findOne).toHaveBeenCalledWith({
+      where: { id: created.id },
+    });
     expect(found).not.toBeNull();
     expect(found?.userId).toBe(userId);
     expect(found?.id).toBe(created.id);

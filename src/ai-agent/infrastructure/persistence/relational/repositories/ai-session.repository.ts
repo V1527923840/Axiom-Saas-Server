@@ -107,10 +107,7 @@ export class RelationalAiSessionRepository extends AiSessionRepository {
       .execute();
   }
 
-  async incrementQuotaIfToday(
-    sessionId: string,
-    today: Date,
-  ): Promise<number> {
+  async incrementQuotaIfToday(sessionId: string, today: Date): Promise<number> {
     // Atomic: if quota_date != today, reset to 1; otherwise +1.
     // The CASE expression yields the new quota_count in a single statement,
     // avoiding the race window of a read-then-write separate UPDATE.
