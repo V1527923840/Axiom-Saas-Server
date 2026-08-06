@@ -24,6 +24,13 @@ export class VibeTradingService implements AgentAdapter {
     return this.client.submitMessage(remoteSessionId, content, signal);
   }
 
+  async *streamEvents(
+    remoteSessionId: string,
+    signal: AbortSignal,
+  ): AsyncGenerator<{ event: string; data: Record<string, any> }> {
+    yield* this.client.streamEvents(remoteSessionId, signal);
+  }
+
   getMessages(remoteSessionId: string, cursor?: string): Promise<MessageDto[]> {
     return this.client.getMessages(remoteSessionId, cursor);
   }
