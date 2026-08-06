@@ -7,9 +7,16 @@ import { AgentAdapterRegistry } from './infrastructure/agent-adapter.registry';
 import { ConcurrencyService } from './infrastructure/concurrency/concurrency.service';
 import { QuotaService } from './infrastructure/quota/quota.service';
 import { SessionCleanupService } from './infrastructure/cleanup/session-cleanup.service';
+import { RelationalAiSessionPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
+import { VibeTradingModule } from './vibe-trading/vibe-trading.module';
 
 @Module({
-  imports: [AuthModule, UsersModule],
+  imports: [
+    AuthModule,
+    UsersModule,
+    RelationalAiSessionPersistenceModule,
+    VibeTradingModule,
+  ],
   controllers: [AiAgentController],
   providers: [
     AiAgentService,

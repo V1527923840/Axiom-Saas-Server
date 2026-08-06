@@ -7,11 +7,12 @@ import { RelationalAiSessionRepository } from './repositories/ai-session.reposit
 @Module({
   imports: [TypeOrmModule.forFeature([AiSessionEntity])],
   providers: [
+    RelationalAiSessionRepository,
     {
       provide: AiSessionRepository,
       useClass: RelationalAiSessionRepository,
     },
   ],
-  exports: [AiSessionRepository],
+  exports: [AiSessionRepository, RelationalAiSessionRepository],
 })
 export class RelationalAiSessionPersistenceModule {}

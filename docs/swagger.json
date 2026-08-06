@@ -5076,6 +5076,292 @@
           "Research"
         ]
       }
+    },
+    "/api/v1/ai-agent/agents": {
+      "get": {
+        "operationId": "AiAgentController_listAgents_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
+    },
+    "/api/v1/ai-agent/sessions": {
+      "post": {
+        "operationId": "AiAgentController_create_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSessionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      },
+      "get": {
+        "operationId": "AiAgentController_list_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
+    },
+    "/api/v1/ai-agent/sessions/{id}": {
+      "get": {
+        "operationId": "AiAgentController_getOne_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      },
+      "delete": {
+        "operationId": "AiAgentController_remove_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
+    },
+    "/api/v1/ai-agent/sessions/{id}/messages": {
+      "get": {
+        "operationId": "AiAgentController_getMessages_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      },
+      "post": {
+        "operationId": "AiAgentController_sendMessage_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
+    },
+    "/api/v1/ai-agent/sessions/{id}/cancel": {
+      "post": {
+        "operationId": "AiAgentController_cancel_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
     }
   },
   "info": {
@@ -6549,6 +6835,14 @@
             "example": "zsxq-parser"
           }
         }
+      },
+      "CreateSessionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SendMessageDto": {
+        "type": "object",
+        "properties": {}
       }
     }
   }

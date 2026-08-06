@@ -43,6 +43,9 @@ import { ScrapeLogModule } from './scrape-log/scrape-log.module';
 import { ParseTaskModule } from './parse-task/parse-task.module';
 import { IntelligenceModule } from './intelligence/intelligence.module';
 import { ResearchModule } from './research/research.module';
+import { AiAgentModule } from './ai-agent/ai-agent.module';
+import { VibeTradingModule } from './ai-agent/vibe-trading/vibe-trading.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 // <database-block>
 const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
@@ -127,6 +130,9 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     ParseTaskModule,
     IntelligenceModule,
     ResearchModule,
+    ScheduleModule.forRoot(),
+    AiAgentModule,
+    VibeTradingModule,
   ],
 })
 export class AppModule {}
