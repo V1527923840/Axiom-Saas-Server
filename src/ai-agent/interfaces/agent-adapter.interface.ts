@@ -16,9 +16,10 @@ export interface SseChunk {
 export interface AgentAdapter {
   readonly agentType: string;
 
-  createRemoteSession(
-    ownerId: string,
-  ): Promise<{ remoteSessionId: string; meta?: Record<string, unknown> }>;
+  createRemoteSession(): Promise<{
+    remoteSessionId: string;
+    meta?: Record<string, unknown>;
+  }>;
 
   sendMessage(
     remoteSessionId: string,

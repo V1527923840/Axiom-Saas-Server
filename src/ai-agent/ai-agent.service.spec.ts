@@ -53,7 +53,7 @@ describe('AiAgentService', () => {
     const created = { id: 'local-1', userId: 'u1', agentType: 'vibe-trading' };
     repo.create.mockResolvedValue(created);
     const r = await svc.createSession('u1', 'vibe-trading');
-    expect(adapter.createRemoteSession).toHaveBeenCalledWith('u1');
+    expect(adapter.createRemoteSession).toHaveBeenCalledWith();
     expect(repo.create).toHaveBeenCalled();
     expect(r).toEqual(created);
   });

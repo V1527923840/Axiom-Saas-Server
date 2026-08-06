@@ -31,9 +31,7 @@ export class AiAgentService {
     const ttlDays =
       this.configService.get('aiAgent.ttlDays', { infer: true }) ?? 30;
     const now = new Date();
-    const { remoteSessionId } = await adapter.createRemoteSession(
-      String(userId),
-    );
+    const { remoteSessionId } = await adapter.createRemoteSession();
     return this.repo.create({
       userId,
       agentType,

@@ -1,11 +1,7 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '../../config/config.type';
-import {
-  MessageDto,
-  SseChunk,
-  SseChunkType,
-} from '../interfaces/agent-adapter.interface';
+import { MessageDto, SseChunk } from '../interfaces/agent-adapter.interface';
 
 @Injectable()
 export class VibeClientService {
@@ -36,13 +32,11 @@ export class VibeClientService {
     return AbortSignal.timeout(ms);
   }
 
-  async createRemoteSession(
-    ownerId: string,
-  ): Promise<{ remoteSessionId: string }> {
+  async createRemoteSession(): Promise<{ remoteSessionId: string }> {
     const res = await fetch(`${this.baseUrl()}/sessions`, {
       method: 'POST',
       headers: this.authHeaders(),
-      body: JSON.stringify({ owner_id: ownerId }),
+      body: JSON.stringify({ title: '' }),
       signal: this.timeoutSignal(),
     });
     if (!res.ok) {
@@ -54,8 +48,8 @@ export class VibeClientService {
         HttpStatus.BAD_GATEWAY,
       );
     }
-    const data = (await res.json()) as { id: string };
-    return { remoteSessionId: data.id };
+    const data = (await res.json()) as { session_id: string };
+    return { remoteSessionId: data.session_id };
   }
 
   async *sendMessage(
@@ -63,46 +57,104 @@ export class VibeClientService {
     content: string,
     signal: AbortSignal,
   ): AsyncIterable<SseChunk> {
-    const res = await fetch(
+    // Option A: sync-poll pattern.
+    // Upstream POST messages returns synchronously with {message_id, attempt_id}.
+    // The actual assistant reply appears later in GET messages — we poll for it
+    // and yield the content as a single chunk. Future Option B: replace polling
+    // with a long-lived /events stream connection.
+    const submitRes = await fetch(
       `${this.baseUrl()}/sessions/${remoteSessionId}/messages`,
       {
         method: 'POST',
-        headers: this.authHeaders({ Accept: 'text/event-stream' }),
+        headers: this.authHeaders(),
         body: JSON.stringify({ content }),
         signal,
       },
     );
-    if (!res.ok || !res.body) {
+    if (!submitRes.ok) {
       throw new HttpException(
         {
           statusCode: HttpStatus.BAD_GATEWAY,
-          message: `Vibe stream failed: ${res.status}`,
+          message: `Vibe submit message failed: ${submitRes.status}`,
         },
         HttpStatus.BAD_GATEWAY,
       );
     }
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const events = buffer.split('\n\n');
-        buffer = events.pop() ?? '';
-        for (const ev of events) {
-          const chunk = parseSseEvent(ev);
-          if (chunk) yield chunk;
-        }
+    const { message_id, attempt_id } = (await submitRes.json()) as {
+      message_id: string;
+      attempt_id: string;
+    };
+
+    yield {
+      type: 'message',
+      data: {
+        delta: '',
+        status: 'submitted',
+        messageId: message_id,
+        attemptId: attempt_id,
+      },
+    };
+
+    // Poll GET messages for the assistant reply, up to ~55s (under default 60s timeout).
+    const deadline = Date.now() + 55_000;
+    const initialMessages = await this.getMessages(remoteSessionId);
+    const baselineIds = new Set(
+      initialMessages.map((m) => m.id ?? '').filter(Boolean),
+    );
+    const baselineTimestamp = initialMessages.reduce(
+      (max, m) => Math.max(max, m.createdAt?.getTime?.() ?? 0),
+      0,
+    );
+
+    while (Date.now() < deadline) {
+      if (signal.aborted) {
+        yield {
+          type: 'error',
+          data: { code: 'CANCELLED', message: 'Cancelled by client' },
+        };
+        return;
       }
-      if (buffer.trim()) {
-        const chunk = parseSseEvent(buffer);
-        if (chunk) yield chunk;
+      await sleep(1000);
+      if (signal.aborted) {
+        yield {
+          type: 'error',
+          data: { code: 'CANCELLED', message: 'Cancelled by client' },
+        };
+        return;
       }
-    } finally {
-      reader.releaseLock();
+      const current = await this.getMessages(remoteSessionId);
+      const fresh = current.filter((m) => {
+        const id = m.id ?? '';
+        const ts = m.createdAt?.getTime?.() ?? 0;
+        return (
+          !baselineIds.has(id) && ts >= baselineTimestamp && m.role !== 'user'
+        );
+      });
+      // Take the last fresh message (most recent assistant reply).
+      const assistantMsg = fresh[fresh.length - 1];
+      if (assistantMsg?.content) {
+        yield {
+          type: 'message',
+          data: {
+            delta: assistantMsg.content,
+            status: 'completed',
+            messageId: assistantMsg.id,
+            attemptId: attempt_id,
+          },
+        };
+        yield { type: 'done', data: { attemptId: attempt_id } };
+        return;
+      }
     }
+
+    yield {
+      type: 'error',
+      data: {
+        code: 'TIMEOUT',
+        message: 'Assistant response timed out',
+        attemptId: attempt_id,
+      },
+    };
   }
 
   async getMessages(
@@ -127,13 +179,13 @@ export class VibeClientService {
         HttpStatus.BAD_GATEWAY,
       );
     }
-    const data = (await res.json()) as { messages: any[] };
-    return (data.messages ?? []).map((m) => ({
-      id: m.id,
+    const data = (await res.json()) as any[];
+    return (Array.isArray(data) ? data : []).map((m) => ({
+      id: m.message_id ?? m.id,
       role: m.role,
       content: m.content,
       createdAt: new Date(m.created_at ?? Date.now()),
-      meta: m.meta,
+      meta: m.metadata ?? m.meta,
     }));
   }
 
@@ -154,19 +206,6 @@ export class VibeClientService {
   }
 }
 
-function parseSseEvent(raw: string): SseChunk | null {
-  let event = 'message';
-  let data = '';
-  for (const line of raw.split('\n')) {
-    if (line.startsWith('event:')) event = line.slice(6).trim();
-    else if (line.startsWith('data:')) data += line.slice(5).trim();
-  }
-  if (!data) return null;
-  try {
-    const parsed = JSON.parse(data);
-    const type = (parsed.type ?? event) as SseChunkType;
-    return { type, data: parsed.data ?? parsed };
-  } catch {
-    return { type: event as SseChunkType, data: { raw: data } };
-  }
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

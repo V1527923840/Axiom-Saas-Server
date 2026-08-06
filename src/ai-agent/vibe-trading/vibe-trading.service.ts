@@ -13,8 +13,8 @@ export class VibeTradingService implements AgentAdapter {
 
   constructor(private readonly client: VibeClientService) {}
 
-  createRemoteSession(ownerId: string) {
-    return this.client.createRemoteSession(ownerId);
+  createRemoteSession() {
+    return this.client.createRemoteSession();
   }
 
   sendMessage(

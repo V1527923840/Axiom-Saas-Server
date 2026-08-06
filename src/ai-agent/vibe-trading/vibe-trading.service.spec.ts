@@ -16,7 +16,7 @@ describe('VibeTradingService', () => {
 
   it('should delegate createRemoteSession', async () => {
     client.createRemoteSession.mockResolvedValue({ remoteSessionId: 'r1' });
-    await expect(svc.createRemoteSession('u1')).resolves.toEqual({
+    await expect(svc.createRemoteSession()).resolves.toEqual({
       remoteSessionId: 'r1',
     });
   });
