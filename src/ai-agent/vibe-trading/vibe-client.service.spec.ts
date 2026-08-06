@@ -1,3 +1,4 @@
+import { HttpException } from '@nestjs/common';
 import { VibeClientService } from './vibe-client.service';
 
 describe('VibeClientService', () => {
@@ -19,6 +20,8 @@ describe('VibeClientService', () => {
     svc = new VibeClientService(cfg as any);
   });
 
+  // ---------------- createRemoteSession ----------------
+
   it('should POST /sessions with auth header', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
@@ -36,79 +39,97 @@ describe('VibeClientService', () => {
     expect(r).toEqual({ remoteSessionId: 'r1' });
   });
 
-  it('should yield text_delta chunks then done on attempt.completed', async () => {
-    const sseBody =
-      'id: 1\nevent: message.received\ndata: {"message_id":"m2","role":"user"}\n\n' +
-      'id: 2\nevent: attempt.started\ndata: {"attempt_id":"a1"}\n\n' +
-      'id: 3\nevent: text_delta\ndata: {"attempt_id":"a1","delta":"Hel"}\n\n' +
-      'id: 4\nevent: text_delta\ndata: {"attempt_id":"a1","delta":"lo"}\n\n' +
-      'id: 5\nevent: attempt.completed\ndata: {"attempt_id":"a1","summary":"Hello","status":"completed"}\n\n';
-    fetchMock
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 201,
-        json: () => Promise.resolve({ message_id: 'm1', attempt_id: 'a1' }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        body: makeReadableStream(sseBody),
-      });
+  // ---------------- submitMessage (sync POST) ----------------
 
-    const chunks: any[] = [];
-    for await (const c of svc.sendMessage(
+  it('should POST /sessions/:id/messages and return {messageId, attemptId}', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ message_id: 'm1', attempt_id: 'a1' }),
+    });
+
+    const r = await svc.submitMessage(
       'r1',
       'hello',
       new AbortController().signal,
-    )) {
-      chunks.push(c);
-    }
-    // Expected order:
-    //   submitted, message(He), message(lo), message(completed), done
-    const types = chunks.map((c) => `${c.type}/${c.data.status ?? '-'}`);
-    expect(types).toEqual([
-      'message/submitted',
-      'message/streaming',
-      'message/streaming',
-      'message/completed',
-      'done/-',
-    ]);
-    // Delta accumulation
-    expect(chunks[1].data.delta).toBe('Hel');
-    expect(chunks[2].data.delta).toBe('lo');
-    expect(chunks[3].data.fullReply).toBe('Hello');
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://vibe.local/sessions/r1/messages',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({ Authorization: 'Bearer tk' }),
+        body: JSON.stringify({ content: 'hello' }),
+      }),
+    );
+    expect(r).toEqual({ messageId: 'm1', attemptId: 'a1' });
   });
 
-  it('should ignore events for other attempt_ids', async () => {
-    const sseBody =
-      'id: 1\nevent: text_delta\ndata: {"attempt_id":"other","delta":"skip"}\n\n' +
-      'id: 2\nevent: attempt.completed\ndata: {"attempt_id":"a1","summary":"done"}\n\n';
-    fetchMock
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 201,
-        json: () => Promise.resolve({ message_id: 'm1', attempt_id: 'a1' }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        body: makeReadableStream(sseBody),
-      });
+  it('should throw HttpException when submitMessage receives non-ok response', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 502,
+      json: () => Promise.resolve({}),
+    });
 
-    const chunks: any[] = [];
-    for await (const c of svc.sendMessage(
+    await expect(
+      svc.submitMessage('r1', 'hi', new AbortController().signal),
+    ).rejects.toBeInstanceOf(HttpException);
+  });
+
+  // ---------------- streamEvents (long-lived SSE) ----------------
+
+  it('should yield parsed SSE frames from /sessions/:id/events', async () => {
+    const sseBody =
+      'event: message.received\ndata: {"message_id":"m1"}\n\n' +
+      'event: attempt.started\ndata: {"attempt_id":"a1"}\n\n' +
+      'event: text_delta\ndata: {"attempt_id":"a1","delta":"Hel"}\n\n' +
+      'event: text_delta\ndata: {"attempt_id":"a1","delta":"lo"}\n\n' +
+      'event: attempt.completed\ndata: {"attempt_id":"a1","summary":"Hello"}\n\n';
+
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: makeReadableStream(sseBody),
+    });
+
+    const events: { event: string; data: any }[] = [];
+    for await (const e of svc.streamEvents(
       'r1',
-      'hello',
       new AbortController().signal,
     )) {
-      chunks.push(c);
+      events.push(e);
     }
-    // First text_delta is filtered (other attempt), then attempt.completed
-    expect(chunks.map((c) => c.type)).toEqual([
-      'message', // submitted
-      'message', // completed with fullReply
-      'done',
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://vibe.local/sessions/r1/events',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer tk',
+          Accept: 'text/event-stream',
+        }),
+      }),
+    );
+    expect(events.map((e) => e.event)).toEqual([
+      'message.received',
+      'attempt.started',
+      'text_delta',
+      'text_delta',
+      'attempt.completed',
     ]);
+    expect(events[2].data.delta).toBe('Hel');
+    expect(events[4].data.summary).toBe('Hello');
+  });
+
+  it('should throw HttpException when streamEvents receives non-ok response', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 503,
+      body: null,
+    });
+
+    const gen = svc.streamEvents('r1', new AbortController().signal);
+    await expect(gen.next()).rejects.toBeInstanceOf(HttpException);
   });
 });
 

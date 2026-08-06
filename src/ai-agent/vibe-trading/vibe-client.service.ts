@@ -87,6 +87,52 @@ export class VibeClientService {
     return { messageId: data.message_id, attemptId: data.attempt_id };
   }
 
+  /**
+   * 长连接订阅上游 session 的事件流。
+   * 上游会推送该 session 上所有 attempt 的事件（text_delta / attempt.completed / attempt.error 等）。
+   * 调用方按 attempt_id 自行路由。
+   */
+  async *streamEvents(
+    remoteSessionId: string,
+    signal: AbortSignal,
+  ): AsyncGenerator<{ event: string; data: Record<string, any> }> {
+    const res = await fetch(
+      `${this.baseUrl()}/sessions/${remoteSessionId}/events`,
+      {
+        headers: this.authHeaders({ Accept: 'text/event-stream' }),
+        signal,
+      },
+    );
+    if (!res.ok || !res.body) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_GATEWAY,
+          message: `Vibe events stream failed: ${res.status}`,
+        },
+        HttpStatus.BAD_GATEWAY,
+      );
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) return;
+        buf += decoder.decode(value, { stream: true });
+        const frames = buf.split('\n\n');
+        buf = frames.pop() ?? '';
+        for (const raw of frames) {
+          const parsed = parseSseFrame(raw);
+          if (parsed) yield parsed;
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
+
   async getMessages(
     remoteSessionId: string,
     cursor?: string,
@@ -133,5 +179,33 @@ export class VibeClientService {
       headers: this.authHeaders(),
       signal: this.timeoutSignal(),
     });
+  }
+}
+
+/**
+ * Parse one SSE frame (text between blank lines) into {event, data}.
+ * Returns null for empty frames or frames with no usable data.
+ */
+function parseSseFrame(
+  raw: string,
+): { event: string; data: Record<string, any> } | null {
+  const lines = raw.split('\n');
+  let event = 'message';
+  const dataLines: string[] = [];
+  for (const line of lines) {
+    if (!line || line.startsWith(':')) continue;
+    const colon = line.indexOf(':');
+    const field = colon === -1 ? line : line.slice(0, colon);
+    let value = colon === -1 ? '' : line.slice(colon + 1);
+    if (value.startsWith(' ')) value = value.slice(1);
+    if (field === 'event') event = value;
+    else if (field === 'data') dataLines.push(value);
+  }
+  if (dataLines.length === 0) return null;
+  const joined = dataLines.join('\n');
+  try {
+    return { event, data: JSON.parse(joined) };
+  } catch {
+    return { event, data: { raw: joined } };
   }
 }
