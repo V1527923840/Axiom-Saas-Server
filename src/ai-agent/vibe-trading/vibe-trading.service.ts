@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import {
   AgentAdapter,
   MessageDto,
-  SseChunk,
 } from '../interfaces/agent-adapter.interface';
 import { VIBE_TRADING_AGENT_TYPE } from './vibe-trading.config';
 import { VibeClientService } from './vibe-client.service';
@@ -17,12 +16,12 @@ export class VibeTradingService implements AgentAdapter {
     return this.client.createRemoteSession();
   }
 
-  sendMessage(
+  submitMessage(
     remoteSessionId: string,
     content: string,
     signal: AbortSignal,
-  ): AsyncIterable<SseChunk> {
-    return this.client.sendMessage(remoteSessionId, content, signal);
+  ): Promise<{ messageId: string; attemptId: string }> {
+    return this.client.submitMessage(remoteSessionId, content, signal);
   }
 
   getMessages(remoteSessionId: string, cursor?: string): Promise<MessageDto[]> {
