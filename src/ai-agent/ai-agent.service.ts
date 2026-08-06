@@ -2,9 +2,11 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  MessageEvent,
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Observable } from 'rxjs';
 import { AllConfigType } from '../config/config.type';
 import { AiSessionRepository } from './infrastructure/persistence/ai-session.repository';
 import { AgentAdapterRegistry } from './infrastructure/agent-adapter.registry';
@@ -147,5 +149,92 @@ export class AiAgentService {
       await this.concurrency.release(s.id);
       throw e;
     }
+  }
+
+  /**
+   * 订阅 session 的事件流，返回 rxjs Observable。
+   * View 层通过 @Sse() 装饰器消费。
+   *
+   * 副作用:
+   * - attempt.completed → 释放 inflight 锁 + 更新 lastActiveAt/expiresAt
+   * - attempt.error     → 释放 inflight 锁 + 标记 status='error'
+   * - AbortSignal abort → 立即完成 Observable
+   */
+  streamEvents(
+    userId: number | string,
+    id: string,
+    signal: AbortSignal,
+  ): Observable<MessageEvent> {
+    return new Observable<MessageEvent>((subscriber) => {
+      let aborted = false;
+      const onAbort = () => {
+        aborted = true;
+        subscriber.complete();
+      };
+      signal.addEventListener('abort', onAbort);
+
+      void (async () => {
+        let s: AiSession;
+        try {
+          s = await this.getSession(userId, id);
+        } catch (e) {
+          // Owner-check failures (e.g. NotFoundException) propagate to the
+          // Observable's error channel — the @Sse() controller surfaces them
+          // as proper HTTP 4xx/5xx responses to the client.
+          if (!aborted) subscriber.error(e);
+          return;
+        }
+        try {
+          if (aborted) return;
+          if (!s.remoteSessionId) {
+            subscriber.next({
+              type: 'error',
+              data: { code: 'NO_REMOTE_SESSION' },
+            });
+            subscriber.complete();
+            return;
+          }
+
+          const adapter = this.registry.get(s.agentType);
+          for await (const ev of adapter.streamEvents(
+            s.remoteSessionId,
+            signal,
+          )) {
+            if (aborted) break;
+            subscriber.next({ type: ev.event, data: ev.data });
+
+            if (ev.event === 'attempt.completed') {
+              const now = new Date();
+              const ttlDays =
+                this.configService.get('aiAgent.ttlDays', { infer: true }) ??
+                30;
+              await this.concurrency.release(s.id);
+              await this.repo.update(s.id, {
+                lastActiveAt: now,
+                expiresAt: new Date(now.getTime() + ttlDays * 86400_000),
+                status: 'active',
+              });
+            } else if (ev.event === 'attempt.error') {
+              await this.concurrency.release(s.id);
+              await this.repo.update(s.id, { status: 'error' });
+            }
+          }
+          subscriber.complete();
+        } catch (e) {
+          if (!aborted) {
+            subscriber.next({
+              type: 'error',
+              data: { code: 'STREAM_ERROR', message: (e as Error).message },
+            });
+            subscriber.complete();
+          }
+        }
+      })();
+
+      return () => {
+        aborted = true;
+        signal.removeEventListener('abort', onAbort);
+      };
+    });
   }
 }

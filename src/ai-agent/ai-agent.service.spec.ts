@@ -1,5 +1,6 @@
 import { AiAgentService } from './ai-agent.service';
 import { NotFoundException } from '@nestjs/common';
+import { firstValueFrom, toArray } from 'rxjs';
 
 describe('AiAgentService', () => {
   const repo = {
@@ -19,6 +20,7 @@ describe('AiAgentService', () => {
     getMessages: jest.fn(),
     cancelRemoteSession: jest.fn(),
     deleteRemoteSession: jest.fn(),
+    streamEvents: jest.fn(),
   };
   const registry = {
     get: jest.fn().mockReturnValue(adapter),
@@ -142,6 +144,97 @@ describe('AiAgentService', () => {
         .mockRejectedValue(new Error('upstream down'));
       await expect(svc.submitMessage('u1', 's1', 'hi')).rejects.toThrow(
         /upstream/,
+      );
+      expect(concurrency.release).toHaveBeenCalledWith('s1');
+    });
+  });
+
+  describe('streamEvents', () => {
+    it('should reject if session not owned', async () => {
+      repo.findByIdAndUser.mockResolvedValue(null);
+      const obs = svc.streamEvents('u1', 's1', new AbortController().signal);
+      await expect(firstValueFrom(obs)).rejects.toThrow(/not found/i);
+    });
+
+    it('should emit upstream events as MessageEvent', async () => {
+      repo.findByIdAndUser.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        remoteSessionId: 'r1',
+        status: 'active',
+      });
+      adapter.streamEvents = jest.fn().mockImplementation(async function* () {
+        await Promise.resolve();
+        yield { event: 'text_delta', data: { attempt_id: 'a1', delta: 'hel' } };
+        yield { event: 'text_delta', data: { attempt_id: 'a1', delta: 'lo' } };
+        yield {
+          event: 'attempt.completed',
+          data: { attempt_id: 'a1', summary: 'hello' },
+        };
+      });
+
+      const events = await firstValueFrom(
+        svc
+          .streamEvents('u1', 's1', new AbortController().signal)
+          .pipe(toArray()),
+      );
+      expect(events).toEqual([
+        { type: 'text_delta', data: { attempt_id: 'a1', delta: 'hel' } },
+        { type: 'text_delta', data: { attempt_id: 'a1', delta: 'lo' } },
+        {
+          type: 'attempt.completed',
+          data: { attempt_id: 'a1', summary: 'hello' },
+        },
+      ]);
+    });
+
+    it('should release inflight lock on attempt.completed', async () => {
+      repo.findByIdAndUser.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        remoteSessionId: 'r1',
+        status: 'active',
+      });
+      adapter.streamEvents = jest.fn().mockImplementation(async function* () {
+        await Promise.resolve();
+        yield {
+          event: 'attempt.completed',
+          data: { attempt_id: 'a1', summary: 'x' },
+        };
+      });
+      await firstValueFrom(
+        svc
+          .streamEvents('u1', 's1', new AbortController().signal)
+          .pipe(toArray()),
+      );
+      expect(concurrency.release).toHaveBeenCalledWith('s1');
+      expect(repo.update).toHaveBeenCalledWith(
+        's1',
+        expect.objectContaining({ lastActiveAt: expect.any(Date) }),
+      );
+    });
+
+    it('should release inflight lock on attempt.error', async () => {
+      repo.findByIdAndUser.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        remoteSessionId: 'r1',
+        status: 'active',
+      });
+      adapter.streamEvents = jest.fn().mockImplementation(async function* () {
+        await Promise.resolve();
+        yield {
+          event: 'attempt.error',
+          data: { attempt_id: 'a1', error: 'oops' },
+        };
+      });
+      await firstValueFrom(
+        svc
+          .streamEvents('u1', 's1', new AbortController().signal)
+          .pipe(toArray()),
       );
       expect(concurrency.release).toHaveBeenCalledWith('s1');
     });
