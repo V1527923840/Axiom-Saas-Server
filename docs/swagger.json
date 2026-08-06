@@ -5237,6 +5237,50 @@
         "tags": [
           "AI Agent"
         ]
+      },
+      "patch": {
+        "operationId": "AiAgentController_update_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSessionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
       }
     },
     "/api/v1/ai-agent/sessions/{id}/messages": {
@@ -5312,6 +5356,42 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
+    },
+    "/api/v1/ai-agent/sessions/{id}/events": {
+      "get": {
+        "operationId": "AiAgentController_events_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -6837,6 +6917,10 @@
         }
       },
       "CreateSessionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateSessionDto": {
         "type": "object",
         "properties": {}
       },

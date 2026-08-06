@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Param,
   Query,
@@ -27,6 +28,7 @@ interface CurrentUserShape {
 import { CreateSessionDto } from './dto/create-session.dto';
 import { QuerySessionsDto } from './dto/query-sessions.dto';
 import { SendMessageDto } from './dto/send-message.dto';
+import { UpdateSessionDto } from './dto/update-session.dto';
 import { SessionResponseDto } from './dto/session-response.dto';
 import { infinityPagination } from '../utils/infinity-pagination';
 
@@ -90,6 +92,17 @@ export class AiAgentController {
   async remove(@CurrentUser() user: CurrentUserShape, @Param('id') id: string) {
     await this.aiAgentService.deleteSession(user.id, id);
     return { success: true, message: 'Session deleted' };
+  }
+
+  @Patch('sessions/:id')
+  @HttpCode(HttpStatus.OK)
+  async update(
+    @CurrentUser() user: CurrentUserShape,
+    @Param('id') id: string,
+    @Body() dto: UpdateSessionDto,
+  ) {
+    const session = await this.aiAgentService.updateSession(user.id, id, dto);
+    return { data: SessionResponseDto.fromDomain(session) };
   }
 
   @Get('sessions/:id/messages')
