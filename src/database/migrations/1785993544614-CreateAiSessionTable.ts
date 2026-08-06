@@ -2,12 +2,10 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreateAiSessionTable1785993544614 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
-
     await queryRunner.query(`
       CREATE TABLE "ai_session" (
-        "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
-        "user_id" uuid NOT NULL,
+        "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+        "user_id" integer NOT NULL,
         "agent_type" varchar(64) NOT NULL,
         "remote_session_id" varchar(128),
         "title" varchar(255),
