@@ -10,7 +10,9 @@ import {
   UseGuards,
   HttpStatus,
   HttpCode,
+  Logger,
   MessageEvent,
+  RequestMethod,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -21,7 +23,9 @@ import { AiAgentService } from './ai-agent.service';
 // Minimal User shape required by this controller — avoids loading the
 // full User class which transitively triggers databaseConfig() at
 // import time. Keep aligned with `src/users/domain/user.ts`.
-type CurrentUserShape = { id: number | string };
+interface CurrentUserShape {
+  id: number | string;
+}
 import { CreateSessionDto } from './dto/create-session.dto';
 import { QuerySessionsDto } from './dto/query-sessions.dto';
 import { SendMessageDto } from './dto/send-message.dto';
@@ -101,7 +105,7 @@ export class AiAgentController {
     return { data: messages };
   }
 
-  @Sse('sessions/:id/messages')
+  @Sse('sessions/:id/messages', { method: RequestMethod.POST })
   sendMessage(
     @CurrentUser() user: CurrentUserShape,
     @Param('id') id: string,
@@ -119,13 +123,29 @@ export class AiAgentController {
           }
           subscriber.complete();
         } catch (e) {
+          // Log full error server-side; never leak internals to the client.
+          Logger.error(
+            `SSE stream failed for session ${id} (user ${user.id}): ${
+              (e as Error).message
+            }`,
+            (e as Error).stack,
+            'AiAgentController.sendMessage',
+          );
           subscriber.next({
             type: 'error',
-            data: { code: 'STREAM_ERROR', message: (e as Error).message },
+            data: {
+              code: 'STREAM_ERROR',
+              message: 'Internal stream error',
+            },
           });
           subscriber.complete();
         }
       })();
+      // Teardown is intentionally a no-op: the underlying AsyncIterable
+      // is not cancelable, and AiAgentService does not yet expose a
+      // cancel handle. Until the service supports cancellation, the
+      // stream will run to completion even if the client disconnects.
+      return () => undefined;
     });
   }
 
