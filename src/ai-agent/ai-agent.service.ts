@@ -124,7 +124,10 @@ export class AiAgentService {
     }
     if (!s.remoteSessionId) {
       throw new HttpException(
-        { statusCode: HttpStatus.CONFLICT, message: 'Session has no remote id yet' },
+        {
+          statusCode: HttpStatus.CONFLICT,
+          message: 'Session has no remote id yet',
+        },
         HttpStatus.CONFLICT,
       );
     }

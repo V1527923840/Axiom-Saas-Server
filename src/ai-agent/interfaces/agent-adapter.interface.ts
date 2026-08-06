@@ -6,13 +6,6 @@ export interface MessageDto {
   meta?: Record<string, unknown>;
 }
 
-export type SseChunkType = 'message' | 'tool' | 'done' | 'error';
-
-export interface SseChunk {
-  type: SseChunkType;
-  data: Record<string, unknown>;
-}
-
 export interface AgentAdapter {
   readonly agentType: string;
 

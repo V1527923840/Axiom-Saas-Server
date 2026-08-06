@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '../../config/config.type';
-import { MessageDto, SseChunk } from '../interfaces/agent-adapter.interface';
+import { MessageDto } from '../interfaces/agent-adapter.interface';
 
 @Injectable()
 export class VibeClientService {
@@ -133,25 +133,5 @@ export class VibeClientService {
       headers: this.authHeaders(),
       signal: this.timeoutSignal(),
     });
-  }
-}
-
-interface SseEvent {
-  event: string;
-  data: Record<string, any>;
-}
-
-function parseSseEvent(raw: string): SseEvent | null {
-  let event = 'message';
-  let data = '';
-  for (const line of raw.split('\n')) {
-    if (line.startsWith('event:')) event = line.slice(6).trim();
-    else if (line.startsWith('data:')) data += line.slice(5).trim();
-  }
-  if (!data) return null;
-  try {
-    return { event, data: JSON.parse(data) as Record<string, any> };
-  } catch {
-    return null;
   }
 }

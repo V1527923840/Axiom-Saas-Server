@@ -5283,7 +5283,7 @@
         ]
       },
       "post": {
-        "operationId": "AiAgentController_sendMessage_v1",
+        "operationId": "AiAgentController_submitMessage_v1",
         "parameters": [
           {
             "name": "id",
@@ -5313,7 +5313,7 @@
           }
         },
         "responses": {
-          "201": {
+          "200": {
             "description": ""
           }
         },

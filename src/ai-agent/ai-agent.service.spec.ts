@@ -137,9 +137,9 @@ describe('AiAgentService', () => {
         remoteSessionId: 'r1',
         status: 'active',
       });
-      adapter.submitMessage = jest.fn().mockRejectedValue(
-        new Error('upstream down'),
-      );
+      adapter.submitMessage = jest
+        .fn()
+        .mockRejectedValue(new Error('upstream down'));
       await expect(svc.submitMessage('u1', 's1', 'hi')).rejects.toThrow(
         /upstream/,
       );
