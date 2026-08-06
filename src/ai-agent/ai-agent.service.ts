@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '../config/config.type';
 import { AiSessionRepository } from './infrastructure/persistence/ai-session.repository';
@@ -6,7 +11,7 @@ import { AgentAdapterRegistry } from './infrastructure/agent-adapter.registry';
 import { QuotaService } from './infrastructure/quota/quota.service';
 import { ConcurrencyService } from './infrastructure/concurrency/concurrency.service';
 import { AiSession } from './domain/ai-session';
-import { MessageDto, SseChunk } from './interfaces/agent-adapter.interface';
+import { MessageDto } from './interfaces/agent-adapter.interface';
 
 @Injectable()
 export class AiAgentService {
@@ -98,54 +103,46 @@ export class AiAgentService {
     await this.repo.update(s.id, { status: 'cancelled' });
   }
 
-  async *sendMessage(
+  /**
+   * 同步提交一条消息到上游，返回上游分配的 messageId + attemptId。
+   * 流式响应通过 streamEvents() 走独立 SSE 通道；本方法不消费任何流。
+   *
+   * inflight 锁的获取时机：成功拿到后**不释放**——流完成 / cancel / 错误 时才释放。
+   * 失败的兜底：adapter.submitMessage 抛错 → finally 释放锁。
+   */
+  async submitMessage(
     userId: number | string,
     id: string,
     content: string,
-  ): AsyncIterable<SseChunk> {
+  ): Promise<{ messageId: string; attemptId: string }> {
     const s = await this.getSession(userId, id);
     if (s.status === 'cancelled') {
-      yield {
-        type: 'error',
-        data: { code: 'SESSION_CANCELLED', message: 'Session cancelled' },
-      };
-      return;
+      throw new HttpException(
+        { statusCode: HttpStatus.CONFLICT, message: 'Session cancelled' },
+        HttpStatus.CONFLICT,
+      );
+    }
+    if (!s.remoteSessionId) {
+      throw new HttpException(
+        { statusCode: HttpStatus.CONFLICT, message: 'Session has no remote id yet' },
+        HttpStatus.CONFLICT,
+      );
     }
 
     await this.concurrency.acquire(s.id);
+    await this.quota.checkAndIncrement(s.id);
+
     try {
-      await this.quota.checkAndIncrement(s.id);
-
       const adapter = this.registry.get(s.agentType);
-      const ac = new AbortController();
-      try {
-        for await (const chunk of adapter.sendMessage(
-          s.remoteSessionId!,
-          content,
-          ac.signal,
-        )) {
-          yield chunk;
-        }
-      } catch (e) {
-        yield {
-          type: 'error',
-          data: { code: 'UPSTREAM_ERROR', message: (e as Error).message },
-        };
-        await this.repo.update(s.id, { status: 'error' });
-        return;
-      }
-
-      // 流成功完成:续期 TTL
-      const now = new Date();
-      const ttlDays =
-        this.configService.get('aiAgent.ttlDays', { infer: true }) ?? 30;
-      await this.repo.update(s.id, {
-        lastActiveAt: now,
-        expiresAt: new Date(now.getTime() + ttlDays * 86400_000),
-        status: 'active',
-      });
-    } finally {
+      const result = await adapter.submitMessage(
+        s.remoteSessionId,
+        content,
+        new AbortController().signal, // 提交阶段的 cancel 由 inflight 锁 + 后续 /cancel 端点控制
+      );
+      return result;
+    } catch (e) {
       await this.concurrency.release(s.id);
+      throw e;
     }
   }
 }

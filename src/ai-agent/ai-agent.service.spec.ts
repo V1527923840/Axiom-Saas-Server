@@ -15,6 +15,7 @@ describe('AiAgentService', () => {
       .fn()
       .mockResolvedValue({ remoteSessionId: 'remote-1' }),
     sendMessage: jest.fn(),
+    submitMessage: jest.fn(),
     getMessages: jest.fn(),
     cancelRemoteSession: jest.fn(),
     deleteRemoteSession: jest.fn(),
@@ -37,6 +38,9 @@ describe('AiAgentService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    concurrency.acquire.mockResolvedValue(undefined);
+    concurrency.release.mockResolvedValue(undefined);
+    quota.checkAndIncrement.mockResolvedValue(undefined);
     registry.get.mockReturnValue(adapter);
   });
 
@@ -75,5 +79,71 @@ describe('AiAgentService', () => {
     await svc.deleteSession('u1', 'sid');
     expect(repo.softDeleteById).toHaveBeenCalledWith('sid');
     expect(adapter.deleteRemoteSession).toHaveBeenCalledWith('r1');
+  });
+
+  describe('submitMessage', () => {
+    it('should reject if session not owned by user', async () => {
+      repo.findByIdAndUser.mockResolvedValue(null);
+      await expect(svc.submitMessage('u1', 's1', 'hi')).rejects.toThrow(
+        /not found/i,
+      );
+      expect(adapter.submitMessage).not.toHaveBeenCalled();
+    });
+
+    it('should reject if concurrency lock not acquired', async () => {
+      repo.findByIdAndUser.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        remoteSessionId: 'r1',
+        status: 'active',
+      });
+      concurrency.acquire.mockRejectedValue(new Error('locked'));
+      await expect(svc.submitMessage('u1', 's1', 'hi')).rejects.toThrow(
+        /locked/,
+      );
+      expect(adapter.submitMessage).not.toHaveBeenCalled();
+    });
+
+    it('should submit, persist, return messageId + attemptId', async () => {
+      repo.findByIdAndUser.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        remoteSessionId: 'r1',
+        status: 'active',
+      });
+      adapter.submitMessage = jest.fn().mockResolvedValue({
+        messageId: 'm-1',
+        attemptId: 'a-1',
+      });
+      const r = await svc.submitMessage('u1', 's1', 'hi');
+      expect(r).toEqual({ messageId: 'm-1', attemptId: 'a-1' });
+      expect(adapter.submitMessage).toHaveBeenCalledWith(
+        'r1',
+        'hi',
+        expect.any(AbortSignal),
+      );
+      expect(quota.checkAndIncrement).toHaveBeenCalledWith('s1');
+      // inflight lock NOT released — events stream completion releases it
+      expect(concurrency.release).not.toHaveBeenCalled();
+    });
+
+    it('should release inflight lock if submit fails', async () => {
+      repo.findByIdAndUser.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        remoteSessionId: 'r1',
+        status: 'active',
+      });
+      adapter.submitMessage = jest.fn().mockRejectedValue(
+        new Error('upstream down'),
+      );
+      await expect(svc.submitMessage('u1', 's1', 'hi')).rejects.toThrow(
+        /upstream/,
+      );
+      expect(concurrency.release).toHaveBeenCalledWith('s1');
+    });
   });
 });
