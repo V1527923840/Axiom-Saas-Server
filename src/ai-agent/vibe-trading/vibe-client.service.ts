@@ -57,11 +57,11 @@ export class VibeClientService {
     content: string,
     signal: AbortSignal,
   ): AsyncIterable<SseChunk> {
-    // Option A: sync-poll pattern.
-    // Upstream POST messages returns synchronously with {message_id, attempt_id}.
-    // The actual assistant reply appears later in GET messages — we poll for it
-    // and yield the content as a single chunk. Future Option B: replace polling
-    // with a long-lived /events stream connection.
+    // Option B: real streaming via /sessions/{id}/events.
+    // Upstream POST messages returns {message_id, attempt_id} synchronously; the
+    // assistant reply streams out via text_delta events on /events. Yield each
+    // delta to the frontend for a typewriter effect, then yield done on
+    // attempt.completed (or error on failure / cancellation).
     const submitRes = await fetch(
       `${this.baseUrl()}/sessions/${remoteSessionId}/messages`,
       {
@@ -95,66 +95,96 @@ export class VibeClientService {
       },
     };
 
-    // Poll GET messages for the assistant reply, up to ~55s (under default 60s timeout).
-    const deadline = Date.now() + 55_000;
-    const initialMessages = await this.getMessages(remoteSessionId);
-    const baselineIds = new Set(
-      initialMessages.map((m) => m.id ?? '').filter(Boolean),
+    const eventsRes = await fetch(
+      `${this.baseUrl()}/sessions/${remoteSessionId}/events`,
+      {
+        headers: this.authHeaders({ Accept: 'text/event-stream' }),
+        signal,
+      },
     );
-    const baselineTimestamp = initialMessages.reduce(
-      (max, m) => Math.max(max, m.createdAt?.getTime?.() ?? 0),
-      0,
-    );
-
-    while (Date.now() < deadline) {
-      if (signal.aborted) {
-        yield {
-          type: 'error',
-          data: { code: 'CANCELLED', message: 'Cancelled by client' },
-        };
-        return;
-      }
-      await sleep(1000);
-      if (signal.aborted) {
-        yield {
-          type: 'error',
-          data: { code: 'CANCELLED', message: 'Cancelled by client' },
-        };
-        return;
-      }
-      const current = await this.getMessages(remoteSessionId);
-      const fresh = current.filter((m) => {
-        const id = m.id ?? '';
-        const ts = m.createdAt?.getTime?.() ?? 0;
-        return (
-          !baselineIds.has(id) && ts >= baselineTimestamp && m.role !== 'user'
-        );
-      });
-      // Take the last fresh message (most recent assistant reply).
-      const assistantMsg = fresh[fresh.length - 1];
-      if (assistantMsg?.content) {
-        yield {
-          type: 'message',
-          data: {
-            delta: assistantMsg.content,
-            status: 'completed',
-            messageId: assistantMsg.id,
-            attemptId: attempt_id,
-          },
-        };
-        yield { type: 'done', data: { attemptId: attempt_id } };
-        return;
-      }
+    if (!eventsRes.ok || !eventsRes.body) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_GATEWAY,
+          message: `Vibe events stream failed: ${eventsRes.status}`,
+        },
+        HttpStatus.BAD_GATEWAY,
+      );
     }
 
-    yield {
-      type: 'error',
-      data: {
-        code: 'TIMEOUT',
-        message: 'Assistant response timed out',
-        attemptId: attempt_id,
-      },
-    };
+    const reader = eventsRes.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let reply = '';
+    try {
+      while (true) {
+        if (signal.aborted) {
+          yield {
+            type: 'error',
+            data: { code: 'CANCELLED', message: 'Cancelled by client' },
+          };
+          return;
+        }
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split('\n\n');
+        buffer = events.pop() ?? '';
+        for (const raw of events) {
+          const parsed = parseSseEvent(raw);
+          if (!parsed) continue;
+          // Only react to events that belong to OUR attempt — concurrent
+          // messages on the same session produce other attempts' events too.
+          if (parsed.data.attempt_id && parsed.data.attempt_id !== attempt_id) {
+            continue;
+          }
+          switch (parsed.event) {
+            case 'text_delta':
+              reply += parsed.data.delta ?? '';
+              yield {
+                type: 'message',
+                data: {
+                  delta: parsed.data.delta ?? '',
+                  status: 'streaming',
+                  attemptId: attempt_id,
+                },
+              };
+              break;
+            case 'attempt.completed':
+              yield {
+                type: 'message',
+                data: {
+                  delta: '',
+                  status: 'completed',
+                  attemptId: attempt_id,
+                  fullReply: parsed.data.summary ?? reply,
+                },
+              };
+              yield { type: 'done', data: { attemptId: attempt_id } };
+              return;
+            case 'attempt.error':
+              yield {
+                type: 'error',
+                data: {
+                  code: 'UPSTREAM_ERROR',
+                  message: parsed.data.error ?? 'Upstream attempt error',
+                  attemptId: attempt_id,
+                },
+              };
+              return;
+            // ignore: message.received, attempt.created, attempt.started, thinking_done
+            default:
+              break;
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    // Stream closed without attempt.completed — yield done anyway so the
+    // frontend doesn't hang waiting for it.
+    yield { type: 'done', data: { attemptId: attempt_id, partial: true } };
   }
 
   async getMessages(
@@ -206,6 +236,22 @@ export class VibeClientService {
   }
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+interface SseEvent {
+  event: string;
+  data: Record<string, any>;
+}
+
+function parseSseEvent(raw: string): SseEvent | null {
+  let event = 'message';
+  let data = '';
+  for (const line of raw.split('\n')) {
+    if (line.startsWith('event:')) event = line.slice(6).trim();
+    else if (line.startsWith('data:')) data += line.slice(5).trim();
+  }
+  if (!data) return null;
+  try {
+    return { event, data: JSON.parse(data) as Record<string, any> };
+  } catch {
+    return null;
+  }
 }
