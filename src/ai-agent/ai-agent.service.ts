@@ -72,6 +72,21 @@ export class AiAgentService {
     return s;
   }
 
+  async updateSession(
+    userId: number | string,
+    id: string,
+    patch: { title?: string },
+  ): Promise<AiSession> {
+    const session = await this.getSession(userId, id);
+    if (patch.title !== undefined) session.title = patch.title;
+    session.lastActiveAt = new Date();
+    const updated = await this.repo.update(session.id, {
+      title: session.title,
+      lastActiveAt: session.lastActiveAt,
+    });
+    return updated as AiSession;
+  }
+
   async deleteSession(userId: number | string, id: string): Promise<void> {
     const s = await this.getSession(userId, id);
     await this.repo.softDeleteById(s.id);

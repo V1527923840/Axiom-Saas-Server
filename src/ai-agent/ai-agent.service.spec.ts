@@ -71,6 +71,59 @@ describe('AiAgentService', () => {
     );
   });
 
+  describe('updateSession', () => {
+    it('should reject if session not owned', async () => {
+      repo.findByIdAndUser.mockResolvedValue(null);
+      await expect(
+        svc.updateSession('u1', 's1', { title: 'x' }),
+      ).rejects.toThrow(/not found/i);
+      expect(repo.update).not.toHaveBeenCalled();
+    });
+
+    it('should patch title and bump lastActiveAt', async () => {
+      const existing = {
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        title: null,
+        status: 'active',
+        lastActiveAt: new Date(0),
+        expiresAt: new Date(0),
+      };
+      repo.findByIdAndUser.mockResolvedValue(existing);
+      const saved = {
+        ...existing,
+        title: 'new',
+        lastActiveAt: expect.any(Date),
+      };
+      repo.update.mockResolvedValue(saved);
+
+      const r = await svc.updateSession('u1', 's1', { title: 'new' });
+      expect(r.title).toBe('new');
+      expect(repo.update).toHaveBeenCalledWith(
+        's1',
+        expect.objectContaining({ title: 'new' }),
+      );
+    });
+
+    it('should ignore fields not in patch', async () => {
+      repo.findByIdAndUser.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        title: 'old',
+        status: 'active',
+        lastActiveAt: new Date(),
+        expiresAt: new Date(),
+      });
+      repo.update.mockResolvedValue({});
+      await svc.updateSession('u1', 's1', {});
+      const updateArg = repo.update.mock.calls[0][1];
+      expect(updateArg).not.toHaveProperty('status');
+      expect(updateArg).not.toHaveProperty('agentType');
+    });
+  });
+
   it('should soft-delete then notify adapter', async () => {
     repo.findByIdAndUser.mockResolvedValue({
       id: 'sid',
