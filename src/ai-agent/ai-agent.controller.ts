@@ -6,17 +6,12 @@ import {
   Param,
   Query,
   Body,
-  Sse,
   UseGuards,
   HttpStatus,
   HttpCode,
-  Logger,
-  MessageEvent,
-  RequestMethod,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Observable } from 'rxjs';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AiAgentService } from './ai-agent.service';
 
@@ -105,48 +100,19 @@ export class AiAgentController {
     return { data: messages };
   }
 
-  @Sse('sessions/:id/messages', { method: RequestMethod.POST })
-  sendMessage(
+  @Post('sessions/:id/messages')
+  @HttpCode(HttpStatus.OK)
+  async submitMessage(
     @CurrentUser() user: CurrentUserShape,
     @Param('id') id: string,
     @Body() dto: SendMessageDto,
-  ): Observable<MessageEvent> {
-    return new Observable<MessageEvent>((subscriber) => {
-      void (async () => {
-        try {
-          for await (const chunk of this.aiAgentService.sendMessage(
-            user.id,
-            id,
-            dto.content,
-          )) {
-            subscriber.next({ type: chunk.type, data: chunk.data });
-          }
-          subscriber.complete();
-        } catch (e) {
-          // Log full error server-side; never leak internals to the client.
-          Logger.error(
-            `SSE stream failed for session ${id} (user ${user.id}): ${
-              (e as Error).message
-            }`,
-            (e as Error).stack,
-            'AiAgentController.sendMessage',
-          );
-          subscriber.next({
-            type: 'error',
-            data: {
-              code: 'STREAM_ERROR',
-              message: 'Internal stream error',
-            },
-          });
-          subscriber.complete();
-        }
-      })();
-      // Teardown is intentionally a no-op: the underlying AsyncIterable
-      // is not cancelable, and AiAgentService does not yet expose a
-      // cancel handle. Until the service supports cancellation, the
-      // stream will run to completion even if the client disconnects.
-      return () => undefined;
-    });
+  ) {
+    const result = await this.aiAgentService.submitMessage(
+      user.id,
+      id,
+      dto.content,
+    );
+    return { data: result };
   }
 
   @Post('sessions/:id/cancel')
