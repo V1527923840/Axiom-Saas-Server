@@ -1,7 +1,10 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '../../config/config.type';
-import { MessageDto } from '../interfaces/agent-adapter.interface';
+import {
+  AgentStreamEvent,
+  MessageDto,
+} from '../interfaces/agent-adapter.interface';
 
 @Injectable()
 export class VibeClientService {
@@ -95,7 +98,7 @@ export class VibeClientService {
   async *streamEvents(
     remoteSessionId: string,
     signal: AbortSignal,
-  ): AsyncGenerator<{ event: string; data: Record<string, any> }> {
+  ): AsyncGenerator<AgentStreamEvent> {
     const res = await fetch(
       `${this.baseUrl()}/sessions/${remoteSessionId}/events`,
       {
@@ -186,9 +189,7 @@ export class VibeClientService {
  * Parse one SSE frame (text between blank lines) into {event, data}.
  * Returns null for empty frames or frames with no usable data.
  */
-function parseSseFrame(
-  raw: string,
-): { event: string; data: Record<string, any> } | null {
+function parseSseFrame(raw: string): AgentStreamEvent | null {
   const lines = raw.split('\n');
   let event = 'message';
   const dataLines: string[] = [];

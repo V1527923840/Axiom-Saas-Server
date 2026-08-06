@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   AgentAdapter,
+  AgentStreamEvent,
   MessageDto,
 } from '../interfaces/agent-adapter.interface';
 import { VIBE_TRADING_AGENT_TYPE } from './vibe-trading.config';
@@ -27,7 +28,7 @@ export class VibeTradingService implements AgentAdapter {
   async *streamEvents(
     remoteSessionId: string,
     signal: AbortSignal,
-  ): AsyncGenerator<{ event: string; data: Record<string, any> }> {
+  ): AsyncGenerator<AgentStreamEvent> {
     yield* this.client.streamEvents(remoteSessionId, signal);
   }
 

@@ -6,6 +6,14 @@ export interface MessageDto {
   meta?: Record<string, unknown>;
 }
 
+/**
+ * SSE 事件流的统一形状：上游推送的 event 名称 + data 负载（任意 JSON）。
+ */
+export interface AgentStreamEvent {
+  event: string;
+  data: Record<string, unknown>;
+}
+
 export interface AgentAdapter {
   readonly agentType: string;
 
@@ -23,6 +31,14 @@ export interface AgentAdapter {
     content: string,
     signal: AbortSignal,
   ): Promise<{ messageId: string; attemptId: string }>;
+
+  /**
+   * 长连接订阅一个 session 的事件流。返回 AsyncGenerator，调用方负责消费与中止。
+   */
+  streamEvents(
+    remoteSessionId: string,
+    signal: AbortSignal,
+  ): AsyncGenerator<AgentStreamEvent>;
 
   getMessages(remoteSessionId: string, cursor?: string): Promise<MessageDto[]>;
 
