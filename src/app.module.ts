@@ -10,6 +10,8 @@ import fileConfig from './files/config/file.config';
 import facebookConfig from './auth-facebook/config/facebook.config';
 import googleConfig from './auth-google/config/google.config';
 import appleConfig from './auth-apple/config/apple.config';
+import aiAgentConfig from './config/ai-agent/ai-agent.config';
+import vibeTradingConfig from './config/vibe-trading/vibe-trading.config';
 import path from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -69,6 +71,8 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
         facebookConfig,
         googleConfig,
         appleConfig,
+        aiAgentConfig,
+        vibeTradingConfig,
       ],
       envFilePath: ['.env'],
     }),
