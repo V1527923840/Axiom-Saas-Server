@@ -81,6 +81,7 @@ describe('AiAgentService', () => {
     });
 
     it('should patch title and bump lastActiveAt', async () => {
+      const baselineLastActiveAt = new Date(0).getTime();
       const existing = {
         id: 's1',
         userId: 'u1',
@@ -104,6 +105,11 @@ describe('AiAgentService', () => {
         's1',
         expect.objectContaining({ title: 'new' }),
       );
+      const updateArg = repo.update.mock.calls[0][1];
+      expect(updateArg.lastActiveAt).toBeInstanceOf(Date);
+      expect(updateArg.lastActiveAt.getTime()).toBeGreaterThan(
+        baselineLastActiveAt,
+      );
     });
 
     it('should ignore fields not in patch', async () => {
@@ -121,6 +127,8 @@ describe('AiAgentService', () => {
       const updateArg = repo.update.mock.calls[0][1];
       expect(updateArg).not.toHaveProperty('status');
       expect(updateArg).not.toHaveProperty('agentType');
+      expect(Object.keys(updateArg).sort()).toEqual(['lastActiveAt', 'title']);
+      expect(updateArg.title).toBe('old');
     });
   });
 
