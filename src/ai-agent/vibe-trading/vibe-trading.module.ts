@@ -13,6 +13,6 @@ import { AGENT_ADAPTERS } from '../interfaces/agent-adapter.interface';
       inject: [VibeTradingService],
     },
   ],
-  exports: [VibeTradingService, AGENT_ADAPTERS],
+  exports: [VibeClientService, VibeTradingService, AGENT_ADAPTERS],
 })
 export class VibeTradingModule {}

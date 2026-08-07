@@ -5442,6 +5442,458 @@
           "AI Agent"
         ]
       }
+    },
+    "/api/v1/ai-agent/sessions/{id}/goal": {
+      "post": {
+        "operationId": "AiAgentController_createGoal_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGoalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      },
+      "get": {
+        "operationId": "AiAgentController_getGoal_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      },
+      "patch": {
+        "operationId": "AiAgentController_updateGoal_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGoalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
+    },
+    "/api/v1/ai-agent/sessions/{id}/goal/evidence": {
+      "post": {
+        "operationId": "AiAgentController_addGoalEvidence_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddGoalEvidenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
+    },
+    "/api/v1/ai-agent/sessions/{id}/goal/status": {
+      "patch": {
+        "operationId": "AiAgentController_updateGoalStatus_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGoalStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
+    },
+    "/api/v1/ai-agent/swarm/presets": {
+      "get": {
+        "operationId": "AiAgentController_listSwarmPresets_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
+    },
+    "/api/v1/ai-agent/swarm/runs": {
+      "post": {
+        "operationId": "AiAgentController_createSwarmRun_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSwarmRunDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      },
+      "get": {
+        "operationId": "AiAgentController_listSwarmRuns_v1",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
+    },
+    "/api/v1/ai-agent/swarm/runs/{id}": {
+      "get": {
+        "operationId": "AiAgentController_getSwarmRun_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
+    },
+    "/api/v1/ai-agent/swarm/runs/{id}/cancel": {
+      "post": {
+        "operationId": "AiAgentController_cancelSwarmRun_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
+    },
+    "/api/v1/ai-agent/swarm/runs/{id}/retry": {
+      "post": {
+        "operationId": "AiAgentController_retrySwarmRun_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
+    },
+    "/api/v1/ai-agent/upload": {
+      "post": {
+        "operationId": "AiAgentController_uploadFile_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
     }
   },
   "info": {
@@ -6925,6 +7377,26 @@
         "properties": {}
       },
       "SendMessageDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateGoalDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateGoalDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AddGoalEvidenceDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateGoalStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateSwarmRunDto": {
         "type": "object",
         "properties": {}
       }
