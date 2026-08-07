@@ -22,9 +22,11 @@ export class VibeClientService {
     const token = this.configService.get('vibeTrading.apiToken', {
       infer: true,
     });
+    // Intentionally no default Content-Type: callers that send JSON should
+    // pass {'Content-Type': 'application/json'} via `extra`, while callers
+    // that send FormData must let fetch auto-generate the multipart boundary.
     return {
       Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
       ...extra,
     };
   }
@@ -38,7 +40,7 @@ export class VibeClientService {
   async createRemoteSession(): Promise<{ remoteSessionId: string }> {
     const res = await fetch(`${this.baseUrl()}/sessions`, {
       method: 'POST',
-      headers: this.authHeaders(),
+      headers: this.authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ title: '' }),
       signal: this.timeoutSignal(),
     });
@@ -69,7 +71,7 @@ export class VibeClientService {
       `${this.baseUrl()}/sessions/${remoteSessionId}/messages`,
       {
         method: 'POST',
-        headers: this.authHeaders(),
+        headers: this.authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ content }),
         signal,
       },
@@ -195,7 +197,10 @@ export class VibeClientService {
     form.append('file', blob, filename);
     const res = await fetch(`${this.baseUrl()}/upload`, {
       method: 'POST',
-      headers: this.authHeaders({ 'Content-Type': 'multipart/form-data' }),
+      // Do NOT set Content-Type manually here. When body is FormData, fetch
+      // auto-generates the multipart boundary in the Content-Type header.
+      // Setting it ourselves without the boundary breaks upstream parsers.
+      headers: this.authHeaders(),
       body: form,
       signal: this.timeoutSignal(),
     });
@@ -232,7 +237,7 @@ export class VibeClientService {
       `${this.baseUrl()}/sessions/${encodeURIComponent(remoteSessionId)}/goal`,
       {
         method: 'POST',
-        headers: this.authHeaders(),
+        headers: this.authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
         signal: this.timeoutSignal(),
       },
@@ -281,7 +286,7 @@ export class VibeClientService {
       `${this.baseUrl()}/sessions/${encodeURIComponent(remoteSessionId)}/goal`,
       {
         method: 'PATCH',
-        headers: this.authHeaders(),
+        headers: this.authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
         signal: this.timeoutSignal(),
       },
@@ -305,7 +310,7 @@ export class VibeClientService {
       `${this.baseUrl()}/sessions/${encodeURIComponent(remoteSessionId)}/goal/evidence`,
       {
         method: 'POST',
-        headers: this.authHeaders(),
+        headers: this.authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
         signal: this.timeoutSignal(),
       },
@@ -335,7 +340,7 @@ export class VibeClientService {
       `${this.baseUrl()}/sessions/${encodeURIComponent(remoteSessionId)}/goal/status`,
       {
         method: 'PATCH',
-        headers: this.authHeaders(),
+        headers: this.authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
         signal: this.timeoutSignal(),
       },
@@ -373,7 +378,7 @@ export class VibeClientService {
   ): Promise<{ id: string; status: string; preset_name: string }> {
     const res = await fetch(`${this.baseUrl()}/swarm/runs`, {
       method: 'POST',
-      headers: this.authHeaders(),
+      headers: this.authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ preset_name: presetName, user_vars: userVars }),
       signal: this.timeoutSignal(),
     });

@@ -158,11 +158,16 @@ describe('VibeClientService', () => {
           method: 'POST',
           headers: expect.objectContaining({
             Authorization: 'Bearer tk',
-            'Content-Type': 'multipart/form-data',
           }),
           body: expect.any(FormData),
         }),
       );
+      // We must NOT set Content-Type manually here — fetch auto-generates
+      // the proper `multipart/form-data; boundary=...` header when body is FormData.
+      // A manually-set Content-Type (without the boundary parameter) breaks
+      // upstream multipart parsing.
+      const callArgs = fetchMock.mock.calls[0][1];
+      expect(callArgs.headers['Content-Type']).toBeUndefined();
       expect(r).toEqual({
         status: 'ok',
         file_path: '/uploads/abc.pdf',
