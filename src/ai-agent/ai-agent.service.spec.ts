@@ -344,31 +344,24 @@ describe('AiAgentService', () => {
       });
       adapter.cancelRemoteSession = jest.fn().mockResolvedValue(undefined);
       await svc.cancelSession('u1', 's1');
-      // release must run before status update
-      const releaseOrder = concurrency.release.mock.invocationCallOrder[0];
-      const updateCallOrder =
-        repo.update.mock.invocationCallOrder[0] ?? Number.MAX_SAFE_INTEGER;
+      // cancel stops the current attempt only; the session status must stay
+      // unchanged so the user can immediately send a new message.
       expect(concurrency.release).toHaveBeenCalledWith('s1');
-      expect(repo.update).toHaveBeenCalledWith(
-        's1',
-        expect.objectContaining({ status: 'cancelled' }),
-      );
-      expect(releaseOrder).toBeLessThan(updateCallOrder);
+      expect(adapter.cancelRemoteSession).toHaveBeenCalledWith('r1');
+      expect(repo.update).not.toHaveBeenCalled();
     });
 
-    it('should release lock even if status update fails', async () => {
+    it('should be a no-op when session has no remote id', async () => {
       repo.findByIdAndUser.mockResolvedValue({
         id: 's1',
         userId: 'u1',
         agentType: 'vibe-trading',
-        remoteSessionId: 'r1',
+        remoteSessionId: null,
         status: 'active',
       });
-      adapter.cancelRemoteSession = jest.fn().mockResolvedValue(undefined);
-      repo.update.mockRejectedValue(new Error('db down'));
-      await expect(svc.cancelSession('u1', 's1')).rejects.toThrow(/db down/);
-      // defensive: release happens BEFORE update, so lock is free even when update throws
-      expect(concurrency.release).toHaveBeenCalledWith('s1');
+      await svc.cancelSession('u1', 's1');
+      expect(adapter.cancelRemoteSession).not.toHaveBeenCalled();
+      expect(concurrency.release).not.toHaveBeenCalled();
     });
   });
 
@@ -376,68 +369,6 @@ describe('AiAgentService', () => {
     it('should delegate to concurrency.release with the given session id', async () => {
       await svc.releaseSessionLock('s1');
       expect(concurrency.release).toHaveBeenCalledWith('s1');
-    });
-  });
-
-  describe('reactivateSession', () => {
-    it('should flip status from cancelled to active and bump lastActiveAt', async () => {
-      const baselineLastActiveAt = new Date(0).getTime();
-      repo.findByIdAndUser.mockResolvedValue({
-        id: 's1',
-        userId: 'u1',
-        agentType: 'vibe-trading',
-        remoteSessionId: 'r1',
-        status: 'cancelled',
-        lastActiveAt: new Date(0),
-      });
-      // reset implementation from any prior test (e.g. cancelSession rejection)
-      repo.update.mockResolvedValue(undefined);
-
-      await svc.reactivateSession('u1', 's1');
-
-      expect(concurrency.release).toHaveBeenCalledWith('s1');
-      expect(repo.update).toHaveBeenCalledWith(
-        's1',
-        expect.objectContaining({ status: 'active' }),
-      );
-      const updateArg = repo.update.mock.calls[0][1];
-      expect(updateArg.lastActiveAt).toBeInstanceOf(Date);
-      expect(updateArg.lastActiveAt.getTime()).toBeGreaterThan(
-        baselineLastActiveAt,
-      );
-    });
-
-    it('should be idempotent on already-active sessions (no-op)', async () => {
-      repo.findByIdAndUser.mockResolvedValue({
-        id: 's1',
-        userId: 'u1',
-        agentType: 'vibe-trading',
-        remoteSessionId: 'r1',
-        status: 'active',
-      });
-      repo.update.mockResolvedValue(undefined);
-
-      await svc.reactivateSession('u1', 's1');
-
-      expect(repo.update).not.toHaveBeenCalled();
-      // no point releasing a clean lock
-      expect(concurrency.release).not.toHaveBeenCalled();
-    });
-
-    it('should not touch error-state sessions', async () => {
-      repo.findByIdAndUser.mockResolvedValue({
-        id: 's1',
-        userId: 'u1',
-        agentType: 'vibe-trading',
-        remoteSessionId: 'r1',
-        status: 'error',
-      });
-      repo.update.mockResolvedValue(undefined);
-
-      await svc.reactivateSession('u1', 's1');
-
-      expect(repo.update).not.toHaveBeenCalled();
-      expect(concurrency.release).not.toHaveBeenCalled();
     });
   });
 });

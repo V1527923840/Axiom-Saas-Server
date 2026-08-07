@@ -116,26 +116,11 @@ export class AiAgentService {
   async cancelSession(userId: number | string, id: string): Promise<void> {
     const s = await this.getSession(userId, id);
     if (!s.remoteSessionId) return;
+    // Cancel only stops the current attempt; the session itself stays active and
+    // remains usable for new messages. Release the inflight lock so the next
+    // submitMessage can acquire it.
     await this.registry.get(s.agentType).cancelRemoteSession(s.remoteSessionId);
-    // 先释放 inflight 锁再更新状态 —— 防御性:即使状态更新失败,锁也已释放
     await this.concurrency.release(s.id);
-    await this.repo.update(s.id, { status: 'cancelled' });
-  }
-
-  /**
-   * 把已 cancelled 的 session 恢复到 active 状态,允许继续发送消息。
-   * 防御性地释放可能仍然持有的 inflight 锁(cancel 路径已释放,但 re-activate
-   * 不应依赖于此)。
-   * 只允许 cancelled → active 转换;active/error 状态下不操作(幂等返回)。
-   */
-  async reactivateSession(userId: number | string, id: string): Promise<void> {
-    const s = await this.getSession(userId, id);
-    if (s.status !== 'cancelled') return; // 幂等:已 active / error 不动
-    await this.concurrency.release(s.id); // 防御性
-    await this.repo.update(s.id, {
-      status: 'active',
-      lastActiveAt: new Date(),
-    });
   }
 
   /**
@@ -159,12 +144,6 @@ export class AiAgentService {
     content: string,
   ): Promise<{ messageId: string; attemptId: string }> {
     const s = await this.getSession(userId, id);
-    if (s.status === 'cancelled') {
-      throw new HttpException(
-        { statusCode: HttpStatus.CONFLICT, message: 'Session cancelled' },
-        HttpStatus.CONFLICT,
-      );
-    }
     if (!s.remoteSessionId) {
       throw new HttpException(
         {
