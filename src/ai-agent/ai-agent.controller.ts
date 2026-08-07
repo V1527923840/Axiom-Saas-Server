@@ -8,12 +8,18 @@ import {
   Query,
   Body,
   UseGuards,
+  UseInterceptors,
   HttpStatus,
   HttpCode,
   HttpException,
   Sse,
   MessageEvent,
+  BadRequestException,
+  PayloadTooLargeException,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import * as path from 'path';
 import { Observable } from 'rxjs';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -313,5 +319,100 @@ export class AiAgentController {
   @HttpCode(HttpStatus.OK)
   async retrySwarmRun(@Param('id') id: string) {
     return this.vibeClient.retrySwarmRun(id);
+  }
+
+  // ---------------- File upload (multer) ----------------
+
+  private static readonly MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+
+  private static readonly ALLOWED_UPLOAD_EXT = new Set([
+    '.pdf',
+    '.docx',
+    '.xlsx',
+    '.xls',
+    '.pptx',
+    '.csv',
+    '.tsv',
+    '.txt',
+    '.md',
+    '.log',
+    '.json',
+    '.yaml',
+    '.yml',
+    '.toml',
+    '.html',
+    '.xml',
+    '.rst',
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.gif',
+    '.bmp',
+    '.webp',
+    '.tiff',
+  ]);
+
+  private static readonly BLOCKED_UPLOAD_EXT = new Set([
+    '.exe',
+    '.msi',
+    '.bat',
+    '.cmd',
+    '.com',
+    '.scr',
+    '.app',
+    '.dmg',
+    '.so',
+    '.dll',
+    '.dylib',
+    '.py',
+    '.pyw',
+    '.sh',
+    '.bash',
+    '.zsh',
+    '.fish',
+    '.ps1',
+    '.yaml',
+    '.yml',
+    '.j2',
+    '.jinja',
+    '.jinja2',
+    '.template',
+    '.zip',
+    '.rar',
+    '.7z',
+    '.tar',
+    '.gz',
+    '.tgz',
+    '.bz2',
+    '.xz',
+  ]);
+
+  @Post('upload')
+  @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: AiAgentController.MAX_UPLOAD_BYTES },
+    }),
+  )
+  @HttpCode(HttpStatus.OK)
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Missing file');
+    if (file.size > AiAgentController.MAX_UPLOAD_BYTES) {
+      throw new PayloadTooLargeException('File exceeds 50MB limit');
+    }
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (
+      AiAgentController.BLOCKED_UPLOAD_EXT.has(ext) ||
+      !AiAgentController.ALLOWED_UPLOAD_EXT.has(ext)
+    ) {
+      throw new BadRequestException(
+        'This file type is not allowed for upload.',
+      );
+    }
+    return this.vibeClient.uploadFile(
+      file.buffer,
+      file.originalname,
+      file.mimetype,
+    );
   }
 }

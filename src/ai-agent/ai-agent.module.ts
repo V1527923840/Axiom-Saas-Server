@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { MulterModule } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { AiAgentController } from './ai-agent.controller';
@@ -16,6 +18,10 @@ import { VibeTradingModule } from './vibe-trading/vibe-trading.module';
     UsersModule,
     RelationalAiSessionPersistenceModule,
     VibeTradingModule,
+    MulterModule.register({
+      storage: memoryStorage(),
+      limits: { fileSize: 50 * 1024 * 1024 },
+    }),
   ],
   controllers: [AiAgentController],
   providers: [

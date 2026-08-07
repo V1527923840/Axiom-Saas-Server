@@ -33,6 +33,7 @@ describe('AiAgentController', () => {
     getSwarmRun: jest.fn(),
     cancelSwarmRun: jest.fn(),
     retrySwarmRun: jest.fn(),
+    uploadFile: jest.fn(),
   };
 
   let ctrl: AiAgentController;
@@ -298,6 +299,73 @@ describe('AiAgentController', () => {
     });
   });
 
+  // ---------------- POST /upload (Task 3) ----------------
+
+  describe('POST /upload', () => {
+    const makeFile = (
+      overrides: Partial<{
+        originalname: string;
+        size: number;
+        mimetype: string;
+      }> = {},
+    ): Express.Multer.File => ({
+      fieldname: 'file',
+      originalname: 'doc.pdf',
+      encoding: '7bit',
+      mimetype: 'application/pdf',
+      size: 1024,
+      buffer: Buffer.from('test'),
+      destination: '',
+      filename: '',
+      path: '',
+      stream: undefined as any,
+      ...overrides,
+    });
+
+    it('should pass through vibe uploadFile response for a valid .pdf', async () => {
+      const vibeResp = {
+        status: 'ok',
+        file_path: '/uploads/x.pdf',
+        filename: 'x.pdf',
+      };
+      (vibe.uploadFile as jest.Mock).mockResolvedValue(vibeResp);
+      const r = await ctrl.uploadFile(makeFile({ originalname: 'doc.pdf' }));
+      expect(vibe.uploadFile).toHaveBeenCalledWith(
+        expect.any(Buffer),
+        'doc.pdf',
+        'application/pdf',
+      );
+      expect(r).toEqual(vibeResp);
+    });
+
+    it('should reject file exceeding 50MB', async () => {
+      const big = makeFile({
+        originalname: 'huge.pdf',
+        size: 50 * 1024 * 1024 + 1,
+      });
+      await expect(ctrl.uploadFile(big)).rejects.toBeInstanceOf(HttpException);
+      expect(vibe.uploadFile).not.toHaveBeenCalled();
+    });
+
+    it('should reject blocked extension .exe', async () => {
+      const exe = makeFile({
+        originalname: 'malware.exe',
+        mimetype: 'application/octet-stream',
+      });
+      await expect(ctrl.uploadFile(exe)).rejects.toBeInstanceOf(HttpException);
+      expect(vibe.uploadFile).not.toHaveBeenCalled();
+    });
+
+    it('should propagate HttpException from vibe on 5xx', async () => {
+      (vibe.uploadFile as jest.Mock).mockRejectedValue(
+        new HttpException('upstream 502', 502),
+      );
+      await expect(
+        ctrl.uploadFile(makeFile({ originalname: 'doc.pdf' })),
+      ).rejects.toBeInstanceOf(HttpException);
+    });
+  });
+
   // ---- guard metadata verification ----
   describe('JWT guard placement', () => {
     // Use Reflect to inspect which handlers carry the @UseGuards
@@ -316,6 +384,7 @@ describe('AiAgentController', () => {
       'getSwarmRun',
       'cancelSwarmRun',
       'retrySwarmRun',
+      'uploadFile',
     ];
 
     it.each(protectedMethods)(
