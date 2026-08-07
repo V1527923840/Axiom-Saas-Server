@@ -378,4 +378,66 @@ describe('AiAgentService', () => {
       expect(concurrency.release).toHaveBeenCalledWith('s1');
     });
   });
+
+  describe('reactivateSession', () => {
+    it('should flip status from cancelled to active and bump lastActiveAt', async () => {
+      const baselineLastActiveAt = new Date(0).getTime();
+      repo.findByIdAndUser.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        remoteSessionId: 'r1',
+        status: 'cancelled',
+        lastActiveAt: new Date(0),
+      });
+      // reset implementation from any prior test (e.g. cancelSession rejection)
+      repo.update.mockResolvedValue(undefined);
+
+      await svc.reactivateSession('u1', 's1');
+
+      expect(concurrency.release).toHaveBeenCalledWith('s1');
+      expect(repo.update).toHaveBeenCalledWith(
+        's1',
+        expect.objectContaining({ status: 'active' }),
+      );
+      const updateArg = repo.update.mock.calls[0][1];
+      expect(updateArg.lastActiveAt).toBeInstanceOf(Date);
+      expect(updateArg.lastActiveAt.getTime()).toBeGreaterThan(
+        baselineLastActiveAt,
+      );
+    });
+
+    it('should be idempotent on already-active sessions (no-op)', async () => {
+      repo.findByIdAndUser.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        remoteSessionId: 'r1',
+        status: 'active',
+      });
+      repo.update.mockResolvedValue(undefined);
+
+      await svc.reactivateSession('u1', 's1');
+
+      expect(repo.update).not.toHaveBeenCalled();
+      // no point releasing a clean lock
+      expect(concurrency.release).not.toHaveBeenCalled();
+    });
+
+    it('should not touch error-state sessions', async () => {
+      repo.findByIdAndUser.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        remoteSessionId: 'r1',
+        status: 'error',
+      });
+      repo.update.mockResolvedValue(undefined);
+
+      await svc.reactivateSession('u1', 's1');
+
+      expect(repo.update).not.toHaveBeenCalled();
+      expect(concurrency.release).not.toHaveBeenCalled();
+    });
+  });
 });

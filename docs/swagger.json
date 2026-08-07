@@ -5442,6 +5442,42 @@
           "AI Agent"
         ]
       }
+    },
+    "/api/v1/ai-agent/sessions/{id}/reactivate": {
+      "post": {
+        "operationId": "AiAgentController_reactivate_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "AI Agent"
+        ]
+      }
     }
   },
   "info": {

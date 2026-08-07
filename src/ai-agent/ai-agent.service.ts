@@ -123,6 +123,22 @@ export class AiAgentService {
   }
 
   /**
+   * 把已 cancelled 的 session 恢复到 active 状态,允许继续发送消息。
+   * 防御性地释放可能仍然持有的 inflight 锁(cancel 路径已释放,但 re-activate
+   * 不应依赖于此)。
+   * 只允许 cancelled → active 转换;active/error 状态下不操作(幂等返回)。
+   */
+  async reactivateSession(userId: number | string, id: string): Promise<void> {
+    const s = await this.getSession(userId, id);
+    if (s.status !== 'cancelled') return; // 幂等:已 active / error 不动
+    await this.concurrency.release(s.id); // 防御性
+    await this.repo.update(s.id, {
+      status: 'active',
+      lastActiveAt: new Date(),
+    });
+  }
+
+  /**
    * Controller-only 暴露:在 SSE teardown 时调用,释放可能仍持有的 inflight 锁。
    * 使用 fire-and-forget,不阻塞 teardown。
    */

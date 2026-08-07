@@ -162,4 +162,14 @@ export class AiAgentController {
     await this.aiAgentService.cancelSession(user.id, id);
     return { success: true, message: 'Session cancelled' };
   }
+
+  @Post('sessions/:id/reactivate')
+  @HttpCode(HttpStatus.OK)
+  async reactivate(
+    @CurrentUser() user: CurrentUserShape,
+    @Param('id') id: string,
+  ) {
+    await this.aiAgentService.reactivateSession(user.id, id);
+    return { success: true, message: 'Session reactivated' };
+  }
 }
