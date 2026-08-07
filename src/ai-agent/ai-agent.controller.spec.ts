@@ -283,5 +283,60 @@ describe('AiAgentController', () => {
         HttpException,
       );
     });
+
+    // Verify the method itself runs without invoking any JWT-protected
+    // service (svc.getSession is the JWT-backed owner check). Since the
+    // unit test instantiates the controller directly without any guard
+    // middleware, we just assert that calling listSwarmPresets does not
+    // touch the protected AiAgentService.
+    it('should not invoke any JWT-protected service when called directly', async () => {
+      (vibe.listSwarmPresets as jest.Mock).mockResolvedValue([]);
+      await ctrl.listSwarmPresets();
+      expect(svc.getSession).not.toHaveBeenCalled();
+      expect(svc.createSession).not.toHaveBeenCalled();
+      expect(svc.listSessions).not.toHaveBeenCalled();
+    });
+  });
+
+  // ---- guard metadata verification ----
+  describe('JWT guard placement', () => {
+    // Use Reflect to inspect which handlers carry the @UseGuards
+    // metadata. The exact guard class is anonymous (AuthGuard('jwt')
+    // returns an inner class with no .name), so we check that protected
+    // routes have at least one guard entry, while `listSwarmPresets`
+    // has none — proving it is the only public route.
+    const protectedMethods = [
+      'createGoal',
+      'getGoal',
+      'updateGoal',
+      'addGoalEvidence',
+      'updateGoalStatus',
+      'createSwarmRun',
+      'listSwarmRuns',
+      'getSwarmRun',
+      'cancelSwarmRun',
+      'retrySwarmRun',
+    ];
+
+    it.each(protectedMethods)(
+      '%s should be decorated with @UseGuards',
+      (methodName) => {
+        const guards: any[] =
+          Reflect.getMetadata(
+            '__guards__',
+            (AiAgentController.prototype as any)[methodName],
+          ) ?? [];
+        expect(guards.length).toBeGreaterThan(0);
+      },
+    );
+
+    it('should NOT decorate listSwarmPresets with @UseGuards', () => {
+      const guards: any[] =
+        Reflect.getMetadata(
+          '__guards__',
+          AiAgentController.prototype.listSwarmPresets,
+        ) ?? [];
+      expect(guards.length).toBe(0);
+    });
   });
 });

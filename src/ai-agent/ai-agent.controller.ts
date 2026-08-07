@@ -18,7 +18,6 @@ import { Observable } from 'rxjs';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Public } from '../auth/decorators/public.decorator';
 import { AiAgentService } from './ai-agent.service';
 import { VibeClientService } from './vibe-trading/vibe-client.service';
 import { CreateGoalDto } from './vibe-trading/dto/create-goal.dto';
@@ -42,7 +41,6 @@ import { infinityPagination } from '../utils/infinity-pagination';
 
 @ApiBearerAuth()
 @ApiTags('AI Agent')
-@UseGuards(AuthGuard('jwt'))
 @Controller({ path: 'ai-agent', version: '1' })
 export class AiAgentController {
   constructor(
@@ -57,6 +55,7 @@ export class AiAgentController {
   }
 
   @Post('sessions')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.CREATED)
   async create(
     @CurrentUser() user: CurrentUserShape,
@@ -71,6 +70,7 @@ export class AiAgentController {
   }
 
   @Get('sessions')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async list(
     @CurrentUser() user: CurrentUserShape,
@@ -92,6 +92,7 @@ export class AiAgentController {
   }
 
   @Get('sessions/:id')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async getOne(@CurrentUser() user: CurrentUserShape, @Param('id') id: string) {
     const s = await this.aiAgentService.getSession(user.id, id);
@@ -99,6 +100,7 @@ export class AiAgentController {
   }
 
   @Delete('sessions/:id')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async remove(@CurrentUser() user: CurrentUserShape, @Param('id') id: string) {
     await this.aiAgentService.deleteSession(user.id, id);
@@ -106,6 +108,7 @@ export class AiAgentController {
   }
 
   @Patch('sessions/:id')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async update(
     @CurrentUser() user: CurrentUserShape,
@@ -117,6 +120,7 @@ export class AiAgentController {
   }
 
   @Get('sessions/:id/messages')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async getMessages(
     @CurrentUser() user: CurrentUserShape,
@@ -128,6 +132,7 @@ export class AiAgentController {
   }
 
   @Post('sessions/:id/messages')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async submitMessage(
     @CurrentUser() user: CurrentUserShape,
@@ -143,6 +148,7 @@ export class AiAgentController {
   }
 
   @Get('sessions/:id/events')
+  @UseGuards(AuthGuard('jwt'))
   @Sse()
   events(
     @CurrentUser() user: CurrentUserShape,
@@ -168,6 +174,7 @@ export class AiAgentController {
   }
 
   @Post('sessions/:id/cancel')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async cancel(@CurrentUser() user: CurrentUserShape, @Param('id') id: string) {
     await this.aiAgentService.cancelSession(user.id, id);
@@ -200,6 +207,7 @@ export class AiAgentController {
   }
 
   @Post('sessions/:id/goal')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async createGoal(
     @CurrentUser() user: CurrentUserShape,
@@ -211,6 +219,7 @@ export class AiAgentController {
   }
 
   @Get('sessions/:id/goal')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async getGoal(
     @CurrentUser() user: CurrentUserShape,
@@ -222,6 +231,7 @@ export class AiAgentController {
   }
 
   @Patch('sessions/:id/goal')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async updateGoal(
     @CurrentUser() user: CurrentUserShape,
@@ -233,6 +243,7 @@ export class AiAgentController {
   }
 
   @Post('sessions/:id/goal/evidence')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async addGoalEvidence(
     @CurrentUser() user: CurrentUserShape,
@@ -244,6 +255,7 @@ export class AiAgentController {
   }
 
   @Patch('sessions/:id/goal/status')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async updateGoalStatus(
     @CurrentUser() user: CurrentUserShape,
@@ -255,23 +267,23 @@ export class AiAgentController {
   }
 
   // ---------------- Swarm (passthrough) ----------------
-  // 注意:presets 不挂 JWT,单独放在 class 顶端、绕过 @UseGuards。
-  // 当前 class 级别 @UseGuards(AuthGuard('jwt')) 仍会生效;@Public()
-  // 仅为未来引入全局 Reflector-based guard 时的 marker。
+  // 注意:presets 不挂 JWT,公开访问;其他 swarm 路由需要 JWT。
 
   @Get('swarm/presets')
-  @Public()
+  @HttpCode(HttpStatus.OK)
   async listSwarmPresets() {
     return this.vibeClient.listSwarmPresets();
   }
 
   @Post('swarm/runs')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async createSwarmRun(@Body() dto: CreateSwarmRunDto) {
     return this.vibeClient.createSwarmRun(dto.preset_name, dto.user_vars);
   }
 
   @Get('swarm/runs')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async listSwarmRuns(@Query('limit') limit?: string) {
     // Use isNaN check (not `|| 20`) so that `limit=0` parses to 0 then
@@ -283,18 +295,21 @@ export class AiAgentController {
   }
 
   @Get('swarm/runs/:id')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async getSwarmRun(@Param('id') id: string) {
     return this.vibeClient.getSwarmRun(id);
   }
 
   @Post('swarm/runs/:id/cancel')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async cancelSwarmRun(@Param('id') id: string) {
     return this.vibeClient.cancelSwarmRun(id);
   }
 
   @Post('swarm/runs/:id/retry')
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
   async retrySwarmRun(@Param('id') id: string) {
     return this.vibeClient.retrySwarmRun(id);
