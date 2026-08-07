@@ -796,3 +796,35 @@ npm run release
 ```
 
 发布配置使用 `release-it` + Conventional Commits preset。
+## AI Agent 对话模块路由清单
+
+`ai-agent` 模块(`Controller({ path: 'ai-agent', version: '1' })`)提供对话能力,所有路由 **per-route JWT 守卫**(class 级守卫在重构中移除,避免影响公开路由)。透明转发到上游 vibe FastAPI service(`VibeClientService` 集中 fetch 透传)。
+
+### 上传
+| Method | Path | 说明 | 鉴权 |
+|--------|------|------|------|
+| `POST` | `/upload` | multer memoryStorage 接收 multipart/form-data(50 MB 上限,扩展名白名单 + 黑名单),透传 vibe `/upload` | JWT |
+
+### Goal(研究目标)
+| Method | Path | 说明 | 鉴权 |
+|--------|------|------|------|
+| `POST` | `/sessions/:id/goal` | 创建目标(`CreateGoalDto`) | JWT |
+| `GET`  | `/sessions/:id/goal` | 获取最新 `GoalSnapshot`(包含 criteria/evidence) | JWT |
+| `PATCH`| `/sessions/:id/goal` | 修改 objective | JWT |
+| `POST` | `/sessions/:id/goal/evidence` | 追加证据 | JWT |
+| `PATCH`| `/sessions/:id/goal/status` | 流转状态(active/cancelled/complete/...) | JWT |
+
+### Swarm(智能体蜂群)
+| Method | Path | 说明 | 鉴权 |
+|--------|------|------|------|
+| `GET`  | `/swarm/presets` | 列出预设(从 vibe `/swarm/presets` 透传) | **公开**(无需 JWT) |
+| `POST` | `/swarm/runs` | 启动 swarm run | JWT |
+| `GET`  | `/swarm/runs?limit=N` | 列出 run | JWT |
+| `GET`  | `/swarm/runs/:id` | run 详情 | JWT |
+| `POST` | `/swarm/runs/:id/cancel` | 取消 | JWT |
+| `POST` | `/swarm/runs/:id/retry` | 重试 | JWT |
+
+swarm 实时事件不通过额外 SSE 路由,而是走 `/sessions/:id/events`(vibe 在 session SSE 上 broadcast `swarm.started` / `swarm.event`)。
+
+### 已有 session/messages/events/cancel 路由
+保持不变。9 个 session 路由 + 1 个 SSE + 1 个 cancel,全部 per-route JWT 守卫。
