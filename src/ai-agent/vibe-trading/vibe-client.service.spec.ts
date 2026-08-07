@@ -131,6 +131,339 @@ describe('VibeClientService', () => {
     const gen = svc.streamEvents('r1', new AbortController().signal);
     await expect(gen.next()).rejects.toBeInstanceOf(HttpException);
   });
+
+  // ---------------- new methods (upload, goal, swarm) ----------------
+
+  describe('new methods', () => {
+    // ---------------- uploadFile ----------------
+
+    it('should POST /upload as multipart/form-data and return {status, file_path, filename}', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            status: 'ok',
+            file_path: '/uploads/abc.pdf',
+            filename: 'abc.pdf',
+          }),
+      });
+
+      const buf = Buffer.from('pdf-bytes');
+      const r = await svc.uploadFile(buf, 'abc.pdf', 'application/pdf');
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://vibe.local/upload',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            Authorization: 'Bearer tk',
+            'Content-Type': 'multipart/form-data',
+          }),
+          body: expect.any(FormData),
+        }),
+      );
+      expect(r).toEqual({
+        status: 'ok',
+        file_path: '/uploads/abc.pdf',
+        filename: 'abc.pdf',
+      });
+    });
+
+    // ---------------- createGoal ----------------
+
+    it('should POST /sessions/:id/goal with goal body and return vibe response', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ goal_id: 'g1', status: 'active' }),
+      });
+
+      const body = {
+        objective: 'reach 20% portfolio growth',
+        criteria: ['sharpe > 1.5'],
+        risk_tier: 'medium',
+      };
+      const r = await svc.createGoal('r1', body);
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://vibe.local/sessions/r1/goal',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            Authorization: 'Bearer tk',
+          }),
+          body: JSON.stringify(body),
+        }),
+      );
+      expect(r).toEqual({ goal_id: 'g1', status: 'active' });
+    });
+
+    // ---------------- getGoal ----------------
+
+    it('should GET /sessions/:id/goal and return vibe response', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ goal_id: 'g1', status: 'active' }),
+      });
+
+      const r = await svc.getGoal('r1');
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://vibe.local/sessions/r1/goal',
+        expect.objectContaining({
+          headers: expect.objectContaining({ Authorization: 'Bearer tk' }),
+        }),
+      );
+      expect(r).toEqual({ goal_id: 'g1', status: 'active' });
+    });
+
+    it('should return null when getGoal receives 404', async () => {
+      fetchMock.mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: () => Promise.resolve({}),
+      });
+
+      await expect(svc.getGoal('r1')).resolves.toBeNull();
+    });
+
+    // ---------------- updateGoal ----------------
+
+    it('should PATCH /sessions/:id/goal with update body and return vibe response', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ goal_id: 'g1', status: 'updated' }),
+      });
+
+      const body = {
+        goal_id: 'g1',
+        expected_goal_id: 'g1',
+        ui_summary: 'new summary',
+      };
+      const r = await svc.updateGoal('r1', body);
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://vibe.local/sessions/r1/goal',
+        expect.objectContaining({
+          method: 'PATCH',
+          headers: expect.objectContaining({ Authorization: 'Bearer tk' }),
+          body: JSON.stringify(body),
+        }),
+      );
+      expect(r).toEqual({ goal_id: 'g1', status: 'updated' });
+    });
+
+    // ---------------- addGoalEvidence ----------------
+
+    it('should POST /sessions/:id/goal/evidence with body and return vibe response', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ status: 'accepted' }),
+      });
+
+      const body = { goal_id: 'g1', evidence: 'metric improvement' };
+      const r = await svc.addGoalEvidence('r1', body);
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://vibe.local/sessions/r1/goal/evidence',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ Authorization: 'Bearer tk' }),
+          body: JSON.stringify(body),
+        }),
+      );
+      expect(r).toEqual({ status: 'accepted' });
+    });
+
+    // ---------------- updateGoalStatus ----------------
+
+    it('should PATCH /sessions/:id/goal/status with status body and return vibe response', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ status: 'achieved' }),
+      });
+
+      const body = {
+        goal_id: 'g1',
+        expected_goal_id: 'g1',
+        status: 'achieved',
+        recap: 'goal met',
+      };
+      const r = await svc.updateGoalStatus('r1', body);
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://vibe.local/sessions/r1/goal/status',
+        expect.objectContaining({
+          method: 'PATCH',
+          headers: expect.objectContaining({ Authorization: 'Bearer tk' }),
+          body: JSON.stringify(body),
+        }),
+      );
+      expect(r).toEqual({ status: 'achieved' });
+    });
+
+    // ---------------- listSwarmPresets ----------------
+
+    it('should GET /swarm/presets and return vibe response', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            presets: [{ name: 'momentum', label: 'Momentum' }],
+          }),
+      });
+
+      const r = await svc.listSwarmPresets();
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://vibe.local/swarm/presets',
+        expect.objectContaining({
+          headers: expect.objectContaining({ Authorization: 'Bearer tk' }),
+        }),
+      );
+      expect(r).toEqual({ presets: [{ name: 'momentum', label: 'Momentum' }] });
+    });
+
+    // ---------------- createSwarmRun ----------------
+
+    it('should POST /swarm/runs with preset_name and user_vars, returning {id,status,preset_name}', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            id: 'run-1',
+            status: 'queued',
+            preset_name: 'momentum',
+          }),
+      });
+
+      const r = await svc.createSwarmRun('momentum', { universe: 'US' });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://vibe.local/swarm/runs',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ Authorization: 'Bearer tk' }),
+          body: JSON.stringify({
+            preset_name: 'momentum',
+            user_vars: { universe: 'US' },
+          }),
+        }),
+      );
+      expect(r).toEqual({
+        id: 'run-1',
+        status: 'queued',
+        preset_name: 'momentum',
+      });
+    });
+
+    // ---------------- listSwarmRuns ----------------
+
+    it('should GET /swarm/runs with limit query param and return vibe response', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ runs: [{ id: 'run-1' }] }),
+      });
+
+      const r = await svc.listSwarmRuns(25);
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://vibe.local/swarm/runs?limit=25',
+        expect.objectContaining({
+          headers: expect.objectContaining({ Authorization: 'Bearer tk' }),
+        }),
+      );
+      expect(r).toEqual({ runs: [{ id: 'run-1' }] });
+    });
+
+    // ---------------- getSwarmRun ----------------
+
+    it('should GET /swarm/runs/:id and return vibe response', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            id: 'run-1',
+            status: 'queued',
+            preset_name: 'momentum',
+          }),
+      });
+
+      const r = await svc.getSwarmRun('run-1');
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://vibe.local/swarm/runs/run-1',
+        expect.objectContaining({
+          headers: expect.objectContaining({ Authorization: 'Bearer tk' }),
+        }),
+      );
+      expect(r).toEqual({
+        id: 'run-1',
+        status: 'queued',
+        preset_name: 'momentum',
+      });
+    });
+
+    // ---------------- cancelSwarmRun ----------------
+
+    it('should POST /swarm/runs/:id/cancel and return {status}', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ status: 'cancelled' }),
+      });
+
+      const r = await svc.cancelSwarmRun('run-1');
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://vibe.local/swarm/runs/run-1/cancel',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ Authorization: 'Bearer tk' }),
+        }),
+      );
+      expect(r).toEqual({ status: 'cancelled' });
+    });
+
+    // ---------------- retrySwarmRun ----------------
+
+    it('should POST /swarm/runs/:id/retry and return {id,status,preset_name}', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            id: 'run-2',
+            status: 'queued',
+            preset_name: 'momentum',
+          }),
+      });
+
+      const r = await svc.retrySwarmRun('run-1');
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://vibe.local/swarm/runs/run-1/retry',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ Authorization: 'Bearer tk' }),
+        }),
+      );
+      expect(r).toEqual({
+        id: 'run-2',
+        status: 'queued',
+        preset_name: 'momentum',
+      });
+    });
+  });
 });
 
 function makeReadableStream(text: string) {
