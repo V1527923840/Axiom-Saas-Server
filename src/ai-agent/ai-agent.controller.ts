@@ -150,6 +150,8 @@ export class AiAgentController {
       return () => {
         ac.abort();
         sub.unsubscribe();
+        // 释放可能仍持有的 inflight 锁 —— 客户端断连时正常完成事件不会到达
+        void this.aiAgentService.releaseSessionLock(id).catch(() => undefined);
       };
     });
   }

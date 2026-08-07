@@ -299,5 +299,83 @@ describe('AiAgentService', () => {
       );
       expect(concurrency.release).toHaveBeenCalledWith('s1');
     });
+
+    it('should release inflight lock on upstream stream error', async () => {
+      repo.findByIdAndUser.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        remoteSessionId: 'r1',
+        status: 'active',
+      });
+      adapter.streamEvents = jest.fn().mockImplementation(async function* () {
+        await Promise.resolve();
+        // simulate upstream fetch / parse error mid-stream
+        throw new Error('upstream fetch failed');
+      });
+      const events = await firstValueFrom(
+        svc
+          .streamEvents('u1', 's1', new AbortController().signal)
+          .pipe(toArray()),
+      );
+      // error event delivered to client before lock release
+      expect(events).toEqual([
+        {
+          type: 'error',
+          data: { code: 'STREAM_ERROR', message: 'upstream fetch failed' },
+        },
+      ]);
+      // fire-and-forget release — give the microtask a tick to flush
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(concurrency.release).toHaveBeenCalledWith('s1');
+    });
+  });
+
+  describe('cancelSession — inflight lock release', () => {
+    it('should release inflight lock when cancelling an active session', async () => {
+      repo.findByIdAndUser.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        remoteSessionId: 'r1',
+        status: 'active',
+        inflightStartedAt: new Date(),
+      });
+      adapter.cancelRemoteSession = jest.fn().mockResolvedValue(undefined);
+      await svc.cancelSession('u1', 's1');
+      // release must run before status update
+      const releaseOrder = concurrency.release.mock.invocationCallOrder[0];
+      const updateCallOrder =
+        repo.update.mock.invocationCallOrder[0] ?? Number.MAX_SAFE_INTEGER;
+      expect(concurrency.release).toHaveBeenCalledWith('s1');
+      expect(repo.update).toHaveBeenCalledWith(
+        's1',
+        expect.objectContaining({ status: 'cancelled' }),
+      );
+      expect(releaseOrder).toBeLessThan(updateCallOrder);
+    });
+
+    it('should release lock even if status update fails', async () => {
+      repo.findByIdAndUser.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        remoteSessionId: 'r1',
+        status: 'active',
+      });
+      adapter.cancelRemoteSession = jest.fn().mockResolvedValue(undefined);
+      repo.update.mockRejectedValue(new Error('db down'));
+      await expect(svc.cancelSession('u1', 's1')).rejects.toThrow(/db down/);
+      // defensive: release happens BEFORE update, so lock is free even when update throws
+      expect(concurrency.release).toHaveBeenCalledWith('s1');
+    });
+  });
+
+  describe('releaseSessionLock', () => {
+    it('should delegate to concurrency.release with the given session id', async () => {
+      await svc.releaseSessionLock('s1');
+      expect(concurrency.release).toHaveBeenCalledWith('s1');
+    });
   });
 });

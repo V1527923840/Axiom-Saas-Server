@@ -117,7 +117,17 @@ export class AiAgentService {
     const s = await this.getSession(userId, id);
     if (!s.remoteSessionId) return;
     await this.registry.get(s.agentType).cancelRemoteSession(s.remoteSessionId);
+    // 先释放 inflight 锁再更新状态 —— 防御性:即使状态更新失败,锁也已释放
+    await this.concurrency.release(s.id);
     await this.repo.update(s.id, { status: 'cancelled' });
+  }
+
+  /**
+   * Controller-only 暴露:在 SSE teardown 时调用,释放可能仍持有的 inflight 锁。
+   * 使用 fire-and-forget,不阻塞 teardown。
+   */
+  async releaseSessionLock(sessionId: string): Promise<void> {
+    await this.concurrency.release(sessionId);
   }
 
   /**
@@ -242,6 +252,8 @@ export class AiAgentService {
               data: { code: 'STREAM_ERROR', message: (e as Error).message },
             });
             subscriber.complete();
+            // 释放可能仍持有的 inflight 锁 —— 上游流挂掉时 attempt.completed/attempt.error 不会到达
+            void this.concurrency.release(s.id).catch(() => undefined);
           }
         }
       })();
