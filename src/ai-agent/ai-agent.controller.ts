@@ -392,6 +392,19 @@ export class AiAgentController {
   @UseInterceptors(
     FileInterceptor('file', {
       limits: { fileSize: AiAgentController.MAX_UPLOAD_BYTES },
+      // 浏览器 FormData 不在 multipart Content-Type 上声明 charset,
+      // multer 把这个选项透传给 busboy(multer/lib/make-middleware.js:27,131)。
+      // busboy 默认 defParamCharset = 'latin1',中文 UTF-8 字节被当成 Latin-1
+      // 单字节解读,导致 file.originalname 在这里就已经乱码
+      // (例如 `2-3 山东宏桥...pdf` 变成 `2-3 ã±ã, ã°...`),后续写到
+      // response 的 filename 字段也是乱的,前端 chip/card 直接渲染乱码。
+      // 显式设 'utf8' 是 SaaS Server 侧唯一修复点 —— 前端 wire shape 不需要改。
+      //
+      // 类型 cast:`@types/multer@2.1.0` 的 MulterOptions 没声明 defParamCharset,
+      // 但 multer 2.1.1 runtime 明确支持(multer/lib/make-middleware.js:131 把
+      // 它传给 busboy),因此这里用 `as any` 绕过类型层。后续 @types/multer
+      // 升上来后可清理。
+      ...({ defParamCharset: 'utf8' } as any),
     }),
   )
   @HttpCode(HttpStatus.OK)

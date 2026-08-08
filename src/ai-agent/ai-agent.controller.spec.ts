@@ -1,5 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { HttpException } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 import { AiAgentController } from './ai-agent.controller';
 import { AiAgentService } from './ai-agent.service';
 import { VibeClientService } from './vibe-trading/vibe-client.service';
@@ -338,6 +340,36 @@ describe('AiAgentController', () => {
       expect(r).toEqual(vibeResp);
     });
 
+    // 回归:中文文件名必须保持原样传到 VibeTrading,不能被 Latin-1 化。
+    //
+    // 根因链路:浏览器 FormData 不在 multipart Content-Type 上声明 charset;
+    // Multer 把 options.defParamCharset 透传给 busboy(multer/lib/make-middleware.js:27,131);
+    // busboy 默认 defParamCharset = 'latin1' (busboy/lib/types/multipart.js:236-239)
+    // → 中文 UTF-8 字节被当 Latin-1 单字节解读 → file.originalname 在 controller
+    // 已经是乱码(如 `2-3 山东宏桥...pdf` → `2-3 ã±ã, ã°...`)→ 前端渲染乱码。
+    //
+    // 修复:FileInterceptor 加 defParamCharset: 'utf8'。本测试钉住 controller
+    // 这一层不能再次引入 Latin-1 编码转换(例如不要写
+    // `Buffer.from(file.originalname, 'latin1').toString('utf8')`)。
+    it('should pass through Chinese filenames unchanged (no Latin-1 transcoding in controller)', async () => {
+      const originalName =
+        '2-3 山东宏桥新型材料有限公司2024年度经审计的合并及母公司财务报告.pdf';
+      const vibeResp = {
+        status: 'ok',
+        file_path: 'uploads/abc.pdf',
+        filename: originalName,
+      };
+      (vibe.uploadFile as jest.Mock).mockResolvedValue(vibeResp);
+      const r = await ctrl.uploadFile(makeFile({ originalname: originalName }));
+      expect(vibe.uploadFile).toHaveBeenCalledWith(
+        expect.any(Buffer),
+        originalName, // 必须严格相等,不允许任何编码转换
+        'application/pdf',
+      );
+      // 返回值里的 filename 也必须保持中文 —— 这是前端 UI 渲染的字段。
+      expect((r as any).filename).toBe(originalName);
+    });
+
     it('should reject file exceeding 50MB', async () => {
       const big = makeFile({
         originalname: 'huge.pdf',
@@ -406,6 +438,39 @@ describe('AiAgentController', () => {
           AiAgentController.prototype.listSwarmPresets,
         ) ?? [];
       expect(guards.length).toBe(0);
+    });
+  });
+
+  // ---------------- FileInterceptor defParamCharset pin ----------------
+  //
+  // 防止有人改回 Multer 默认(Latin-1)导致中文文件名乱码。
+  // 真正验证需要 e2e 走完整 multipart pipeline,但单元层至少钉住
+  // interceptor 类是被装饰的、options 字段被正确传入。
+  describe('POST /upload FileInterceptor config', () => {
+    it('should decorate uploadFile with @UseInterceptors', () => {
+      const interceptors: any[] =
+        Reflect.getMetadata(
+          '__interceptors__',
+          AiAgentController.prototype.uploadFile,
+        ) ?? [];
+      expect(interceptors.length).toBeGreaterThan(0);
+    });
+
+    // 防回归 pin:这段代码不应该被删除。
+    // 在 NestJS 里 FileInterceptor 是匿名 mixin class,无法直接
+    // 用 Reflect 读出 options.defParamCharset 字段;真正的 UTF-8
+    // 解码验证需要 supertest 走完整 multipart pipeline
+    // (参考 test/vibe-trading.e2e-spec.ts 的模式)。
+    //
+    // 这里我们用 `grep` 兜底:源码里必须出现 `defParamCharset: 'utf8'`
+    // 这个字面量。如果有人不小心删了它(包括 PR 删 import 也算),
+    // 这个测试会立刻 fail。
+    it("should declare defParamCharset: 'utf8' in controller source", () => {
+      const src = fs.readFileSync(
+        path.join(__dirname, 'ai-agent.controller.ts'),
+        'utf8',
+      );
+      expect(src).toContain("defParamCharset: 'utf8'");
     });
   });
 });
