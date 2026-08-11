@@ -1,6 +1,16 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, Matches, Max, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsIn,
+  IsInt,
+  IsOptional,
+  Matches,
+  Max,
+  Min,
+  Validate,
+} from 'class-validator';
+import { IsDateRangeOrderedConstraint } from '../../utils/validators/is-date-range-ordered.validator';
 
 export class ListQueryDto {
   @ApiPropertyOptional({
@@ -22,6 +32,10 @@ export class ListQueryDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/, {
     message: 'dateFrom must be a YYYY-MM-DD string',
   })
+  @IsDateString(
+    {},
+    { message: 'dateFrom must be a real calendar date (YYYY-MM-DD)' },
+  )
   dateFrom?: string;
 
   @ApiPropertyOptional({
@@ -34,6 +48,11 @@ export class ListQueryDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/, {
     message: 'dateTo must be a YYYY-MM-DD string',
   })
+  @IsDateString(
+    {},
+    { message: 'dateTo must be a real calendar date (YYYY-MM-DD)' },
+  )
+  @Validate(IsDateRangeOrderedConstraint)
   dateTo?: string;
 
   @ApiPropertyOptional({
