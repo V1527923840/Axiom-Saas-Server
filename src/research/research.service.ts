@@ -68,4 +68,12 @@ export class ResearchService {
     }
     return { data: research };
   }
+
+  // IN-batch lookup for callers that hold a list of ids — currently
+  // DailySummaryService.getSources, which maps `source_research_ids`
+  // back to rows. Missing ids are simply absent from the returned
+  // array; the caller is responsible for the missing-id fallback.
+  async findManyByIds(ids: number[]): Promise<ResearchAnalysis[]> {
+    return this.researchRepository.findManyByIds(ids);
+  }
 }

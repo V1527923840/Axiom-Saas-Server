@@ -55,10 +55,7 @@ export class DailySummaryRelationalRepository implements DailySummaryRepository 
     if (filterOptions?.dateFrom && filterOptions?.dateTo) {
       // report_date is stored as `varchar` — ISO date strings sort
       // lexicographically, so a string `Between` is correct.
-      where.reportDate = Between(
-        filterOptions.dateFrom,
-        filterOptions.dateTo,
-      );
+      where.reportDate = Between(filterOptions.dateFrom, filterOptions.dateTo);
     } else if (filterOptions?.dateFrom) {
       where.reportDate = MoreThanOrEqual(filterOptions.dateFrom);
     } else if (filterOptions?.dateTo) {

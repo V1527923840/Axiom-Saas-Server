@@ -7,6 +7,7 @@ import {
   Between,
   MoreThanOrEqual,
   LessThanOrEqual,
+  In,
 } from 'typeorm';
 import { ResearchAnalysisEntity } from '../entities/research-analysis.entity';
 import { ResearchAnalysisMapper } from '../mappers/research-analysis.mapper';
@@ -53,6 +54,12 @@ export class ResearchRelationalRepository implements ResearchRepository {
   async findById(id: number): Promise<ResearchAnalysis | null> {
     const entity = await this.repository.findOne({ where: { id } });
     return entity ? ResearchAnalysisMapper.toDomain(entity) : null;
+  }
+
+  async findManyByIds(ids: number[]): Promise<ResearchAnalysis[]> {
+    if (!ids.length) return [];
+    const entities = await this.repository.find({ where: { id: In(ids) } });
+    return entities.map((entity) => ResearchAnalysisMapper.toDomain(entity));
   }
 
   private buildWhereClause(
