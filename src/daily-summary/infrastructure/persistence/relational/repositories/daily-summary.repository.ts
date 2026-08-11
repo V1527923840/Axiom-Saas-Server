@@ -46,6 +46,10 @@ export class DailySummaryRelationalRepository implements DailySummaryRepository 
       where.frequency = filterOptions.frequency;
     }
 
+    if (filterOptions?.reportDate) {
+      where.reportDate = filterOptions.reportDate;
+    }
+
     const [entities, total] = await this.dailySummaryRepository.findAndCount({
       where,
       order: { reportDate: 'DESC', revision: 'DESC' },

@@ -2489,6 +2489,16 @@
             }
           },
           {
+            "name": "reportDate",
+            "required": false,
+            "in": "query",
+            "description": "Exact-match filter against report_date (YYYY-MM-DD).",
+            "schema": {
+              "example": "2026-08-07",
+              "type": "string"
+            }
+          },
+          {
             "name": "page",
             "required": false,
             "in": "query",

@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, Matches, Max, Min } from 'class-validator';
 
 export class ListQueryDto {
   @ApiPropertyOptional({
@@ -11,6 +11,17 @@ export class ListQueryDto {
   @IsOptional()
   @IsIn(['daily', 'weekly'])
   frequency?: 'daily' | 'weekly';
+
+  @ApiPropertyOptional({
+    type: String,
+    example: '2026-08-07',
+    description: 'Exact-match filter against report_date (YYYY-MM-DD).',
+  })
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'reportDate must be a YYYY-MM-DD string',
+  })
+  reportDate?: string;
 
   @ApiPropertyOptional({
     type: Number,

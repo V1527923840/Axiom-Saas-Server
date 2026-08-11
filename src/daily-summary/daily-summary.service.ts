@@ -29,9 +29,13 @@ export class DailySummaryService {
     page: number;
     pageSize: number;
   }> {
-    const filterOptions: DailySummaryFilterOptions | null = q.frequency
-      ? { frequency: q.frequency }
-      : null;
+    const filterOptions: DailySummaryFilterOptions | null =
+      q.frequency || q.reportDate
+        ? {
+            ...(q.frequency ? { frequency: q.frequency } : {}),
+            ...(q.reportDate ? { reportDate: q.reportDate } : {}),
+          }
+        : null;
     const paginationOptions: DailySummaryPaginationOptions = {
       page: q.page ?? 0,
       pageSize: q.pageSize ?? 20,
