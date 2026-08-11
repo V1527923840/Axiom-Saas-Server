@@ -102,6 +102,10 @@ export class ContentService {
     return contentItem;
   }
 
+  async findManyByIds(ids: string[]): Promise<ContentItem[]> {
+    return this.contentItemRepository.findManyByIds(ids);
+  }
+
   async createContent(
     categoryCode: string,
     createContentDto: CreateContentDto,

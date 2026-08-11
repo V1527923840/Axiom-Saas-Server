@@ -7,6 +7,7 @@ import {
   Between,
   MoreThanOrEqual,
   LessThanOrEqual,
+  In,
 } from 'typeorm';
 import { ContentItemEntity } from '../entities/content-item.entity';
 import { ContentItemMapper } from '../mappers/content-item.mapper';
@@ -90,6 +91,17 @@ export class ContentItemRelationalRepository implements ContentItemRepository {
       where: { id },
     });
     return entity ? ContentItemMapper.toDomain(entity) : null;
+  }
+
+  async findManyByIds(ids: ContentItem['id'][]): Promise<ContentItem[]> {
+    if (!ids.length) {
+      return [];
+    }
+
+    const entities = await this.contentItemRepository.find({
+      where: { id: In(ids) },
+    });
+    return entities.map((entity) => ContentItemMapper.toDomain(entity));
   }
 
   async create(

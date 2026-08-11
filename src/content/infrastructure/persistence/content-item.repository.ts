@@ -18,6 +18,8 @@ export abstract class ContentItemRepository {
 
   abstract findById(id: ContentItem['id']): Promise<NullableType<ContentItem>>;
 
+  abstract findManyByIds(ids: ContentItem['id'][]): Promise<ContentItem[]>;
+
   abstract create(
     data: Omit<ContentItem, 'id' | 'createdAt' | 'updatedAt' | 'collectedAt'>,
   ): Promise<ContentItem>;
