@@ -71,7 +71,7 @@ export class DailySummaryService {
         id,
         title: it?.title ?? '(missing)',
         categoryCode: it?.categoryId ?? it?.categoryCode ?? 'unknown',
-        publishDate: (it?.publishDate ?? new Date(0)).toISOString?.() ?? '',
+        publishDate: (it?.publishedAt ?? new Date(0)).toISOString?.() ?? '',
         sourceFileUrl: it?.sourceFileUrl ?? null,
       };
     };
