@@ -53,8 +53,9 @@ export class DailySummaryRelationalRepository implements DailySummaryRepository 
     }
 
     if (filterOptions?.dateFrom && filterOptions?.dateTo) {
-      // report_date is stored as `varchar` — ISO date strings sort
-      // lexicographically, so a string `Between` is correct.
+      // report_date is pg `date` (see 1791000000000). TypeORM binds the
+      // driver string as a Date, but the column accepts ISO date
+      // literals and the YYYY-MM-DD input passes through correctly.
       where.reportDate = Between(filterOptions.dateFrom, filterOptions.dateTo);
     } else if (filterOptions?.dateFrom) {
       where.reportDate = MoreThanOrEqual(filterOptions.dateFrom);
