@@ -14,14 +14,27 @@ export class ListQueryDto {
 
   @ApiPropertyOptional({
     type: String,
-    example: '2026-08-07',
-    description: 'Exact-match filter against report_date (YYYY-MM-DD).',
+    example: '2026-08-01',
+    description:
+      'Inclusive lower bound for report_date (YYYY-MM-DD). Used with dateTo to define a date range.',
   })
   @IsOptional()
   @Matches(/^\d{4}-\d{2}-\d{2}$/, {
-    message: 'reportDate must be a YYYY-MM-DD string',
+    message: 'dateFrom must be a YYYY-MM-DD string',
   })
-  reportDate?: string;
+  dateFrom?: string;
+
+  @ApiPropertyOptional({
+    type: String,
+    example: '2026-08-11',
+    description:
+      'Inclusive upper bound for report_date (YYYY-MM-DD). Used with dateFrom to define a date range.',
+  })
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'dateTo must be a YYYY-MM-DD string',
+  })
+  dateTo?: string;
 
   @ApiPropertyOptional({
     type: Number,

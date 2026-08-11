@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import {
+  Between,
+  FindOptionsWhere,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { DailySummaryEntity } from '../entities/daily-summary.entity';
 import { DailySummaryMapper } from '../mappers/daily-summary.mapper';
 import {
@@ -46,8 +52,17 @@ export class DailySummaryRelationalRepository implements DailySummaryRepository 
       where.frequency = filterOptions.frequency;
     }
 
-    if (filterOptions?.reportDate) {
-      where.reportDate = filterOptions.reportDate;
+    if (filterOptions?.dateFrom && filterOptions?.dateTo) {
+      // report_date is stored as `varchar` — ISO date strings sort
+      // lexicographically, so a string `Between` is correct.
+      where.reportDate = Between(
+        filterOptions.dateFrom,
+        filterOptions.dateTo,
+      );
+    } else if (filterOptions?.dateFrom) {
+      where.reportDate = MoreThanOrEqual(filterOptions.dateFrom);
+    } else if (filterOptions?.dateTo) {
+      where.reportDate = LessThanOrEqual(filterOptions.dateTo);
     }
 
     const [entities, total] = await this.dailySummaryRepository.findAndCount({

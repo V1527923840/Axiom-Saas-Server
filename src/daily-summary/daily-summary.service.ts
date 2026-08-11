@@ -30,10 +30,11 @@ export class DailySummaryService {
     pageSize: number;
   }> {
     const filterOptions: DailySummaryFilterOptions | null =
-      q.frequency || q.reportDate
+      q.frequency || q.dateFrom || q.dateTo
         ? {
             ...(q.frequency ? { frequency: q.frequency } : {}),
-            ...(q.reportDate ? { reportDate: q.reportDate } : {}),
+            ...(q.dateFrom ? { dateFrom: q.dateFrom } : {}),
+            ...(q.dateTo ? { dateTo: q.dateTo } : {}),
           }
         : null;
     const paginationOptions: DailySummaryPaginationOptions = {

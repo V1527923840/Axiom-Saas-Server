@@ -2489,12 +2489,22 @@
             }
           },
           {
-            "name": "reportDate",
+            "name": "dateFrom",
             "required": false,
             "in": "query",
-            "description": "Exact-match filter against report_date (YYYY-MM-DD).",
+            "description": "Inclusive lower bound for report_date (YYYY-MM-DD). Used with dateTo to define a date range.",
             "schema": {
-              "example": "2026-08-07",
+              "example": "2026-08-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive upper bound for report_date (YYYY-MM-DD). Used with dateFrom to define a date range.",
+            "schema": {
+              "example": "2026-08-11",
               "type": "string"
             }
           },

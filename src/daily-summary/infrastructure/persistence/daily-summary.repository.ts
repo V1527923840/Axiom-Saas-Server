@@ -18,8 +18,10 @@ export interface DailySummaryPaginationOptions {
 export interface DailySummaryFilterOptions {
   /** 'daily' | 'weekly'；不传表示不过滤 */
   frequency?: string | null;
-  /** ISO 日期 (YYYY-MM-DD)，对 report_date 做精确匹配；不传表示不过滤 */
-  reportDate?: string | null;
+  /** 范围下界 (YYYY-MM-DD)，report_date >= dateFrom */
+  dateFrom?: string | null;
+  /** 范围上界 (YYYY-MM-DD)，report_date <= dateTo */
+  dateTo?: string | null;
 }
 
 /**
