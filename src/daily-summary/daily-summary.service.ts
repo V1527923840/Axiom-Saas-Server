@@ -14,6 +14,7 @@ import {
   SourcesResponseDto,
 } from './dto/sources-response.dto';
 import { SourcesQueryDto } from './dto/sources-query.dto';
+import { ListDailySummariesResponseDto } from './dto/list-daily-summaries-response.dto';
 import { ListQueryDto } from './dto/list-query.dto';
 
 @Injectable()
@@ -30,12 +31,7 @@ export class DailySummaryService {
     return this.repository.findLatest(frequency);
   }
 
-  async list(q: ListQueryDto): Promise<{
-    data: DailySummary[];
-    total: number;
-    page: number;
-    pageSize: number;
-  }> {
+  async list(q: ListQueryDto): Promise<ListDailySummariesResponseDto> {
     const filterOptions: DailySummaryFilterOptions | null =
       q.frequency || q.dateFrom || q.dateTo
         ? {
@@ -129,10 +125,6 @@ export class DailySummaryService {
         // zsxq_posts.post_date is pg `date` — driver returns the raw
         // 'YYYY-MM-DD' string. Pass it through unchanged.
         publishDate: it?.postDate ?? '',
-        // zsxq_posts only has source_file_key (an OSS object key, not
-        // a full URL); surface it through the existing DTO slot so the
-        // UI can show / download if it wants.
-        sourceFileUrl: it?.sourceFileKey ?? null,
       };
     };
 
@@ -150,10 +142,6 @@ export class DailySummaryService {
         // research_analysis.createdAt is timestamptz (@CreateDateColumn)
         // — a real Date.
         publishDate: it?.createdAt ? it.createdAt.toISOString() : '',
-        // research_analysis.ossUrl (or sourceFileKey) is the upstream
-        // PDF key. ContentItemMeta.sourceFileUrl is wired through to
-        // the existing UI surface.
-        sourceFileUrl: it?.ossUrl ?? it?.sourceFileKey ?? null,
       };
     };
 

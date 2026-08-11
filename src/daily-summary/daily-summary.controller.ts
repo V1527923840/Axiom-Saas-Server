@@ -11,6 +11,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
+  ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiTags,
@@ -18,6 +19,7 @@ import {
 import { DailySummary } from './domain/daily-summary';
 import { DailySummaryService } from './daily-summary.service';
 import { LatestQueryDto } from './dto/latest-query.dto';
+import { ListDailySummariesResponseDto } from './dto/list-daily-summaries-response.dto';
 import { ListQueryDto } from './dto/list-query.dto';
 import { SourcesQueryDto } from './dto/sources-query.dto';
 import { SourcesResponseDto } from './dto/sources-response.dto';
@@ -35,6 +37,7 @@ export class DailySummaryController {
   @Get('latest')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get the latest summary for a frequency bucket' })
+  @ApiOkResponse({ type: DailySummary })
   latest(@Query() query: LatestQueryDto): Promise<DailySummary | null> {
     return this.dailySummaryService.getLatest(query.frequency);
   }
@@ -42,12 +45,8 @@ export class DailySummaryController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'List summaries with pagination' })
-  list(@Query() query: ListQueryDto): Promise<{
-    data: DailySummary[];
-    total: number;
-    page: number;
-    pageSize: number;
-  }> {
+  @ApiOkResponse({ type: ListDailySummariesResponseDto })
+  list(@Query() query: ListQueryDto): Promise<ListDailySummariesResponseDto> {
     return this.dailySummaryService.list(query);
   }
 
@@ -55,6 +54,7 @@ export class DailySummaryController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get a single summary by report id' })
   @ApiParam({ name: 'reportId', type: String, required: true })
+  @ApiOkResponse({ type: DailySummary })
   one(
     @Param('reportId', new ParseUUIDPipe()) reportId: string,
   ): Promise<DailySummary> {
@@ -65,6 +65,7 @@ export class DailySummaryController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get source content metadata for a summary' })
   @ApiParam({ name: 'reportId', type: String, required: true })
+  @ApiOkResponse({ type: SourcesResponseDto })
   sources(
     @Param('reportId', new ParseUUIDPipe()) reportId: string,
     @Query() query: SourcesQueryDto,

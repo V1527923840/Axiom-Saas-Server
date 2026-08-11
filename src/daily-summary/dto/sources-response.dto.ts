@@ -16,13 +16,6 @@ export class ContentItemMetaDto {
       "帖文来源为 'YYYY-MM-DD'（pg date 列驱动返回字符串），研报来源为 ISO8601。",
   })
   publishDate!: string;
-
-  @ApiProperty({
-    required: false,
-    nullable: true,
-    example: 'https://cdn.example.com/source.pdf',
-  })
-  sourceFileUrl?: string | null;
 }
 
 export class SourcesResponseDto {
