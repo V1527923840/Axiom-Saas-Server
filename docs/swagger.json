@@ -2427,6 +2427,189 @@
         ]
       }
     },
+    "/api/v1/daily-summary/latest": {
+      "get": {
+        "operationId": "DailySummaryController_latest_v1",
+        "parameters": [
+          {
+            "name": "frequency",
+            "required": true,
+            "in": "query",
+            "description": "Summary frequency bucket to fetch the latest for.",
+            "schema": {
+              "example": "daily",
+              "type": "string",
+              "enum": [
+                "daily",
+                "weekly"
+              ]
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the latest summary for a frequency bucket",
+        "tags": [
+          "DailySummary"
+        ]
+      }
+    },
+    "/api/v1/daily-summary": {
+      "get": {
+        "operationId": "DailySummaryController_list_v1",
+        "parameters": [
+          {
+            "name": "frequency",
+            "required": false,
+            "in": "query",
+            "description": "Filter by summary frequency bucket.",
+            "schema": {
+              "example": "daily",
+              "type": "string",
+              "enum": [
+                "daily",
+                "weekly"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List summaries with pagination",
+        "tags": [
+          "DailySummary"
+        ]
+      }
+    },
+    "/api/v1/daily-summary/{reportId}": {
+      "get": {
+        "operationId": "DailySummaryController_one_v1",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a single summary by report id",
+        "tags": [
+          "DailySummary"
+        ]
+      }
+    },
+    "/api/v1/daily-summary/{reportId}/sources": {
+      "get": {
+        "operationId": "DailySummaryController_sources_v1",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get source content metadata for a summary",
+        "tags": [
+          "DailySummary"
+        ]
+      }
+    },
     "/api/v1/subscriptions": {
       "post": {
         "operationId": "SubscriptionsController_create_v1",

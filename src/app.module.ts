@@ -30,6 +30,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MongooseConfigService } from './database/mongoose-config.service';
 import { DatabaseConfig } from './database/config/database-config.type';
 import { ContentModule } from './content/content.module';
+import { DailySummaryModule } from './daily-summary/daily-summary.module';
 import { PlansModule } from './plans/plans.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { BillsModule } from './bills/bills.module';
@@ -117,6 +118,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     MailerModule,
     HomeModule,
     ContentModule,
+    DailySummaryModule,
     PlansModule,
     SubscriptionsModule,
     BillsModule,
