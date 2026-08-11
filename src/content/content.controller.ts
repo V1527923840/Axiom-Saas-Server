@@ -10,8 +10,15 @@ import {
   HttpCode,
   ParseUUIDPipe,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiParam, ApiOperation } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiParam,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { ContentService } from './content.service';
 import { CreateContentDto } from './dto/create-content.dto';
 import { QueryContentDto } from './dto/query-content.dto';
@@ -19,6 +26,8 @@ import { ContentCategory } from './domain/content-category';
 import { ContentItem } from './domain/content-item';
 
 @ApiTags('Content')
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'))
 @Controller({
   path: 'content',
   version: '1',
