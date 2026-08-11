@@ -7,13 +7,17 @@ import {
   HttpCode,
   ParseIntPipe,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ResearchService } from './research.service';
 import { QueryResearchDto } from './dto/query-research.dto';
 import { ResearchAnalysis, ResearchAnalysisListItem } from './domain/research';
 
 @ApiTags('Research')
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'))
 @Controller({
   path: 'research-analysis',
   version: '1',
