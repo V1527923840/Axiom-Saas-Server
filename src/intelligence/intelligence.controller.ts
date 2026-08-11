@@ -7,13 +7,17 @@ import {
   HttpCode,
   ParseUUIDPipe,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { IntelligenceService } from './intelligence.service';
 import { QueryIntelligenceDto } from './dto/query-intelligence.dto';
 import { Intelligence, IntelligenceListItem } from './domain/intelligence';
 
 @ApiTags('Intelligence')
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'))
 @Controller({
   path: 'intelligence',
   version: '1',
