@@ -96,7 +96,9 @@ export class DailySummaryService {
         id,
         title: it?.title ?? '(missing)',
         categoryCode: it?.categoryL1 ?? 'unknown',
-        publishDate: (it?.postDate ?? new Date(0)).toISOString?.() ?? '',
+        // zsxq_posts.post_date is pg `date` — driver returns the raw
+        // 'YYYY-MM-DD' string. Pass it through unchanged.
+        publishDate: it?.postDate ?? '',
         // zsxq_posts only has source_file_key (an OSS object key, not
         // a full URL); surface it through the existing DTO slot so the
         // UI can show / download if it wants.
@@ -114,7 +116,9 @@ export class DailySummaryService {
         // dto surface; fall back to categoryL1 so the UI badge still
         // has something to show.
         categoryCode: it?.categoryL1 ?? 'research',
-        publishDate: (it?.createdAt ?? new Date(0)).toISOString?.() ?? '',
+        // research_analysis.createdAt is timestamptz (@CreateDateColumn)
+        // — a real Date.
+        publishDate: it?.createdAt ? it.createdAt.toISOString() : '',
         // research_analysis.ossUrl (or sourceFileKey) is the upstream
         // PDF key. ContentItemMeta.sourceFileUrl is wired through to
         // the existing UI surface.

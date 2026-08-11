@@ -10,7 +10,11 @@ export class ContentItemMetaDto {
   @ApiProperty({ example: 'STRUCTURED_DAILY' })
   categoryCode!: string;
 
-  @ApiProperty({ example: '2026-08-10T08:30:00.000Z' })
+  @ApiProperty({
+    example: '2026-08-10T08:30:00.000Z',
+    description:
+      "帖文来源为 'YYYY-MM-DD'（pg date 列驱动返回字符串），研报来源为 ISO8601。",
+  })
   publishDate!: string;
 
   @ApiProperty({

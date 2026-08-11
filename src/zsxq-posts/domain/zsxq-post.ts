@@ -17,8 +17,13 @@ export class ZsxqPost {
   @ApiProperty({ type: String, required: false, nullable: true })
   categoryL1?: string | null;
 
-  @ApiProperty({ type: String, format: 'date' })
-  postDate: Date;
+  // pg `date` columns are returned by the node-postgres driver as
+  // 'YYYY-MM-DD' strings, not Date objects. Earlier we typed this as
+  // Date and called `postDate.toISOString?.()` — the optional-chain
+  // masked the bug and `publishDate` was always an empty string on
+  // /sources responses.
+  @ApiProperty({ type: String, format: 'date', example: '2026-08-10' })
+  postDate: string;
 
   @ApiProperty({ type: String, required: false, nullable: true })
   sourceFileKey?: string | null;

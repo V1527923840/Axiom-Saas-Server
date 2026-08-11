@@ -32,7 +32,7 @@ export class ZsxqPostEntity extends EntityRelationalHelper {
 
   @Index()
   @Column({ type: 'date', name: 'post_date' })
-  postDate: Date;
+  postDate: string;
 
   @Column({ type: 'varchar', length: 100, name: 'category_l1' })
   categoryL1: string;
