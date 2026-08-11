@@ -19,6 +19,7 @@ import { DailySummary } from './domain/daily-summary';
 import { DailySummaryService } from './daily-summary.service';
 import { LatestQueryDto } from './dto/latest-query.dto';
 import { ListQueryDto } from './dto/list-query.dto';
+import { SourcesQueryDto } from './dto/sources-query.dto';
 import { SourcesResponseDto } from './dto/sources-response.dto';
 
 @ApiTags('DailySummary')
@@ -66,7 +67,8 @@ export class DailySummaryController {
   @ApiParam({ name: 'reportId', type: String, required: true })
   sources(
     @Param('reportId', new ParseUUIDPipe()) reportId: string,
+    @Query() query: SourcesQueryDto,
   ): Promise<SourcesResponseDto> {
-    return this.dailySummaryService.getSources(reportId);
+    return this.dailySummaryService.getSources(reportId, query);
   }
 }
