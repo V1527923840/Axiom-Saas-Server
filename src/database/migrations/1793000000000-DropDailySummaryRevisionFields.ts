@@ -29,9 +29,12 @@ export class DropDailySummaryRevisionFields1793000000000 implements MigrationInt
   name = 'DropDailySummaryRevisionFields1793000000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // 1. 删依赖旧字段的 4 个索引 / 1 个 unique 约束 / 1 个 check 约束
+    // 1. 删依赖旧字段的 1 个 unique 约束 / 3 个普通索引 / 1 个 check 约束
+    // ⚠️ daily_summary_frequency_report_date_revision_key 是
+    //    CREATE UNIQUE INDEX（1791000000000）隐式建立的 UNIQUE CONSTRAINT，
+    //    pg 拒绝 DROP INDEX 这种约束上的索引，必须用 ALTER TABLE DROP CONSTRAINT。
     await queryRunner.query(`
-      DROP INDEX IF EXISTS daily_summary_frequency_report_date_revision_key
+      ALTER TABLE daily_summary DROP CONSTRAINT IF EXISTS daily_summary_frequency_report_date_revision_key
     `);
     await queryRunner.query(`
       DROP INDEX IF EXISTS idx_daily_summary_freq_date_latest
@@ -114,7 +117,8 @@ export class DropDailySummaryRevisionFields1793000000000 implements MigrationInt
       DROP INDEX IF EXISTS idx_daily_summary_freq_report_date
     `);
 
-    // 4. 重建原 4 个索引
+    // 4. 重建原 unique 约束（用 CREATE UNIQUE INDEX，让 pg 自动建立
+    //    同名 UNIQUE CONSTRAINT，恢复原 1791000000000 的对象形态）+ 3 个普通索引
     await queryRunner.query(`
       CREATE UNIQUE INDEX IF NOT EXISTS daily_summary_frequency_report_date_revision_key
         ON daily_summary USING btree (frequency, report_date, revision)
