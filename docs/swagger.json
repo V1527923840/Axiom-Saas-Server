@@ -2207,6 +2207,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Get all content categories",
         "tags": [
           "Content"
@@ -2303,6 +2308,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Get content list by category code",
         "tags": [
           "Content"
@@ -2343,6 +2353,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Create new content in category",
         "tags": [
           "Content"
@@ -2383,6 +2398,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Get content detail by category code and id",
         "tags": [
           "Content"
@@ -2421,6 +2441,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Soft delete content by category code and id",
         "tags": [
           "Content"
@@ -2456,7 +2481,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailySummary"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2542,7 +2574,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListDailySummariesResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2579,7 +2618,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailySummary"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2606,6 +2652,162 @@
             }
           },
           {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 200,
+              "default": 200,
+              "example": 200,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get source content metadata for a summary",
+        "tags": [
+          "DailySummary"
+        ]
+      }
+    },
+    "/api/v1/research-analysis": {
+      "get": {
+        "operationId": "ResearchController_getResearchList_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Column to sort by. Use a domain field name.",
+            "schema": {
+              "example": "createdAt",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction. Applied when `sortBy` is set.",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          },
+          {
+            "name": "categoryL1",
+            "required": false,
+            "in": "query",
+            "description": "Level 1 category filter",
+            "schema": {
+              "example": "INDUSTRY",
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryL2",
+            "required": false,
+            "in": "query",
+            "description": "Level 2 category filter",
+            "schema": {
+              "example": "INDUSTRY_NEWS",
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search in document name",
+            "schema": {
+              "example": "AI",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (YYYY-MM-DD)",
+            "schema": {
+              "example": "2026-05-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (YYYY-MM-DD)",
+            "schema": {
+              "example": "2026-05-31",
+              "type": "string"
+            }
+          },
+          {
             "in": "header",
             "required": false,
             "name": "x-custom-lang",
@@ -2624,9 +2826,46 @@
             "bearer": []
           }
         ],
-        "summary": "Get source content metadata for a summary",
+        "summary": "Get research analysis list",
         "tags": [
-          "DailySummary"
+          "Research"
+        ]
+      }
+    },
+    "/api/v1/research-analysis/{id}": {
+      "get": {
+        "operationId": "ResearchController_getResearchDetail_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get research analysis detail by id",
+        "tags": [
+          "Research"
         ]
       }
     },
@@ -5089,6 +5328,11 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Get intelligence list",
         "tags": [
           "Intelligence"
@@ -5121,162 +5365,14 @@
             "description": ""
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "summary": "Get intelligence detail by id",
         "tags": [
           "Intelligence"
-        ]
-      }
-    },
-    "/api/v1/research-analysis": {
-      "get": {
-        "operationId": "ResearchController_getResearchList_v1",
-        "parameters": [
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "default": 1,
-              "example": 1,
-              "type": "number"
-            }
-          },
-          {
-            "name": "pageSize",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "maximum": 100,
-              "default": 10,
-              "example": 20,
-              "type": "number"
-            }
-          },
-          {
-            "name": "sortBy",
-            "required": false,
-            "in": "query",
-            "description": "Column to sort by. Use a domain field name.",
-            "schema": {
-              "example": "createdAt",
-              "type": "string"
-            }
-          },
-          {
-            "name": "sortOrder",
-            "required": false,
-            "in": "query",
-            "description": "Sort direction. Applied when `sortBy` is set.",
-            "schema": {
-              "example": "DESC",
-              "type": "string",
-              "enum": [
-                "ASC",
-                "DESC"
-              ]
-            }
-          },
-          {
-            "name": "categoryL1",
-            "required": false,
-            "in": "query",
-            "description": "Level 1 category filter",
-            "schema": {
-              "example": "INDUSTRY",
-              "type": "string"
-            }
-          },
-          {
-            "name": "categoryL2",
-            "required": false,
-            "in": "query",
-            "description": "Level 2 category filter",
-            "schema": {
-              "example": "INDUSTRY_NEWS",
-              "type": "string"
-            }
-          },
-          {
-            "name": "keyword",
-            "required": false,
-            "in": "query",
-            "description": "Keyword search in document name",
-            "schema": {
-              "example": "AI",
-              "type": "string"
-            }
-          },
-          {
-            "name": "dateFrom",
-            "required": false,
-            "in": "query",
-            "description": "Start date filter (YYYY-MM-DD)",
-            "schema": {
-              "example": "2026-05-01",
-              "type": "string"
-            }
-          },
-          {
-            "name": "dateTo",
-            "required": false,
-            "in": "query",
-            "description": "End date filter (YYYY-MM-DD)",
-            "schema": {
-              "example": "2026-05-31",
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "required": false,
-            "name": "x-custom-lang",
-            "schema": {
-              "example": "en"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Get research analysis list",
-        "tags": [
-          "Research"
-        ]
-      }
-    },
-    "/api/v1/research-analysis/{id}": {
-      "get": {
-        "operationId": "ResearchController_getResearchDetail_v1",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "in": "header",
-            "required": false,
-            "name": "x-custom-lang",
-            "schema": {
-              "example": "en"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Get research analysis detail by id",
-        "tags": [
-          "Research"
         ]
       }
     },
@@ -7123,6 +7219,253 @@
         },
         "required": [
           "title"
+        ]
+      },
+      "DailySummary": {
+        "type": "object",
+        "properties": {
+          "reportId": {
+            "type": "string",
+            "example": "cbcfa8b8-3a25-4adb-a9c6-e325f0d0f3ae"
+          },
+          "frequency": {
+            "type": "string",
+            "example": "daily"
+          },
+          "reportDate": {
+            "type": "string",
+            "example": "2026-08-11"
+          },
+          "weekStart": {
+            "type": "string",
+            "example": "2026-08-10",
+            "nullable": true
+          },
+          "isFinal": {
+            "type": "boolean",
+            "example": false
+          },
+          "isLatest": {
+            "type": "boolean",
+            "example": true
+          },
+          "revision": {
+            "type": "number",
+            "example": 1
+          },
+          "dataWindowStart": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2026-08-10T16:00:00.000Z"
+          },
+          "dataWindowEnd": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2026-08-11T16:00:00.000Z"
+          },
+          "sections": {
+            "type": "object",
+            "description": "daily: 4 段数组 (macro_overseas|industry|stock|risk); weekly: { weekly_events: [...] }",
+            "example": [
+              {
+                "section": "macro_overseas",
+                "items": []
+              }
+            ]
+          },
+          "sourcePostIds": {
+            "example": [
+              "cbcfa8b8-3a25-4adb-a9c6-e325f0d0f3ae"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sourceResearchIds": {
+            "example": [
+              "3a25cbcf-a8b8-4adb-a9c6-e325f0d0f3ae"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sourcePostCount": {
+            "type": "number",
+            "example": 42
+          },
+          "sourceResearchCount": {
+            "type": "number",
+            "example": 7
+          },
+          "completenessRatio": {
+            "type": "string",
+            "example": "1.000"
+          },
+          "hasDataWarning": {
+            "type": "boolean",
+            "example": false
+          },
+          "triggerReason": {
+            "type": "string",
+            "example": "scheduled"
+          },
+          "buildPromptVersion": {
+            "type": "string",
+            "example": "v3.1"
+          },
+          "buildModel": {
+            "type": "string",
+            "example": "gpt-4o"
+          },
+          "hasTopics": {
+            "type": "boolean",
+            "example": false
+          },
+          "topics": {
+            "type": "object",
+            "example": []
+          },
+          "briefSummaryMd": {
+            "type": "string",
+            "example": "## 今日要点\n- ...",
+            "nullable": true
+          },
+          "generatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2026-08-11T16:05:00.000Z"
+          },
+          "lastDataCheckAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2026-08-11T16:05:00.000Z"
+          }
+        },
+        "required": [
+          "reportId",
+          "frequency",
+          "reportDate",
+          "isFinal",
+          "isLatest",
+          "revision",
+          "dataWindowStart",
+          "dataWindowEnd",
+          "sections",
+          "sourcePostIds",
+          "sourceResearchIds",
+          "sourcePostCount",
+          "sourceResearchCount",
+          "completenessRatio",
+          "hasDataWarning",
+          "triggerReason",
+          "buildPromptVersion",
+          "buildModel",
+          "hasTopics",
+          "topics",
+          "generatedAt",
+          "lastDataCheckAt"
+        ]
+      },
+      "ListDailySummariesResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DailySummary"
+            }
+          },
+          "total": {
+            "type": "number",
+            "example": 42
+          },
+          "page": {
+            "type": "number",
+            "example": 0,
+            "description": "0-based"
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          }
+        },
+        "required": [
+          "data",
+          "total",
+          "page",
+          "pageSize"
+        ]
+      },
+      "ContentItemMetaDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "b2c8d2c0-1f4d-4a3a-9b3a-1b6f1a2a0001"
+          },
+          "title": {
+            "type": "string",
+            "example": "康方生物双抗 ADC 临床数据更新"
+          },
+          "categoryCode": {
+            "type": "string",
+            "example": "STRUCTURED_DAILY"
+          },
+          "publishDate": {
+            "type": "string",
+            "example": "2026-08-10T08:30:00.000Z",
+            "description": "帖文来源为 'YYYY-MM-DD'（pg date 列驱动返回字符串），研报来源为 ISO8601。"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "categoryCode",
+          "publishDate"
+        ]
+      },
+      "SourcesResponseDto": {
+        "type": "object",
+        "properties": {
+          "posts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentItemMetaDto"
+            }
+          },
+          "research": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentItemMetaDto"
+            }
+          },
+          "postsTotal": {
+            "type": "number",
+            "example": 368,
+            "description": "去重后的帖文来源总数（不受 limit 截断影响）。"
+          },
+          "researchTotal": {
+            "type": "number",
+            "example": 12,
+            "description": "去重后的研报来源总数（不受 limit 截断影响）。"
+          },
+          "missingIds": {
+            "example": [],
+            "description": "在源表（zsxq_posts + research_analysis）中查不到的 id 合并去重后的列表。前端据此区分\"真缺失\"与标题恰好叫 (missing) 的行。",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "posts",
+          "research",
+          "postsTotal",
+          "researchTotal",
+          "missingIds"
         ]
       },
       "CreateSubscriptionDto": {
