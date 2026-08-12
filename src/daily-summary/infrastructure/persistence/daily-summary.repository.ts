@@ -31,8 +31,10 @@ export interface DailySummaryFilterOptions {
  */
 export abstract class DailySummaryRepository {
   /**
-   * 指定频率下最新的一份报告（`is_latest = true`），
-   * 按 report_date DESC, revision DESC 取第一条。
+   * 指定频率下最新的一份报告。
+   *   daily  → ORDER BY report_date DESC LIMIT 1
+   *   weekly → ORDER BY week_start  DESC LIMIT 1
+   * （实现层用 COALESCE 一条 query 覆盖两种频率）
    */
   abstract findLatest(
     frequency: DailySummary['frequency'],

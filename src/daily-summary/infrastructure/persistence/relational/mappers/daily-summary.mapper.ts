@@ -12,9 +12,6 @@ export class DailySummaryMapper {
     domainEntity.frequency = raw.frequency;
     domainEntity.reportDate = raw.reportDate;
     domainEntity.weekStart = raw.weekStart ?? null;
-    domainEntity.isFinal = raw.isFinal;
-    domainEntity.isLatest = raw.isLatest;
-    domainEntity.revision = raw.revision;
     domainEntity.dataWindowStart = raw.dataWindowStart;
     domainEntity.dataWindowEnd = raw.dataWindowEnd;
     domainEntity.sections = raw.sections;

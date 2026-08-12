@@ -23,19 +23,11 @@ import { EntityRelationalHelper } from '../../../../../utils/relational-entity-h
  * `string`（plan §4.4），为将来新增频率值留出前向兼容空间。
  */
 @Entity({ name: 'daily_summary' })
-@Index(
-  'daily_summary_frequency_report_date_revision_key',
-  ['frequency', 'reportDate', 'revision'],
-  { unique: true },
-)
-@Index('idx_daily_summary_freq_date_latest', ['frequency', 'reportDate'], {
-  where: '"is_latest" = true',
-})
-@Index('idx_daily_summary_freq_date_rev', [
-  'frequency',
-  'reportDate',
-  'revision',
-])
+// 自然键（DB 层用 partial unique index 表达，见 1793000000000）：
+//   frequency='daily'  → (report_date)  一天一份
+//   frequency='weekly' → (week_start)   一周一份（时间窗口起点）
+// 旧的 3 列复合 unique + 3 个 revision 索引在 1793000000000 一并清理。
+@Index('idx_daily_summary_freq_date', ['frequency', 'reportDate'])
 @Index('idx_daily_summary_last_data_check', ['lastDataCheckAt'])
 export class DailySummaryEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid', { name: 'report_id' })
@@ -51,15 +43,6 @@ export class DailySummaryEntity extends EntityRelationalHelper {
 
   @Column({ type: 'date', name: 'week_start', nullable: true })
   weekStart: string | null;
-
-  @Column({ type: 'boolean', name: 'is_final', default: false })
-  isFinal: boolean;
-
-  @Column({ type: 'boolean', name: 'is_latest', default: true })
-  isLatest: boolean;
-
-  @Column({ type: 'int', default: 1 })
-  revision: number;
 
   @Column({ type: 'timestamptz', name: 'data_window_start' })
   dataWindowStart: Date;

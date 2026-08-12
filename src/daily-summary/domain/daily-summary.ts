@@ -30,15 +30,6 @@ export class DailySummary {
   })
   weekStart: string | null;
 
-  @ApiProperty({ type: Boolean, example: false })
-  isFinal: boolean;
-
-  @ApiProperty({ type: Boolean, example: true })
-  isLatest: boolean;
-
-  @ApiProperty({ type: Number, example: 1 })
-  revision: number;
-
   @ApiProperty({ example: '2026-08-10T16:00:00.000Z' })
   dataWindowStart: Date;
 

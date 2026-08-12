@@ -7241,18 +7241,6 @@
             "example": "2026-08-10",
             "nullable": true
           },
-          "isFinal": {
-            "type": "boolean",
-            "example": false
-          },
-          "isLatest": {
-            "type": "boolean",
-            "example": true
-          },
-          "revision": {
-            "type": "number",
-            "example": 1
-          },
           "dataWindowStart": {
             "format": "date-time",
             "type": "string",
@@ -7347,9 +7335,6 @@
           "reportId",
           "frequency",
           "reportDate",
-          "isFinal",
-          "isLatest",
-          "revision",
           "dataWindowStart",
           "dataWindowEnd",
           "sections",
