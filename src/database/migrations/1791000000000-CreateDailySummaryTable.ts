@@ -60,18 +60,38 @@ export class CreateDailySummaryTable1791000000000 implements MigrationInterface 
         ADD COLUMN IF NOT EXISTS has_data_warning boolean NOT NULL DEFAULT false
     `);
 
+    // v3.1 取消了 is_final / is_latest / revision 三字段 (1793000000000),
+    // 但本迁移是更早的"建表"动作,IF NOT EXISTS 在已 drop 索引的库上会真
+    // 去 CREATE,报 column "revision"/"is_latest" does not exist。
+    // 用 information_schema 检测列是否还在 —— 还在 → fresh;不在 → 已
+    // 1793 drop 过的环境,跳过。和 1790100000000 同款幂等思路。
     await queryRunner.query(`
-      CREATE UNIQUE INDEX IF NOT EXISTS daily_summary_frequency_report_date_revision_key
-        ON public.daily_summary USING btree (frequency, report_date, revision)
-    `);
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS idx_daily_summary_freq_date_latest
-        ON public.daily_summary USING btree (frequency, report_date DESC)
-        WHERE (is_latest = true)
-    `);
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS idx_daily_summary_freq_date_rev
-        ON public.daily_summary USING btree (frequency, report_date, revision DESC)
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'daily_summary'
+            AND column_name = 'revision'
+        ) THEN
+          CREATE UNIQUE INDEX IF NOT EXISTS daily_summary_frequency_report_date_revision_key
+            ON public.daily_summary USING btree (frequency, report_date, revision);
+          CREATE INDEX IF NOT EXISTS idx_daily_summary_freq_date_rev
+            ON public.daily_summary USING btree (frequency, report_date, revision DESC);
+        END IF;
+        IF EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'daily_summary'
+            AND column_name = 'is_latest'
+        ) THEN
+          CREATE INDEX IF NOT EXISTS idx_daily_summary_freq_date_latest
+            ON public.daily_summary USING btree (frequency, report_date DESC)
+            WHERE (is_latest = true);
+        END IF;
+      END $$;
     `);
     await queryRunner.query(`
       CREATE INDEX IF NOT EXISTS idx_daily_summary_last_data_check

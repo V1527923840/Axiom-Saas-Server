@@ -22,9 +22,24 @@ export class AddDailySummaryReportDateIndex1792000000000 implements MigrationInt
   name = 'AddDailySummaryReportDateIndex1792000000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // v3.1 取消了 revision 字段 (1793000000000),已 drop revision 的环境
+    // 重放本迁移时 CREATE INDEX IF NOT EXISTS 失效,真去 CREATE 会报
+    // column "revision" does not exist。仅在 revision 列还在时建索引,
+    // 与 1791000000000 同款幂等处理。
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS idx_daily_summary_report_date_rev
-      ON daily_summary (report_date DESC, revision DESC)
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'daily_summary'
+            AND column_name = 'revision'
+        ) THEN
+          CREATE INDEX IF NOT EXISTS idx_daily_summary_report_date_rev
+            ON daily_summary (report_date DESC, revision DESC);
+        END IF;
+      END $$;
     `);
   }
 
