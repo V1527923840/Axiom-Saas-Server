@@ -32,8 +32,18 @@ export default registerAs('skill', () => {
   validateConfig(process.env, EnvironmentVariablesValidator);
 
   return {
-    ossBucket: process.env.SKILL_OSS_BUCKET || 'axiom-skills-dev',
+    ossBucket: process.env.SKILL_OSS_BUCKET || 'axiom',
     serviceToken: process.env.SKILL_SERVICE_TOKEN || 'dev-skill-service-token',
+    // ★ 七牛云 S3 兼容端点配置(替换原 MinIO)
+    qiniu: {
+      accessKey: process.env.QINIU_ACCESS_KEY || '',
+      secretKey: process.env.QINIU_SECRET_KEY || '',
+      bucket: process.env.QINIU_BUCKET || 'axiom',
+      domain: process.env.QINIU_DOMAIN || 'https://cdn.efficientinvest.cn',
+      // 七牛云 S3 兼容端点(华东 cn-east-1 默认)
+      s3Endpoint: process.env.QINIU_S3_ENDPOINT || 's3-cn-south-1.qiniucs.com',
+      s3Region: process.env.QINIU_S3_REGION || 'cn-south-1',
+    },
     maxFileSizeKb: parseInt(process.env.SKILL_MAX_FILE_SIZE_KB || '256', 10),
     maxTotalSizeKb: parseInt(
       process.env.SKILL_MAX_TOTAL_SIZE_KB || '10240',
@@ -51,6 +61,14 @@ export type SkillConfig = {
   skill: {
     ossBucket: string;
     serviceToken: string;
+    qiniu: {
+      accessKey: string;
+      secretKey: string;
+      bucket: string;
+      domain: string;
+      s3Endpoint: string;
+      s3Region: string;
+    };
     maxFileSizeKb: number;
     maxTotalSizeKb: number;
     maxUserQuota: number;

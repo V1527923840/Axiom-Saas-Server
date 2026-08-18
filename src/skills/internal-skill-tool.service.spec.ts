@@ -217,9 +217,16 @@ describe('InternalSkillToolService', () => {
       fileRepo.findOne.mockResolvedValue({
         skillId: 'skill-1',
         relativePath: 'principles.md',
-        ossPath: 'skills/skill-1/files/principles.md',
+        // ★ FIX-6: ossPath now points to the skill's zip; entry_name is the
+        // zip entry path inside the zip blob.
+        ossPath: 'skills/skill-1/abc123def.zip',
+        entryName: 'files/principles.md',
       } as any);
-      storage.getObject.mockResolvedValue(Buffer.from('# Principles content'));
+      // Build a real zip so adm-zip can extract (avoids 'Invalid zip format').
+      const AdmZip = (await import('adm-zip')).default;
+      const zip = new AdmZip();
+      zip.addFile('files/principles.md', Buffer.from('# Principles content'));
+      storage.getObject.mockResolvedValue(zip.toBuffer());
 
       const result = await svc.getFileContent(
         'skill-1',
@@ -230,7 +237,7 @@ describe('InternalSkillToolService', () => {
 
       expect(result.content).toBe('# Principles content');
       expect(storage.getObject).toHaveBeenCalledWith(
-        'skills/skill-1/files/principles.md',
+        'skills/skill-1/abc123def.zip',
       );
     });
 

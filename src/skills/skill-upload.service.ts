@@ -44,6 +44,8 @@ export interface CreateUploadUrlOutput {
   uploadUrl: string;
   key: string;
   skillId: string;
+  cdnUrl: string;
+  expiresAt: number;
 }
 
 export interface ConfirmUploadInput {
@@ -100,8 +102,6 @@ export class SkillUploadService {
 
     // ★ NO VERSIONING: skillId is the sole identity. Use uuid v4.
     const skillId = crypto.randomUUID();
-    // Content-addressed key so identical zips overwrite the same blob.
-    const key = `skills/${skillId}/${input.hash}.zip`;
 
     // Create placeholder skill row (status='draft'). Uploader is recorded
     // for audit; the row will be overwritten by confirmUpload.
@@ -116,9 +116,15 @@ export class SkillUploadService {
       contentHash: input.hash,
     });
 
-    const uploadUrl = await this.storage.getDownloadUrl(key);
+    const presigned = await this.storage.createUploadUrl(skillId, input.hash);
 
-    return { uploadUrl, key, skillId };
+    return {
+      uploadUrl: presigned.uploadUrl,
+      key: presigned.key,
+      skillId: presigned.skillId,
+      cdnUrl: presigned.cdnUrl,
+      expiresAt: presigned.expiresAt,
+    };
   }
 
   // ============================================================
@@ -310,7 +316,10 @@ export class SkillUploadService {
       await this.fileRepo.create({
         skillId: input.skillId,
         relativePath,
-        ossPath: `skills/${input.skillId}/${entry.entryName}`,
+        // ★ FIX-6: oss_path 改为 zip 的 OSS key — 所有文件都在同一个 zip object 里
+        // (InternalSkillToolService.getFileContent 按 entryName 从 zip 提取)
+        ossPath: `skills/${input.skillId}/${input.hash}.zip`,
+        entryName: entry.entryName,
         description: description || null,
         sizeBytes: buf.length,
         contentHash: crypto.createHash('sha256').update(buf).digest('hex'),

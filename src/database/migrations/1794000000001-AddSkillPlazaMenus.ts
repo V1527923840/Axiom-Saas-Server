@@ -1,13 +1,23 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
- * Add the Skill Plaza sidebar entry — one parent menu (`/skills`)
- * plus one admin child menu (`/skills/admin`).
+ * Add the Skill Plaza sidebar entries (★ 2026-08-18 修订 v4:系统菜单挪到底部).
+ *
+ * 排序阶梯(保证核心菜单稳定占位,未来新增无法插队):
+ *   核心 4 项 (10/20/30/40 阶梯):overview → reports → content → app-plaza
+ *   其他菜单:50+,并列按 code 字母排
+ *   系统菜单:100,单独占位,永远在底部
+ *
+ * 层级:
+ *   顶级同级:content(知识库, sortOrder=30) → app-plaza(应用广场, sortOrder=40, icon=LayoutGrid)
+ *   app-plaza 之下:
+ *     ├── skill-plaza (skill广场, /skills, sortOrder=1, icon=Wand2)
+ *     └── skill-plaza-admin (skill管理, /skills/admin, sortOrder=2, icon=Wrench)
  *
  * Lives in a migration (not the menu seed) per
  * src/database/CLAUDE.md — the existing menu seed has an
  * `existingMenus > 0` early-return guard, so already-seeded DBs would
- * never pick this row up. The migration is idempotent
+ * never pick these rows up. The migration is idempotent
  * (`WHERE NOT EXISTS`) so it is safe to re-run.
  *
  * Role assignment mirrors src/database/seeds/relational/menu/menu-seed.service.ts:
@@ -15,100 +25,88 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  *       but seed assigns it too, so we keep parity)
  *   2 = admin       (the role that requires explicit role_menu rows to
  *                    see the sidebar entry)
+ *
+ * 等价于 sql/skill-plaza-setup.sql 的菜单段。两份必须保持 code 一致。
  */
 export class AddSkillPlazaMenus1794000000001 implements MigrationInterface {
   name = 'AddSkillPlazaMenus1794000000001';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Parent: /skills (top-level sidebar entry visible to all roles
-    // assigned below).
+    // 1) 顶级菜单:应用广场 (parentId=NULL, sortOrder=40, 在核心阶梯末位)
+    //    icon = LayoutGrid (lucide-react 风格,与项目其他顶级菜单一致)
+    //    ★ 阶梯策略:核心 4 项 10/20/30/40,其他 50+,新增无法插队
     await queryRunner.query(`
       INSERT INTO menu (id, name, code, icon, path, "parentId", "sortOrder", status, "createdAt", "updatedAt")
       SELECT
         gen_random_uuid(),
-        'Skill 广场',
-        'skill-plaza',
-        'Sparkles',
-        '/skills',
+        '应用广场',
+        'app-plaza',
+        'LayoutGrid',
+        '/apps',
         NULL,
-        5,
+        40,
+        'active',
+        NOW(),
+        NOW()
+      WHERE NOT EXISTS (SELECT 1 FROM menu WHERE code = 'app-plaza')
+    `);
+
+    // 2) 二级菜单:skill广场 (parent=app-plaza, icon=Wand2 魔法棒=施展技能)
+    await queryRunner.query(`
+      INSERT INTO menu (id, name, code, icon, path, "parentId", "sortOrder", status, "createdAt", "updatedAt")
+      SELECT
+        gen_random_uuid(),
+        'skill广场',
+        'skill-plaza',
+        'Wand2',
+        '/skills',
+        (SELECT id FROM menu WHERE code = 'app-plaza' LIMIT 1),
+        1,
         'active',
         NOW(),
         NOW()
       WHERE NOT EXISTS (SELECT 1 FROM menu WHERE code = 'skill-plaza')
     `);
 
-    // Child: /skills/admin — admin-only management page, nested under
-    // the plaza entry.
+    // 3) 二级菜单:skill管理 (parent=app-plaza)
     await queryRunner.query(`
       INSERT INTO menu (id, name, code, icon, path, "parentId", "sortOrder", status, "createdAt", "updatedAt")
       SELECT
         gen_random_uuid(),
-        'Skill 管理',
-        'skill-manage',
+        'skill管理',
+        'skill-plaza-admin',
         'Wrench',
         '/skills/admin',
-        (SELECT id FROM menu WHERE code = 'skill-plaza'),
-        1,
+        (SELECT id FROM menu WHERE code = 'app-plaza' LIMIT 1),
+        2,
         'active',
         NOW(),
         NOW()
-      WHERE NOT EXISTS (SELECT 1 FROM menu WHERE code = 'skill-manage')
+      WHERE NOT EXISTS (SELECT 1 FROM menu WHERE code = 'skill-plaza-admin')
     `);
 
-    // Assign /skills to super_admin (roleId = 1).
+    // 4) 角色分配:Admin (roleId=2) + Super Admin (roleId=1) 都能访问 3 个菜单
     await queryRunner.query(`
       INSERT INTO role_menu ("roleId", "menuId")
-      SELECT 1, id FROM menu WHERE code = 'skill-plaza'
-      AND NOT EXISTS (
-        SELECT 1 FROM role_menu
-        WHERE "roleId" = 1
-          AND "menuId" = (SELECT id FROM menu WHERE code = 'skill-plaza')
-      )
-    `);
-
-    // Assign /skills to admin (roleId = 2).
-    await queryRunner.query(`
-      INSERT INTO role_menu ("roleId", "menuId")
-      SELECT 2, id FROM menu WHERE code = 'skill-plaza'
-      AND NOT EXISTS (
-        SELECT 1 FROM role_menu
-        WHERE "roleId" = 2
-          AND "menuId" = (SELECT id FROM menu WHERE code = 'skill-plaza')
-      )
-    `);
-
-    // Assign /skills/admin to super_admin (roleId = 1).
-    await queryRunner.query(`
-      INSERT INTO role_menu ("roleId", "menuId")
-      SELECT 1, id FROM menu WHERE code = 'skill-manage'
-      AND NOT EXISTS (
-        SELECT 1 FROM role_menu
-        WHERE "roleId" = 1
-          AND "menuId" = (SELECT id FROM menu WHERE code = 'skill-manage')
-      )
-    `);
-
-    // Assign /skills/admin to admin (roleId = 2) — the brief's
-    // primary requirement.
-    await queryRunner.query(`
-      INSERT INTO role_menu ("roleId", "menuId")
-      SELECT 2, id FROM menu WHERE code = 'skill-manage'
-      AND NOT EXISTS (
-        SELECT 1 FROM role_menu
-        WHERE "roleId" = 2
-          AND "menuId" = (SELECT id FROM menu WHERE code = 'skill-manage')
-      )
+      SELECT r.id, m.id
+      FROM role r
+      CROSS JOIN menu m
+      WHERE m.code IN ('app-plaza', 'skill-plaza', 'skill-plaza-admin')
+        AND r.id IN (1, 2)
+        AND NOT EXISTS (
+          SELECT 1 FROM role_menu rm
+          WHERE rm."roleId" = r.id AND rm."menuId" = m.id
+        )
     `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       DELETE FROM role_menu
-      WHERE "menuId" IN (SELECT id FROM menu WHERE code IN ('skill-plaza', 'skill-manage'))
+      WHERE "menuId" IN (SELECT id FROM menu WHERE code IN ('app-plaza', 'skill-plaza', 'skill-plaza-admin'))
     `);
     await queryRunner.query(`
-      DELETE FROM menu WHERE code IN ('skill-plaza', 'skill-manage')
+      DELETE FROM menu WHERE code IN ('app-plaza', 'skill-plaza', 'skill-plaza-admin')
     `);
   }
 }

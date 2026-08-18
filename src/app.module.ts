@@ -47,6 +47,7 @@ import { IntelligenceModule } from './intelligence/intelligence.module';
 import { ResearchModule } from './research/research.module';
 import { AiAgentModule } from './ai-agent/ai-agent.module';
 import { VibeTradingModule } from './ai-agent/vibe-trading/vibe-trading.module';
+import { SkillsModule } from './skills/skills.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 // <database-block>
@@ -137,6 +138,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     ScheduleModule.forRoot(),
     AiAgentModule,
     VibeTradingModule,
+    SkillsModule,
   ],
 })
 export class AppModule {}

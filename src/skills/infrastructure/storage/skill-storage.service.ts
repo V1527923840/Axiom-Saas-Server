@@ -17,52 +17,61 @@ export interface UploadResult {
   hash: string;
 }
 
+/**
+ * SkillStorageService — 七牛云 S3 兼容模式(★ 2026-08-18 替换原 MinIO)
+ *
+ * 七牛云支持 S3 兼容 API(虚拟托管风格),所以我们继续用 AWS SDK,
+ * 但 endpoint 指向 s3-cn-east-1.qiniucs.com,forcePathStyle=false。
+ *
+ *   桶:   axiom (QINIU_BUCKET)
+ *   key:  skills/{skillId}/{contentHash}.zip     ← ★ 用户要求 /skills/ 前缀
+ *   端点: https://{bucket}.{s3Endpoint}   (e.g. axiom.s3-cn-east-1.qiniucs.com)
+ *   CDN:  https://cdn.efficientinvest.cn
+ *
+ * 客户端上传走 presigned PUT URL(Phase 1),后端校验走 GET(Phase 2)。
+ */
 @Injectable()
 export class SkillStorageService {
   private readonly logger = new Logger(SkillStorageService.name);
   private readonly s3: S3Client;
   private readonly bucket: string;
+  private readonly cdnDomain: string;
 
   constructor(configService: ConfigService<AllConfigType>) {
-    const region = configService.getOrThrow('file.awsS3Region', {
-      infer: true,
-    });
-    const endpoint = configService.get('file.minioEndpoint', {
-      infer: true,
-    });
+    const skillCfg = configService.getOrThrow('skill', { infer: true });
+    const qiniu = skillCfg.qiniu;
 
+    if (!qiniu.accessKey || !qiniu.secretKey) {
+      throw new Error(
+        'SkillStorageService: QINIU_ACCESS_KEY / QINIU_SECRET_KEY not configured',
+      );
+    }
+
+    // ★ 七牛云 S3 兼容:用虚拟托管风格 — endpoint 不带 bucket,
+    // AWS SDK 会自动加 bucket 形成 https://<bucket>.<endpoint> 形式
+    // (e.g. https://axiom.s3-cn-east-1.qiniucs.com)
     const clientConfig: S3ClientConfig = {
-      region,
+      region: qiniu.s3Region,
+      endpoint: `https://${qiniu.s3Endpoint}`,
+      forcePathStyle: false,
       credentials: {
-        accessKeyId: configService.getOrThrow('file.accessKeyId', {
-          infer: true,
-        }),
-        secretAccessKey: configService.getOrThrow('file.secretAccessKey', {
-          infer: true,
-        }),
+        accessKeyId: qiniu.accessKey,
+        secretAccessKey: qiniu.secretKey,
       },
     };
 
-    if (endpoint) {
-      clientConfig.endpoint = endpoint;
-      clientConfig.forcePathStyle = true;
-    }
-
     this.s3 = new S3Client(clientConfig);
-    // skill.ossBucket has a default (axiom-skills-dev) so it's optional in config;
-    // use get() and fallback defensively to the same default.
-    this.bucket =
-      configService.get('skill.ossBucket', { infer: true }) ??
-      'axiom-skills-dev';
+    this.bucket = qiniu.bucket;
+    this.cdnDomain = qiniu.domain.replace(/\/+$/, '');
   }
 
   /**
-   * Upload a skill zip blob. Key is content-addressed so identical zips
-   * overwrite the same object (idempotent). Hash = sha256(zip).
+   * Server-side direct upload (admin path / migration). Hashes the zip
+   * before storing so the storage key is content-addressed.
    */
   async upload(skillId: string, zipBlob: Buffer): Promise<UploadResult> {
     const hash = crypto.createHash('sha256').update(zipBlob).digest('hex');
-    const key = `skills/${skillId}/${hash}.zip`;
+    const key = this.keyOf(skillId, hash);
 
     await this.s3.send(
       new PutObjectCommand({
@@ -78,14 +87,47 @@ export class SkillStorageService {
   }
 
   /**
-   * Presigned GET URL for downloading a skill zip.
+   * Presigned PUT URL for client direct upload (Phase 1 of the 2-phase flow).
+   * 浏览器拿到 uploadUrl 后,直接 PUT zip bytes 到七牛云(不经过 Saas-Server)。
+   *
+   * @returns {{ uploadUrl, key, skillId, cdnUrl }}
    */
-  async getDownloadUrl(key: string): Promise<string> {
-    const command = new PutObjectCommand({
+  async createUploadUrl(
+    skillId: string,
+    hash: string,
+    expiresIn = 900,
+  ): Promise<{
+    uploadUrl: string;
+    key: string;
+    skillId: string;
+    cdnUrl: string;
+    expiresAt: number;
+  }> {
+    const key = this.keyOf(skillId, hash);
+    const cmd = new PutObjectCommand({
       Bucket: this.bucket,
       Key: key,
     });
-    return getSignedUrl(this.s3, command, { expiresIn: 900 });
+    const uploadUrl = await getSignedUrl(this.s3, cmd, { expiresIn });
+    return {
+      uploadUrl,
+      key,
+      skillId,
+      cdnUrl: `${this.cdnDomain}/${key}`,
+      expiresAt: Date.now() + expiresIn * 1000,
+    };
+  }
+
+  /**
+   * Presigned GET URL — not used by Phase 2 (we use getObject directly).
+   * Kept for symmetry with `createUploadUrl`.
+   */
+  async getDownloadUrl(key: string, expiresIn = 900): Promise<string> {
+    const cmd = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+    });
+    return getSignedUrl(this.s3, cmd, { expiresIn });
   }
 
   /**
@@ -108,6 +150,8 @@ export class SkillStorageService {
   /**
    * Download a skill zip blob. Streams to a Buffer. Used by the upload
    * confirm pipeline to re-verify sha256 against the client claim.
+   *
+   * 七牛云 S3 兼容:GET Object 用同一 S3Client 即可。
    */
   async getObject(key: string): Promise<Buffer> {
     const result = await this.s3.send(
@@ -122,15 +166,14 @@ export class SkillStorageService {
   }
 
   /**
-   * Check whether a zip with this content hash already exists in OSS.
-   * Used by orphan cleanup to detect blobs no longer referenced by any skill.
+   * Check whether a zip with this content hash already exists in Qiniu.
    */
   async existsByHash(hash: string): Promise<boolean> {
     try {
       await this.s3.send(
         new HeadObjectCommand({
           Bucket: this.bucket,
-          Key: `skills/_orphans/${hash}.zip`,
+          Key: this.keyOf('_orphans', hash),
         }),
       );
       return true;
@@ -141,5 +184,13 @@ export class SkillStorageService {
       // Re-throw unexpected errors (auth, 5xx) so cleanup job can retry.
       throw err;
     }
+  }
+
+  /**
+   * 统一 key 前缀:所有 skill 文件存到 /skills/ 文件夹下
+   * (用户要求 — 在共享 bucket axiom 下,skills/ 隔离避免污染其他业务)
+   */
+  private keyOf(skillId: string, hash: string): string {
+    return `skills/${skillId}/${hash}.zip`;
   }
 }

@@ -7,21 +7,21 @@ describe('SkillStorageService', () => {
   let headResult: 'ok' | 'notfound' | 'throw';
 
   function makeConfigStub(): ConfigService {
-    const lookup = (key: string): string | undefined => {
-      switch (key) {
-        case 'skill.ossBucket':
-          return 'test-bucket';
-        case 'file.awsS3Region':
-          return 'us-east-1';
-        case 'file.accessKeyId':
-          return 'AKIA';
-        case 'file.secretAccessKey':
-          return 'secret';
-        case 'file.minioEndpoint':
-          return undefined;
-        default:
-          return undefined;
-      }
+    const skillConfig = {
+      ossBucket: 'test-bucket',
+      serviceToken: 'dev',
+      qiniu: {
+        accessKey: 'AKIA',
+        secretKey: 'secret',
+        bucket: 'test-bucket',
+        domain: 'https://cdn.example.com',
+        s3Endpoint: 's3.example.com',
+        s3Region: 'us-east-1',
+      },
+    };
+    const lookup = (key: string): unknown => {
+      if (key === 'skill') return skillConfig;
+      return undefined;
     };
     return {
       get: lookup,

@@ -194,9 +194,18 @@ export class InternalSkillToolService {
       );
     }
 
-    // Download from OSS.
-    const buffer = await this.storage.getObject(file.ossPath);
-    const content = buffer.toString('utf-8');
+    // ★ FIX-6: ossPath 现在是 zip 的 key;按 entry_name 从 zip 内提取
+    const zipBuffer = await this.storage.getObject(file.ossPath);
+    const AdmZip = (await import('adm-zip')).default;
+    const zip = new AdmZip(zipBuffer);
+    const entryName = file.entryName ?? `files/${path}`;
+    const entry = zip.getEntry(entryName);
+    if (!entry) {
+      throw new NotFoundException(
+        `entry '${entryName}' not found inside zip for skill ${skillId}`,
+      );
+    }
+    const content = entry.getData().toString('utf-8');
 
     return { content };
   }

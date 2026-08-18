@@ -69,7 +69,15 @@ describe('SkillUploadService', () => {
     jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
 
     storage = {
-      getDownloadUrl: jest.fn().mockResolvedValue('https://oss.example/upload'),
+      createUploadUrl: jest.fn().mockImplementation((skillId, hash) =>
+        Promise.resolve({
+          uploadUrl: 'https://oss.example/upload',
+          key: `skills/${skillId}/${hash}.zip`,
+          skillId,
+          cdnUrl: `https://cdn.example/${skillId}/${hash}.zip`,
+          expiresAt: Date.now() + 900_000,
+        }),
+      ),
       getObject: jest.fn(),
     } as any;
 
@@ -144,12 +152,13 @@ describe('SkillUploadService', () => {
     expect(createArg.uploaderType).toBe('platform');
     expect(createArg.uploaderId).toBe(7);
 
-    expect(storage.getDownloadUrl).toHaveBeenCalledTimes(1);
-    const key = storage.getDownloadUrl.mock.calls[0][0];
-    expect(key).toContain(out.skillId);
+    expect(storage.createUploadUrl).toHaveBeenCalledTimes(1);
+    const callArgs = storage.createUploadUrl.mock.calls[0];
+    expect(callArgs[0]).toBe(out.skillId);
+    expect(callArgs[1]).toBe('h-pending');
 
     expect(out.uploadUrl).toBe('https://oss.example/upload');
-    expect(out.key).toBe(key);
+    expect(out.key).toBe(`skills/${out.skillId}/h-pending.zip`);
     expect(out.skillId).toMatch(/^[0-9a-f-]{36}$/i);
   });
 

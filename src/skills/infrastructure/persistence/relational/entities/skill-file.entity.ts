@@ -37,6 +37,11 @@ export class SkillFileEntity {
   @Column({ name: 'oss_path', type: 'varchar', length: 512 })
   ossPath!: string;
 
+  // ★ FIX-6: 文件在 zip 内的完整 entry 名(含 files/ 前缀),
+  // 用于 InternalSkillToolService.getFileContent 从 zip 按需提取
+  @Column({ name: 'entry_name', type: 'varchar', length: 512, nullable: true })
+  entryName!: string | null;
+
   @Column({ type: 'varchar', length: 1024, nullable: true })
   description!: string | null;
 

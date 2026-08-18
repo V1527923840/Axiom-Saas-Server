@@ -16,6 +16,8 @@ import { PlanSkillRepository } from './infrastructure/persistence/relational/rep
 import { SkillStorageModule } from './infrastructure/storage/skill-storage.module';
 import { ToolEndpointWhitelist } from './tool-endpoint-whitelist';
 
+import { MenusModule } from '../menus/menus.module';
+import { UsersModule } from '../users/users.module';
 import { InternalSkillToolService } from './internal-skill-tool.service';
 import { InternalSkillController } from './internal-skill.controller';
 import { SkillsService } from './skills.service';
@@ -56,6 +58,10 @@ import { SkillResolverService } from './skill-resolver.service';
       PlanSkillEntity,
     ]),
     SkillStorageModule,
+    // MenuAccessGuard (used by SkillsController) needs UsersService.getUserAllMenus + isSuperAdmin.
+    // Both are exported by UsersModule; MenusModule exports MenuAccessGuard itself.
+    UsersModule,
+    MenusModule,
   ],
   controllers: [InternalSkillController, SkillsController],
   providers: [

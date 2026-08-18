@@ -28,7 +28,8 @@ import { Injectable } from '@nestjs/common';
  *   The path MUST start with `/` and contain no `..` or `://`.
  */
 export const PATHS: ReadonlyArray<string> = Object.freeze([
-  // intentionally empty — admin populates as tool endpoints come online.
+  // E2E test endpoint (2026-08-18 dev only — remove before merge to prod)
+  'GET /internal/test/quote',
 ]);
 
 /**

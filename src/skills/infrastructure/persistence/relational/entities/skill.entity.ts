@@ -102,10 +102,10 @@ export class SkillEntity {
   @Column({ name: 'total_token_estimate', type: 'integer', nullable: true })
   totalTokenEstimate!: number | null;
 
-  @Column({ type: 'varchar', length: 64, nullable: true })
+  @Column({ name: 'content_hash', type: 'varchar', length: 64, nullable: true })
   contentHash!: string | null;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ name: 'changelog', type: 'text', nullable: true })
   changelog!: string | null;
 
   @Column({ name: 'published_at', type: 'timestamptz', nullable: true })

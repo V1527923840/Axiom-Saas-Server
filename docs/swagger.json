@@ -6193,6 +6193,899 @@
           "AI Agent"
         ]
       }
+    },
+    "/api/v1/internal/skills/{id}/meta": {
+      "get": {
+        "operationId": "InternalSkillController_getMeta_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "contentHash",
+            "required": false,
+            "in": "query",
+            "description": "Optional sha256 of the zip the caller wants. If supplied and the skill has a different content_hash, returns 404.",
+            "schema": {
+              "minLength": 64,
+              "maxLength": 64,
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "id": "uuid",
+                      "name": "Trading Principles",
+                      "description": "...",
+                      "category": "trading",
+                      "tags": [
+                        "finance"
+                      ],
+                      "contentHash": "sha256...",
+                      "manifestTokenEstimate": 100,
+                      "totalTokenEstimate": 500,
+                      "toolsCount": 2,
+                      "files": [
+                        {
+                          "relativePath": "principles.md",
+                          "description": "Core principles",
+                          "tokenEstimate": 50
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "internal-skills"
+        ]
+      }
+    },
+    "/api/v1/internal/skills/{id}/manifest": {
+      "get": {
+        "operationId": "InternalSkillController_getManifest_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "contentHash",
+            "required": false,
+            "in": "query",
+            "description": "Optional sha256 of the zip the caller wants. If supplied and the skill has a different content_hash, returns 404.",
+            "schema": {
+              "minLength": 64,
+              "maxLength": 64,
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "content": "---\nname: Trading\n---\n# body"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "internal-skills"
+        ]
+      }
+    },
+    "/api/v1/internal/skills/{id}/files/content": {
+      "get": {
+        "operationId": "InternalSkillController_getFileContent_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "contentHash",
+            "required": false,
+            "in": "query",
+            "description": "Optional sha256 of the zip the caller wants. If supplied and the skill has a different content_hash, returns 404.",
+            "schema": {
+              "minLength": 64,
+              "maxLength": 64,
+              "type": "string"
+            }
+          },
+          {
+            "name": "path",
+            "required": true,
+            "in": "query",
+            "description": "Relative path inside the skill. Must be in skill_file.relative_path.",
+            "schema": {
+              "example": "principles.md",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "content": "# Principles file content..."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "internal-skills"
+        ]
+      }
+    },
+    "/api/v1/internal/skills/{id}/tools/{toolName}/execute": {
+      "post": {
+        "operationId": "InternalSkillController_executeTool_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "toolName",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "get_price",
+              "type": "string"
+            }
+          },
+          {
+            "name": "contentHash",
+            "required": false,
+            "in": "query",
+            "description": "Optional sha256 of the zip the caller wants. If supplied and the skill has a different content_hash, returns 404.",
+            "schema": {
+              "minLength": 64,
+              "maxLength": 64,
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalSkillExecuteToolDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "skillId": "uuid",
+                      "toolName": "get_price",
+                      "status": "authorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "internal-skills"
+        ]
+      }
+    },
+    "/api/v1/skills/upload-url": {
+      "post": {
+        "operationId": "SkillsController_createUploadUrl_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSkillUploadUrlDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "uploadUrl": "https://oss.example.com/...",
+                      "key": "skills/{id}/{hash}.zip",
+                      "skillId": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Skills"
+        ]
+      }
+    },
+    "/api/v1/skills/{id}/content": {
+      "put": {
+        "operationId": "SkillsController_confirmContent_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmSkillContentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "version": 1,
+                      "skillId": "uuid",
+                      "filesCount": 3,
+                      "toolsCount": 2
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Skills"
+        ]
+      }
+    },
+    "/api/v1/skills": {
+      "get": {
+        "operationId": "SkillsController_list_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "published",
+              "type": "string",
+              "enum": [
+                "draft",
+                "published",
+                "archived"
+              ]
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "finance",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "updatedAt",
+              "type": "string",
+              "enum": [
+                "name",
+                "createdAt",
+                "updatedAt",
+                "publishedAt"
+              ]
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "DESC",
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InfinityPaginationSkillResponseDtoResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Skills"
+        ]
+      }
+    },
+    "/api/v1/skills/{id}": {
+      "get": {
+        "operationId": "SkillsController_detail_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Skills"
+        ]
+      }
+    },
+    "/api/v1/skills/{id}/files": {
+      "get": {
+        "operationId": "SkillsController_listFiles_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "contentHash",
+            "required": false,
+            "in": "query",
+            "description": "sha256 of the desired content. Omit to use the current content hash.",
+            "schema": {
+              "example": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SkillFileIndexDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Skills"
+        ]
+      }
+    },
+    "/api/v1/skills/{id}/tools": {
+      "get": {
+        "operationId": "SkillsController_listTools_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "contentHash",
+            "required": false,
+            "in": "query",
+            "description": "sha256 of the desired content. Omit to use the current content hash.",
+            "schema": {
+              "example": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SkillToolSummaryDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Skills"
+        ]
+      }
+    },
+    "/api/v1/users/me/skills": {
+      "get": {
+        "operationId": "SkillsController_listMySkills_v1",
+        "parameters": [
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SkillResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Skills"
+        ]
+      }
+    },
+    "/api/v1/skills/{id}/enable": {
+      "post": {
+        "operationId": "SkillsController_enable_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "skillId": "uuid",
+                      "enabled": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Skills"
+        ]
+      }
+    },
+    "/api/v1/skills/{id}/disable": {
+      "post": {
+        "operationId": "SkillsController_disable_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "skillId": "uuid",
+                      "enabled": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Skills"
+        ]
+      }
+    },
+    "/api/v1/sessions/{id}/skills": {
+      "get": {
+        "operationId": "SkillsController_listSessionMounts_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SessionSkillMountItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Skills"
+        ]
+      }
+    },
+    "/api/v1/sessions/{id}/skills/{skillId}": {
+      "put": {
+        "operationId": "SkillsController_mountSkill_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MountSkillDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "sessionId": "uuid",
+                      "skillId": "uuid",
+                      "op": "add"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Skills"
+        ]
+      }
     }
   },
   "info": {
@@ -7930,6 +8823,331 @@
       "CreateSwarmRunDto": {
         "type": "object",
         "properties": {}
+      },
+      "InternalSkillExecuteToolDto": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "type": "object",
+            "description": "Arguments object. Validated server-side against the tool.params_schema (Ajv).",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "args"
+        ]
+      },
+      "CreateSkillUploadUrlDto": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "example": "principles-skill.zip",
+            "maxLength": 255
+          },
+          "size": {
+            "type": "number",
+            "example": 524288,
+            "description": "Size in bytes (max 10 MiB)"
+          },
+          "sourceFormat": {
+            "type": "string",
+            "enum": [
+              "md",
+              "zip"
+            ],
+            "example": "zip"
+          },
+          "hash": {
+            "type": "string",
+            "example": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "description": "sha256 of the zip/md blob (64 hex chars)"
+          }
+        },
+        "required": [
+          "filename",
+          "size",
+          "sourceFormat",
+          "hash"
+        ]
+      },
+      "ConfirmSkillContentDto": {
+        "type": "object",
+        "properties": {
+          "ossKey": {
+            "type": "string",
+            "example": "skills/{skillId}/{hash}.zip"
+          },
+          "hash": {
+            "type": "string",
+            "example": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "sourceFormat": {
+            "type": "string",
+            "enum": [
+              "md",
+              "zip"
+            ],
+            "example": "zip"
+          },
+          "code": {
+            "type": "string",
+            "example": "principles-skill",
+            "maxLength": 64
+          },
+          "name": {
+            "type": "string",
+            "example": "Trading Principles",
+            "maxLength": 128
+          },
+          "description": {
+            "type": "string",
+            "example": "Core principles for evaluating trade setups",
+            "minLength": 10,
+            "maxLength": 500
+          },
+          "changelog": {
+            "type": "string",
+            "example": "First publish"
+          }
+        },
+        "required": [
+          "ossKey",
+          "hash",
+          "sourceFormat",
+          "code",
+          "name",
+          "description"
+        ]
+      },
+      "SkillResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "example": "principles-skill"
+          },
+          "name": {
+            "type": "string",
+            "example": "Trading Principles"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "object",
+            "nullable": true
+          },
+          "tags": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "thumbnailUrl": {
+            "type": "object",
+            "nullable": true
+          },
+          "uploaderType": {
+            "type": "string",
+            "enum": [
+              "platform",
+              "user_self",
+              "third_party"
+            ]
+          },
+          "marketplaceStatus": {
+            "type": "string",
+            "enum": [
+              "private",
+              "pending",
+              "listed"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ]
+          },
+          "contentHash": {
+            "type": "object",
+            "nullable": true
+          },
+          "publishedAt": {
+            "type": "object",
+            "nullable": true
+          },
+          "changelog": {
+            "type": "object",
+            "nullable": true
+          },
+          "tools": {
+            "description": "Tool schema list (jsonb)",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "description",
+          "category",
+          "tags",
+          "thumbnailUrl",
+          "uploaderType",
+          "marketplaceStatus",
+          "status",
+          "contentHash",
+          "publishedAt",
+          "changelog",
+          "tools",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "InfinityPaginationSkillResponseDtoResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillResponseDto"
+            }
+          },
+          "hasNextPage": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "data",
+          "hasNextPage"
+        ]
+      },
+      "SkillFileIndexDto": {
+        "type": "object",
+        "properties": {
+          "relativePath": {
+            "type": "string",
+            "example": "principles.md"
+          },
+          "description": {
+            "type": "object",
+            "nullable": true
+          },
+          "tokenEstimate": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "relativePath",
+          "description",
+          "tokenEstimate"
+        ]
+      },
+      "SkillToolSummaryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "object",
+            "nullable": true
+          },
+          "parameters": {
+            "type": "object",
+            "nullable": true
+          },
+          "tokenEstimate": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "parameters",
+          "tokenEstimate"
+        ]
+      },
+      "SessionSkillMountItemDto": {
+        "type": "object",
+        "properties": {
+          "skillId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "op": {
+            "type": "string",
+            "enum": [
+              "add",
+              "remove"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "auto_matched"
+            ]
+          },
+          "mountedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "skillId",
+          "op",
+          "source",
+          "mountedAt"
+        ]
+      },
+      "MountSkillDto": {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "enum": [
+              "add",
+              "remove"
+            ],
+            "example": "add",
+            "description": "add — mount the skill to this session; remove — unmount it for this session only (the user-skill-binding is untouched)."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "auto_matched"
+            ],
+            "example": "manual",
+            "description": "defaults to \"manual\" if omitted"
+          }
+        },
+        "required": [
+          "op"
+        ]
       }
     }
   }
