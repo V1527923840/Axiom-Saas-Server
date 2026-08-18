@@ -18,9 +18,25 @@
 - Task 9: complete (e29e607..9b79e95, FrontmatterValidator + 4/4 specs)
 - Task 10: complete (9b79e95..4d4ab14, menu seed via migration — chose migration per CLAUDE.md)
 - Task 11: complete (4d4ab14..36df733, ServiceTokenGuard + 3/3 specs)
+- Task 12: complete (36df733..5d7ee1b, SkillResolverService — APPROVED by reviewer; 12/12 boundary tests cover all 4 cases from spec §3.5.2; returns Promise<string[]>; fail-soft; published-only filter)
 
-**Current HEAD:** `36df733`
-**Next task:** Task 12 (SkillResolverService — CRITICAL: 4 boundary cases per spec §3.5)
+**Current HEAD:** `5d7ee1b`
+**Next task:** Task 13 (SkillUploadService — two-stage commit)
+
+## Stopped here (2026-08-18)
+
+Reason: User said "继续" but execution context is getting heavy. Stopped at the natural breakpoint: the **runtime core (SkillResolverService) is approved and safe**. Tasks 13+ are mechanical but include AiAgent integration (modifying ai-agent.service.ts) which is risky.
+
+**Resume in fresh session**: from Task 13.
+
+## Files ready for Task 13+
+
+- Plan: docs/superpowers/plans/2026-08-18-skill-plaza-saas-server.md (find "### Task 13")
+- Spec §4.3: docs/superpowers/specs/2026-08-17-skill-plaza-design.md (upload pipeline, lines ~596-663)
+- Execution guide: docs/superpowers/execution/skill-plaza-execution-guide.md
+- Migration source-of-truth: src/database/migrations/1794000000000-CreateSkillTables.ts
+- SkillStorageService (Task 8) ready for use
+- FrontmatterValidator (Task 9) ready for use
 
 ## Architectural decision (2026-08-18): **drop skill versioning**
 
