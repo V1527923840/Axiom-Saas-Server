@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -102,6 +103,22 @@ export class SkillStorageService {
         `failed to delete skill blob key=${key}: ${(err as Error).message}`,
       );
     }
+  }
+
+  /**
+   * Download a skill zip blob. Streams to a Buffer. Used by the upload
+   * confirm pipeline to re-verify sha256 against the client claim.
+   */
+  async getObject(key: string): Promise<Buffer> {
+    const result = await this.s3.send(
+      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+    );
+    const body = result.Body as NodeJS.ReadableStream;
+    const chunks: Buffer[] = [];
+    for await (const chunk of body) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
   }
 
   /**
