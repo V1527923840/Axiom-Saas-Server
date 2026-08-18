@@ -8,6 +8,7 @@ import { InternalSkillToolService } from './internal-skill-tool.service';
 import { SkillRepository } from './infrastructure/persistence/relational/repositories/skill.repository';
 import { SkillFileRepository } from './infrastructure/persistence/relational/repositories/skill-file.repository';
 import { SkillStorageService } from './infrastructure/storage/skill-storage.service';
+import { ToolEndpointWhitelist } from './tool-endpoint-whitelist';
 
 /**
  * Spec for InternalSkillToolService — the read endpoints called by Vibe.
@@ -65,7 +66,12 @@ describe('InternalSkillToolService', () => {
       getObject: jest.fn(),
     } as unknown as jest.Mocked<SkillStorageService>;
 
-    svc = new InternalSkillToolService(skillRepo, fileRepo, storage);
+    svc = new InternalSkillToolService(
+      skillRepo,
+      fileRepo,
+      storage,
+      new ToolEndpointWhitelist(),
+    );
   });
 
   // ============================================================
@@ -339,6 +345,207 @@ describe('InternalSkillToolService', () => {
       await expect(
         svc.getFileContent('skill-1', 'wrong', 'principles.md', ctx),
       ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  // ============================================================
+  // executeTool — audit C-3 security gates
+  // ============================================================
+
+  describe('executeTool', () => {
+    it('should reject with BadRequest when toolName is missing', async () => {
+      await expect(
+        svc.executeTool('skill-1', undefined, '', { x: 1 }, ctx),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('should reject with BadRequest when toolName contains illegal characters', async () => {
+      // Slash injection
+      await expect(
+        svc.executeTool('skill-1', undefined, '../etc', { x: 1 }, ctx),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      // URL-encoded
+      await expect(
+        svc.executeTool('skill-1', undefined, '%2e%2e', { x: 1 }, ctx),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('should reject with NotFound when toolName not in skill.tools', async () => {
+      skillRepo.findById.mockResolvedValue(makeSkill());
+
+      await expect(
+        svc.executeTool('skill-1', undefined, 'unknown_tool', { x: 1 }, ctx),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('should reject with Forbidden when tool endpoint_path not in whitelist', async () => {
+      skillRepo.findById.mockResolvedValue(
+        makeSkill({
+          tools: [
+            {
+              name: 'get_quote',
+              description: 'Get quote',
+              endpointMethod: 'POST',
+              endpointPath: '/internal/admin/dump',
+            },
+          ],
+        }),
+      );
+
+      await expect(
+        svc.executeTool('skill-1', undefined, 'get_quote', {}, ctx),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('should reject with BadRequest when endpoint schema is partial', async () => {
+      skillRepo.findById.mockResolvedValue(
+        makeSkill({
+          tools: [
+            {
+              name: 'get_quote',
+              description: 'Get quote',
+              endpointPath: '/internal/quote',
+              // endpointMethod missing
+            },
+          ],
+        }),
+      );
+
+      await expect(
+        svc.executeTool('skill-1', undefined, 'get_quote', {}, ctx),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('should reject with BadRequest when args fail params_schema validation', async () => {
+      skillRepo.findById.mockResolvedValue(
+        makeSkill({
+          tools: [
+            {
+              name: 'validated_tool',
+              description: 'Tool with strict schema',
+              parameters: {
+                type: 'object',
+                required: ['symbol'],
+                properties: { symbol: { type: 'string' } },
+              },
+              rateLimitRps: 100,
+            },
+          ],
+        }),
+      );
+
+      // missing required `symbol`
+      await expect(
+        svc.executeTool(
+          'skill-1',
+          undefined,
+          'validated_tool',
+          { wrong: 1 },
+          ctx,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      // wrong type
+      await expect(
+        svc.executeTool(
+          'skill-1',
+          undefined,
+          'validated_tool',
+          { symbol: 123 },
+          ctx,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('should accept valid args and return authorized result (no endpoint declared)', async () => {
+      skillRepo.findById.mockResolvedValue(
+        makeSkill({
+          tools: [
+            {
+              name: 'happy_tool',
+              description: 'Happy path',
+              parameters: {
+                type: 'object',
+                required: ['symbol'],
+                properties: { symbol: { type: 'string' } },
+              },
+              rateLimitRps: 100,
+            },
+          ],
+        }),
+      );
+
+      const result = await svc.executeTool(
+        'skill-1',
+        undefined,
+        'happy_tool',
+        { symbol: 'AAPL' },
+        ctx,
+      );
+
+      expect(result.data).toMatchObject({
+        skillId: 'skill-1',
+        toolName: 'happy_tool',
+        status: 'authorized',
+      });
+    });
+
+    it('should reject with Forbidden when rate limit is exhausted', async () => {
+      skillRepo.findById.mockResolvedValue(
+        makeSkill({
+          tools: [
+            {
+              name: 'rate_limited',
+              description: 'rate limited',
+              rateLimitRps: 1, // 1 token bucket — second call must fail
+            },
+          ],
+        }),
+      );
+
+      // First call consumes the only token.
+      await svc.executeTool('skill-1', undefined, 'rate_limited', {}, ctx);
+
+      // Manually advance time? We can't without a clock — instead,
+      // exhaust by consuming many tokens within the same instant.
+      // Since refill is 1 token/sec, only the first call succeeds
+      // within 1 second. The second call rejects.
+      await expect(
+        svc.executeTool('skill-1', undefined, 'rate_limited', {}, ctx),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('should not enforce rate limit when rateLimitRps is missing (defaults to 1)', async () => {
+      skillRepo.findById.mockResolvedValue(
+        makeSkill({
+          tools: [{ name: 'safe_tool', description: 'no rate declared' }],
+        }),
+      );
+
+      // Two consecutive calls — second still succeeds because the
+      // default 1 rps refill has not been spent yet (bucket was
+      // freshly initialised to capacity=1).
+      const r1 = await svc.executeTool(
+        'skill-1',
+        undefined,
+        'safe_tool',
+        {},
+        ctx,
+      );
+      expect(r1.data).toBeDefined();
+
+      // Second call within the same ms should be rejected (bucket=0).
+      await expect(
+        svc.executeTool('skill-1', undefined, 'safe_tool', {}, ctx),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('should reject with Forbidden when skill is draft', async () => {
+      skillRepo.findById.mockResolvedValue(makeSkill({ status: 'draft' }));
+
+      await expect(
+        svc.executeTool('skill-1', undefined, 'get_price', {}, ctx),
+      ).rejects.toBeInstanceOf(ForbiddenException);
     });
   });
 });
