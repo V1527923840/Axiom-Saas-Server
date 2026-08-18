@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsOptional, IsString, IsUUID, Length } from 'class-validator';
+import {
+  IsIn,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Length,
+  MaxLength,
+} from 'class-validator';
 
 /**
  * Phase 2: idempotent overwrite of a skill's content.
@@ -47,6 +54,19 @@ export class ConfirmSkillContentDto {
   @IsOptional()
   @IsString()
   changelog?: string;
+
+  // ★ Optional category override — takes precedence over frontmatter's
+  // category. Lets the upload UI pick from the predefined set
+  // (宏观 / 行业 / 量化) without forcing the .md author to write it.
+  @ApiPropertyOptional({
+    example: '量化',
+    description:
+      'Predefined category that overrides frontmatter. One of 宏观 / 行业 / 量化 or any custom string (max 64 chars).',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  category?: string;
 }
 
 /**

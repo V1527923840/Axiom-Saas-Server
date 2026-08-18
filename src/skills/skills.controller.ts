@@ -164,6 +164,7 @@ export class SkillsController {
       name: body.name,
       description: body.description,
       changelog: body.changelog,
+      category: body.category,
       userId,
     });
     return { data: out };

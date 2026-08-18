@@ -57,6 +57,8 @@ export interface ConfirmUploadInput {
   name: string;
   description: string;
   changelog?: string;
+  // ★ Optional category override — 见 DTO 上的注释
+  category?: string;
   userId: number;
 }
 
@@ -263,7 +265,7 @@ export class SkillUploadService {
       code: input.code,
       name: input.name,
       description: input.description,
-      category: fm.category ?? null,
+      category: input.category ?? fm.category ?? null,
       tags: fm.tags ?? null,
       manifestContent: skillMdRaw,
       filesDirPath: `skills/${input.skillId}/files`,
