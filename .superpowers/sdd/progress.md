@@ -19,24 +19,14 @@
 - Task 10: complete (9b79e95..4d4ab14, menu seed via migration — chose migration per CLAUDE.md)
 - Task 11: complete (4d4ab14..36df733, ServiceTokenGuard + 3/3 specs)
 - Task 12: complete (36df733..5d7ee1b, SkillResolverService — APPROVED by reviewer; 12/12 boundary tests cover all 4 cases from spec §3.5.2; returns Promise<string[]>; fail-soft; published-only filter)
+- Task 13: complete (5d7ee1b..966ba6b, SkillUploadService two-stage commit; 11/11 new specs; idempotent overwrite; 191/191 total tests)
+- Task 14: complete (966ba6b..6622f7a, InternalSkillToolService — 3 read endpoints; **audit C-3 path traversal defense** via assertPathSafe; 28 tests; tools_count from jsonb resolves audit C-2)
+- Task 15: complete (6622f7a..2d79908, SkillsController — 11 public endpoints; JWT+MenuAccessGuard; infinityPagination; **audit C-1 URL fix** PUT /skills/{id}/content; 219 tests)
+- Task 16: complete (2d79908..5ebaca3, InternalSkillController — 4 endpoints behind ServiceTokenGuard; **audit C-3 execute endpoint with 5 security gates**: toolName regex + endpoint whitelist + ajv schema validation + rate limit + no blind forwarding; 10 security tests; 237/237 total)
+- Task 17: complete (★ implemented as part of Task 16 — SkillsModule wires everything)
 
-**Current HEAD:** `5d7ee1b`
-**Next task:** Task 13 (SkillUploadService — two-stage commit)
-
-## Stopped here (2026-08-18)
-
-Reason: User said "继续" but execution context is getting heavy. Stopped at the natural breakpoint: the **runtime core (SkillResolverService) is approved and safe**. Tasks 13+ are mechanical but include AiAgent integration (modifying ai-agent.service.ts) which is risky.
-
-**Resume in fresh session**: from Task 13.
-
-## Files ready for Task 13+
-
-- Plan: docs/superpowers/plans/2026-08-18-skill-plaza-saas-server.md (find "### Task 13")
-- Spec §4.3: docs/superpowers/specs/2026-08-17-skill-plaza-design.md (upload pipeline, lines ~596-663)
-- Execution guide: docs/superpowers/execution/skill-plaza-execution-guide.md
-- Migration source-of-truth: src/database/migrations/1794000000000-CreateSkillTables.ts
-- SkillStorageService (Task 8) ready for use
-- FrontmatterValidator (Task 9) ready for use
+**Current HEAD:** `5ebaca3`
+**Next task:** Task 18 (modify AgentAdapter interface — risky: modifies existing ai-agent code)
 
 ## Architectural decision (2026-08-18): **drop skill versioning**
 
