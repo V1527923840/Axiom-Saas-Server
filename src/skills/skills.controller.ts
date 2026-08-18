@@ -1,0 +1,334 @@
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
+import { MenuAccessGuard } from '../menus/menu-access.guard';
+import { MenuPaths } from '../menus/menu-paths.decorator';
+import { infinityPagination } from '../utils/infinity-pagination';
+import {
+  InfinityPaginationResponse,
+  PaginatedApiResponseDto,
+} from '../utils/dto/infinity-pagination-response.dto';
+
+import { SkillsService } from './skills.service';
+import { SkillUploadService } from './skill-upload.service';
+import { CreateSkillUploadUrlDto } from './dto/create-skill-upload-url.dto';
+import { ConfirmSkillContentDto } from './dto/confirm-skill-content.dto';
+import { QuerySkillsDto } from './dto/query-skills.dto';
+import { SkillContentHashQueryDto } from './dto/skill-content-query.dto';
+import {
+  MountSkillDto,
+  SessionSkillMountItemDto,
+  SkillFileIndexDto,
+  SkillResponseDto,
+  SkillToolSummaryDto,
+} from './dto/skill-response.dto';
+
+/**
+ * Minimal user shape on the JWT-authenticated request. Avoids pulling in
+ * the full users module here — keeps the controller import-graph small.
+ */
+interface AuthenticatedRequest extends Request {
+  user: { id: number | string };
+}
+
+/**
+ * SkillsController — public REST API for Skill Plaza.
+ *
+ * Per spec §4.4 + audit C-1 (Task 15 brief) — 11 endpoints:
+ *
+ *  Admin (upload pipeline):
+ *    POST /skills/upload-url               — phase 1 presigned URL
+ *    PUT  /skills/{id}/content             — phase 2 idempotent overwrite
+ *
+ *  Reads:
+ *    GET  /skills                          — paginated catalog
+ *    GET  /skills/{id}                     — detail
+ *    GET  /skills/{id}/files?contentHash=X — file metadata index
+ *    GET  /skills/{id}/tools?contentHash=X — tool list from jsonb
+ *
+ *  User bindings:
+ *    GET  /users/me/skills                 — caller's enabled set
+ *    POST /skills/{id}/enable              — create user_self binding
+ *    POST /skills/{id}/disable             — disable user_self binding
+ *
+ *  Session mounts:
+ *    GET  /sessions/{id}/skills            — session-scoped mount list
+ *    PUT  /sessions/{id}/skills/{skillId}  — mount / unmount skill
+ *
+ * ★ Audit C-1: phase 2 is PUT /skills/{id}/content, NOT POST /versions.
+ *   PUT is idempotent (resendable) and matches the no-versioning decision.
+ *
+ * Routing note: the controller is split across two prefixes (`/skills`
+ * and the user/sessions trees) because NestJS does not support
+ * multi-prefix @Controller. We attach the explicit `/skills` path on
+ * each route method so Swagger resolves them correctly.
+ */
+@ApiBearerAuth()
+@ApiTags('Skills')
+@UseGuards(AuthGuard('jwt'), MenuAccessGuard)
+@Controller({ version: '1' })
+export class SkillsController {
+  constructor(
+    private readonly skillsService: SkillsService,
+    private readonly uploadService: SkillUploadService,
+  ) {}
+
+  // ============================================================
+  // Phase 1 + 2 — Admin upload pipeline (under /skills)
+  // ============================================================
+
+  @ApiCreatedResponse({
+    schema: {
+      example: {
+        data: {
+          uploadUrl: 'https://oss.example.com/...',
+          key: 'skills/{id}/{hash}.zip',
+          skillId: 'uuid',
+        },
+      },
+    },
+  })
+  @Post('skills/upload-url')
+  @HttpCode(HttpStatus.CREATED)
+  @MenuPaths('/skills/admin')
+  async createUploadUrl(
+    @Body() body: CreateSkillUploadUrlDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<{
+    data: { uploadUrl: string; key: string; skillId: string };
+  }> {
+    const userId = this.userIdOf(req);
+    const out = await this.uploadService.createUploadUrl({
+      filename: body.filename,
+      size: body.size,
+      sourceFormat: body.sourceFormat,
+      hash: body.hash,
+      userId,
+    });
+    return { data: out };
+  }
+
+  @ApiOkResponse({
+    schema: {
+      example: {
+        data: {
+          version: 1,
+          skillId: 'uuid',
+          filesCount: 3,
+          toolsCount: 2,
+        },
+      },
+    },
+  })
+  @Put('skills/:id/content')
+  @HttpCode(HttpStatus.OK)
+  @MenuPaths('/skills/admin')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  async confirmContent(
+    @Param('id') id: string,
+    @Body() body: ConfirmSkillContentDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<{
+    data: {
+      version: 1;
+      skillId: string;
+      filesCount: number;
+      toolsCount: number;
+    };
+  }> {
+    const userId = this.userIdOf(req);
+    const out = await this.uploadService.confirmUpload({
+      skillId: id,
+      ossKey: body.ossKey,
+      hash: body.hash,
+      sourceFormat: body.sourceFormat,
+      code: body.code,
+      name: body.name,
+      description: body.description,
+      changelog: body.changelog,
+      userId,
+    });
+    return { data: out };
+  }
+
+  // ============================================================
+  // Reads (under /skills)
+  // ============================================================
+
+  @ApiOkResponse({
+    type: InfinityPaginationResponse(SkillResponseDto),
+  })
+  @Get('skills')
+  @HttpCode(HttpStatus.OK)
+  @MenuPaths('/skills')
+  async list(
+    @Query() query: QuerySkillsDto,
+  ): Promise<PaginatedApiResponseDto<SkillResponseDto>> {
+    const page = query.page ?? 1;
+    const limit = query.pageSize ?? 20;
+
+    const { data, total } = await this.skillsService.findManyWithPagination({
+      page,
+      pageSize: limit,
+      status: query.status,
+      category: query.category,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
+    });
+
+    const dtos = data.map((s) => this.skillsService.toResponseDtoPublic(s));
+
+    return infinityPagination(dtos, { page, limit }, total);
+  }
+
+  @ApiOkResponse({ type: SkillResponseDto })
+  @Get('skills/:id')
+  @HttpCode(HttpStatus.OK)
+  @MenuPaths('/skills')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  async detail(@Param('id') id: string): Promise<SkillResponseDto> {
+    return this.skillsService.findById(id);
+  }
+
+  @ApiOkResponse({ type: SkillFileIndexDto, isArray: true })
+  @Get('skills/:id/files')
+  @HttpCode(HttpStatus.OK)
+  @MenuPaths('/skills')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  async listFiles(
+    @Param('id') id: string,
+    @Query() query: SkillContentHashQueryDto,
+  ): Promise<{ data: SkillFileIndexDto[] }> {
+    const files = await this.skillsService.listFiles(id, query.contentHash);
+    return { data: files };
+  }
+
+  @ApiOkResponse({ type: SkillToolSummaryDto, isArray: true })
+  @Get('skills/:id/tools')
+  @HttpCode(HttpStatus.OK)
+  @MenuPaths('/skills')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  async listTools(
+    @Param('id') id: string,
+    @Query() query: SkillContentHashQueryDto,
+  ): Promise<{ data: SkillToolSummaryDto[] }> {
+    const tools = await this.skillsService.listTools(id, query.contentHash);
+    return { data: tools };
+  }
+
+  // ============================================================
+  // User bindings (under /users/me)
+  // ============================================================
+
+  @ApiOkResponse({ type: SkillResponseDto, isArray: true })
+  @Get('users/me/skills')
+  @HttpCode(HttpStatus.OK)
+  @MenuPaths('/skills')
+  async listMySkills(
+    @Req() req: AuthenticatedRequest,
+  ): Promise<{ data: SkillResponseDto[] }> {
+    const userId = this.userIdOf(req);
+    const skills = await this.skillsService.listMyEnabledSkills(userId);
+    return { data: skills };
+  }
+
+  @ApiOkResponse({
+    schema: { example: { data: { skillId: 'uuid', enabled: true } } },
+  })
+  @Post('skills/:id/enable')
+  @HttpCode(HttpStatus.OK)
+  @MenuPaths('/skills')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  async enable(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<{ data: { skillId: string; enabled: true } }> {
+    const userId = this.userIdOf(req);
+    return this.skillsService.enableForUser(userId, id);
+  }
+
+  @ApiOkResponse({
+    schema: { example: { data: { skillId: 'uuid', enabled: false } } },
+  })
+  @Post('skills/:id/disable')
+  @HttpCode(HttpStatus.OK)
+  @MenuPaths('/skills')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  async disable(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<{ data: { skillId: string; enabled: false } }> {
+    const userId = this.userIdOf(req);
+    return this.skillsService.disableForUser(userId, id);
+  }
+
+  // ============================================================
+  // Session mounts (under /sessions)
+  // ============================================================
+
+  @ApiOkResponse({ type: SessionSkillMountItemDto, isArray: true })
+  @Get('sessions/:id/skills')
+  @HttpCode(HttpStatus.OK)
+  @MenuPaths('/skills')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  async listSessionMounts(
+    @Param('id') sessionId: string,
+  ): Promise<{ data: SessionSkillMountItemDto[] }> {
+    const mounts = await this.skillsService.listSessionMounts(sessionId);
+    return { data: mounts };
+  }
+
+  @ApiOkResponse({
+    schema: {
+      example: {
+        data: { sessionId: 'uuid', skillId: 'uuid', op: 'add' },
+      },
+    },
+  })
+  @Put('sessions/:id/skills/:skillId')
+  @HttpCode(HttpStatus.OK)
+  @MenuPaths('/skills')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiParam({ name: 'skillId', format: 'uuid' })
+  async mountSkill(
+    @Param('id') sessionId: string,
+    @Param('skillId') skillId: string,
+    @Body() body: MountSkillDto,
+  ): Promise<{
+    data: { sessionId: string; skillId: string; op: 'add' | 'remove' };
+  }> {
+    return this.skillsService.setSessionMount(
+      sessionId,
+      skillId,
+      body.op,
+      body.source ?? 'manual',
+    );
+  }
+
+  // ============================================================
+  // Helpers
+  // ============================================================
+
+  private userIdOf(req: AuthenticatedRequest): number {
+    const raw = req.user.id;
+    return typeof raw === 'string' ? parseInt(raw, 10) : raw;
+  }
+}

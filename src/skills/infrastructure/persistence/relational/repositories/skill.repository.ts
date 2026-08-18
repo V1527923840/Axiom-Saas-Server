@@ -42,6 +42,25 @@ export class SkillRepository {
     return this.listByStatus('published');
   }
 
+  /**
+   * Page+limit pagination over a filtered slice of the catalog.
+   * Returns [rows, total] for infinityPagination. Sort is a single
+   * {column: direction} object to keep callers flexible.
+   */
+  async findAndCount(args: {
+    where: Partial<Pick<SkillEntity, 'status' | 'category'>>;
+    page: number;
+    limit: number;
+    order: { [k: string]: 'ASC' | 'DESC' };
+  }): Promise<[SkillEntity[], number]> {
+    return this.repository.findAndCount({
+      where: args.where as any,
+      order: args.order,
+      skip: (args.page - 1) * args.limit,
+      take: args.limit,
+    });
+  }
+
   async create(input: Partial<SkillEntity>): Promise<SkillEntity> {
     const entity = this.repository.create(input);
     return this.repository.save(entity);
