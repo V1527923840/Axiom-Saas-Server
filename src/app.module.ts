@@ -11,6 +11,7 @@ import facebookConfig from './auth-facebook/config/facebook.config';
 import googleConfig from './auth-google/config/google.config';
 import appleConfig from './auth-apple/config/apple.config';
 import aiAgentConfig from './config/ai-agent/ai-agent.config';
+import skillConfig from './config/skill/skill.config';
 import vibeTradingConfig from './config/vibe-trading/vibe-trading.config';
 import path from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -76,6 +77,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
         googleConfig,
         appleConfig,
         aiAgentConfig,
+        skillConfig,
         vibeTradingConfig,
       ],
       envFilePath: ['.env'],

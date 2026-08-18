@@ -7,6 +7,7 @@ import { FacebookConfig } from '../auth-facebook/config/facebook-config.type';
 import { FileConfig } from '../files/config/file-config.type';
 import { GoogleConfig } from '../auth-google/config/google-config.type';
 import { MailConfig } from '../mail/config/mail-config.type';
+import { SkillConfig } from './skill/skill.config';
 import { VibeTradingConfig } from './vibe-trading/vibe-trading.config';
 
 export type AllConfigType = {
@@ -19,5 +20,6 @@ export type AllConfigType = {
   file: FileConfig;
   google: GoogleConfig;
   mail: MailConfig;
+  skill: SkillConfig['skill'];
   vibeTrading: VibeTradingConfig['vibeTrading'];
 };
