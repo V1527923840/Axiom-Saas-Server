@@ -14,9 +14,13 @@
 - Task 5: complete (de68548..d429b0e, 4 entities — no skill-version/skill-tool entities; skill_file FK to skill; session_skill_mount without skill_version)
 - Task 6: complete (d429b0e..e6bce76, SkillRepository with In() pattern)
 - Task 7: complete (e6bce76..a649dcd, 4 remaining repositories; no skill-version/tool-tool repos; all methods align with brief)
+- Task 8: complete (a649dcd..e29e607, SkillStorageService with 4 methods + 6/6 specs)
+- Task 9: complete (e29e607..9b79e95, FrontmatterValidator + 4/4 specs)
+- Task 10: complete (9b79e95..4d4ab14, menu seed via migration — chose migration per CLAUDE.md)
+- Task 11: complete (4d4ab14..36df733, ServiceTokenGuard + 3/3 specs)
 
-**Current HEAD:** `a649dcd`
-**Next task:** Task 8 (SkillStorageService)
+**Current HEAD:** `36df733`
+**Next task:** Task 12 (SkillResolverService — CRITICAL: 4 boundary cases per spec §3.5)
 
 ## Architectural decision (2026-08-18): **drop skill versioning**
 
