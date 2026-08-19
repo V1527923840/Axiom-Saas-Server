@@ -18,19 +18,32 @@ export class ParseTaskService {
     private readonly ossService: OssService,
   ) {}
 
-  async findAll(
-    query: ParseTaskQueryDto,
-  ): Promise<{ data: ParseTask[]; total: number }> {
+  async findAllWithPagination(query: ParseTaskQueryDto): Promise<{
+    data: ParseTask[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const page = query.page ?? 1;
-    const limit = query.limit ?? 50;
+    let limit = query.limit ?? 50;
+    if (limit > 100) {
+      limit = 100;
+    }
 
-    return this.parseTaskRepository.findManyWithPagination({
+    const result = await this.parseTaskRepository.findManyWithPagination({
       paginationOptions: { page, limit },
       filterOptions: {
         source: query.source,
         status: query.status,
       },
     });
+
+    return {
+      data: result.data,
+      total: result.total,
+      page,
+      limit,
+    };
   }
 
   async findById(id: string): Promise<ParseTask> {

@@ -45,21 +45,11 @@ export class ParseTaskController {
   async findAll(
     @Query() query: ParseTaskQueryDto,
   ): Promise<PaginatedApiResponseDto<ParseTask>> {
-    const pageNum = query.page ?? 1;
-    let limitNum = query.limit ?? 50;
-    if (limitNum > 100) {
-      limitNum = 100;
-    }
-
-    const result = await this.parseTaskService.findAll({
-      ...query,
-      page: pageNum,
-      limit: limitNum,
-    });
+    const result = await this.parseTaskService.findAllWithPagination(query);
 
     return infinityPagination(
       result.data,
-      { page: pageNum, limit: limitNum },
+      { page: result.page, limit: result.limit },
       result.total,
     );
   }
