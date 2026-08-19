@@ -118,7 +118,7 @@ export class EtlProcessor {
     return { success, failed, errors };
   }
 
-  private readJsonFile(filePath: string): any {
+  private readJsonFile(filePath: string): unknown {
     // In production, this would read from filesystem
     // For now, assume filePath is the actual JSON content for testing
     try {
@@ -133,9 +133,13 @@ export class EtlProcessor {
     }
   }
 
-  private parseDocument(data: any): ParsedDocument | null {
+  private parseDocument(data: unknown): ParsedDocument | null {
+    if (!this.isObject(data)) {
+      this.logger.error('Document data is not an object');
+      return null;
+    }
     const parser = data.parser;
-    if (!parser) {
+    if (typeof parser !== 'string' || !parser) {
       this.logger.error('No parser found in document');
       return null;
     }
@@ -144,20 +148,25 @@ export class EtlProcessor {
 
     if (parser === 'zsxq_parser') {
       // Handle zsxq multi-entry format
-      const rawEntries = data.entries || [];
+      const rawEntries = (Array.isArray(data.entries) ? data.entries : []) as Record<string, unknown>[];
       for (const entry of rawEntries) {
         entries.push({
-          title: entry.title || 'Untitled',
-          summary: entry.content_summary,
-          originalContent: entry.content_raw,
-          reportDate: this.parseDate(data.report_date),
-          entryIndex: entry.index,
-          entryId: entry.entry_id,
-          contentTimestamp: this.parseTimestamp(entry.timestamp),
-          companies: entry.companies || [],
-          sentiment: entry.sentiment?.overall,
+          title: (entry.title as string) || 'Untitled',
+          summary: entry.content_summary as string | undefined,
+          originalContent: entry.content_raw as string | undefined,
+          reportDate: this.parseDate(data.report_date as string | undefined),
+          entryIndex: entry.index as number | undefined,
+          entryId: entry.entry_id as string | undefined,
+          contentTimestamp: this.parseTimestamp(
+            entry.timestamp as string | number | undefined,
+          ),
+          companies: (Array.isArray(entry.companies)
+            ? entry.companies
+            : []) as { name: string; code?: string; context?: string }[],
+          sentiment: ((entry.sentiment as Record<string, unknown> | undefined)
+            ?.overall as string | undefined),
           parser: parser,
-          sourceFile: data.document_path,
+          sourceFile: data.document_path as string | undefined,
           metadata: {
             sourceDocumentId: data.document_id,
             entryType: entry.entry_type,
@@ -167,18 +176,28 @@ export class EtlProcessor {
       }
     } else {
       // Handle single document format (research report, etc.)
+      const meta = (data.metadata as Record<string, unknown> | undefined) ?? {};
       entries.push({
-        title: data.metadata?.title || 'Untitled',
-        summary: data.summary || data.metadata?.summary,
-        originalContent: data.full_text || data.content,
-        reportDate: this.parseDate(data.report_date),
+        title: (meta.title as string) || 'Untitled',
+        summary:
+          (data.summary as string | undefined) ||
+          (meta.summary as string | undefined),
+        originalContent:
+          (data.full_text as string | undefined) ||
+          (data.content as string | undefined),
+        reportDate: this.parseDate(data.report_date as string | undefined),
         entryIndex: 0,
-        entryId: data.document_id,
-        contentTimestamp: this.parseTimestamp(data.timestamp),
-        companies: data.companies || [],
-        sentiment: data.sentiment?.overall,
+        entryId: data.document_id as string | undefined,
+        contentTimestamp: this.parseTimestamp(
+          data.timestamp as string | number | undefined,
+        ),
+        companies: (Array.isArray(data.companies)
+          ? data.companies
+          : []) as { name: string; code?: string; context?: string }[],
+        sentiment: ((data.sentiment as Record<string, unknown> | undefined)
+          ?.overall as string | undefined),
         parser: parser,
-        sourceFile: data.document_path,
+        sourceFile: data.document_path as string | undefined,
         metadata: {
           sourceDocumentId: data.document_id,
           ratingInfo: data.rating_info,
@@ -191,10 +210,14 @@ export class EtlProcessor {
 
     return {
       parser,
-      documentId: data.document_id,
-      documentPath: data.document_path,
+      documentId: (data.document_id as string) ?? '',
+      documentPath: (data.document_path as string) ?? '',
       entries,
     };
+  }
+
+  private isObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
 
   private async findDefaultCategory(
