@@ -38,6 +38,15 @@ import { Subscription } from './domain/subscription';
 import { SubscriptionsService } from './subscriptions.service';
 import { infinityPagination } from '../utils/infinity-pagination';
 
+/**
+ * Minimal user shape on the JWT-authenticated request. Matches the pattern
+ * used in skills.controller.ts (B2 audit). Keeps the controller import-graph
+ * small without pulling in the full users module here.
+ */
+interface AuthedRequest extends Request {
+  user: { id: number | string };
+}
+
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), MenuAccessGuard)
 @ApiTags('Subscriptions')
@@ -58,7 +67,7 @@ export class SubscriptionsController {
   @HttpCode(HttpStatus.CREATED)
   create(
     @Body() createSubscriptionDto: CreateSubscriptionDto,
-    @Request() req: any,
+    @Request() req: AuthedRequest,
   ): Promise<Subscription> {
     const userId = req.user.id;
     return this.subscriptionsService.create(createSubscriptionDto, userId);
@@ -110,7 +119,7 @@ export class SubscriptionsController {
 
   @Get('current')
   @HttpCode(HttpStatus.OK)
-  async getCurrentSubscription(@Request() req: any): Promise<any> {
+  async getCurrentSubscription(@Request() req: AuthedRequest): Promise<any> {
     const userId = req.user.id;
     return this.subscriptionsService.getCurrentSubscription(userId);
   }
@@ -119,7 +128,7 @@ export class SubscriptionsController {
   @HttpCode(HttpStatus.OK)
   async upgrade(
     @Body() upgradeSubscriptionDto: UpgradeSubscriptionDto,
-    @Request() req: any,
+    @Request() req: AuthedRequest,
   ): Promise<any> {
     const userId = req.user.id;
     return this.subscriptionsService.upgrade(upgradeSubscriptionDto, userId);
@@ -128,7 +137,7 @@ export class SubscriptionsController {
   @Get('history')
   @HttpCode(HttpStatus.OK)
   async getHistory(
-    @Request() req: any,
+    @Request() req: AuthedRequest,
     @Query() query: QuerySubscriptionDto,
   ): Promise<PaginatedApiResponseDto<Subscription>> {
     const userId = req.user.id;
