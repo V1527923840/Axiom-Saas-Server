@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { Repository, In } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RoleEntity } from './infrastructure/persistence/relational/entities/role.entity';
-import { UserRoleRepository } from '../users/infrastructure/persistence/user-role.repository';
+import { UserRoleRepository } from '../roles/infrastructure/persistence/user-role.repository';
 
 /**
  * `@Roles()` decorator accepts either role ids (legacy) or role codes.

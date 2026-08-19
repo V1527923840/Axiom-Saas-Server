@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UserSchema, UserSchemaClass } from './entities/user.schema';
 import { UserRepository } from '../user.repository';
 import { UsersDocumentRepository } from './repositories/user.repository';
-import { UserRoleRepository } from '../user-role.repository';
+import { UserRoleRepository } from '../../../../roles/infrastructure/persistence/user-role.repository';
 import { UserMenuRepository } from '../user-menu.repository';
 
 // Stub implementation for MongoDB - user_roles and user_menu would need separate handling

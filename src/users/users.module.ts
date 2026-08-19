@@ -32,7 +32,7 @@ const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
     FilesModule,
     forwardRef(() => MenusModule),
     forwardRef(() => PlansModule),
-    forwardRef(() => RolesModule),
+    RolesModule,
     TypeOrmModule.forFeature([RoleEntity]),
   ],
   controllers: [UsersController],

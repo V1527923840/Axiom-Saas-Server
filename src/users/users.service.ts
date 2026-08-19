@@ -11,7 +11,7 @@ import { NullableType } from '../utils/types/nullable.type';
 import { FilterUserDto, SortUserDto } from './dto/query-user.dto';
 import { UserRepository } from './infrastructure/persistence/user.repository';
 import { UserMenuRepository } from './infrastructure/persistence/user-menu.repository';
-import { UserRoleRepository } from './infrastructure/persistence/user-role.repository';
+import { UserRoleRepository } from '../roles/infrastructure/persistence/user-role.repository';
 import { PlanMenuRepository } from '../plans/infrastructure/persistence/plan-menu.repository';
 import { MenuRepository } from '../menus/infrastructure/persistence/menu.repository';
 import { User } from './domain/user';
