@@ -21,6 +21,6 @@ const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
   ],
   controllers: [MenusController],
   providers: [MenusService, MenuAccessGuard],
-  exports: [MenusService, MenuAccessGuard, infrastructurePersistenceModule],
+  exports: [MenusService, infrastructurePersistenceModule],
 })
 export class MenusModule {}
