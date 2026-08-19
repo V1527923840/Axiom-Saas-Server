@@ -2,6 +2,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  Logger,
   MessageEvent,
   NotFoundException,
 } from '@nestjs/common';
@@ -14,15 +15,21 @@ import { QuotaService } from './infrastructure/quota/quota.service';
 import { ConcurrencyService } from './infrastructure/concurrency/concurrency.service';
 import { AiSession } from './domain/ai-session';
 import { MessageDto } from './interfaces/agent-adapter.interface';
+import { SkillResolverService } from '../skills/skill-resolver.service';
 
 @Injectable()
 export class AiAgentService {
+  private readonly logger = new Logger(AiAgentService.name);
+
   constructor(
     private readonly repo: AiSessionRepository,
     private readonly registry: AgentAdapterRegistry,
     private readonly quota: QuotaService,
     private readonly concurrency: ConcurrencyService,
     private readonly configService: ConfigService<AllConfigType>,
+    // ★ Skill Plaza: resolve active skills (user baseline + session mount delta)
+    // for every sendMessage call. Empty array on failure (never blocks chat).
+    private readonly skillResolver: SkillResolverService,
   ) {}
 
   listAgentTypes(): string[] {
@@ -157,12 +164,33 @@ export class AiAgentService {
     await this.concurrency.acquire(s.id);
     await this.quota.checkAndIncrement(s.id);
 
+    // ★ Skill Plaza: resolve which skills this user/session has enabled,
+    // merged with any session-level add/remove deltas (spec §3.5.1).
+    // Real-time (no cache) — user toggles take effect on the next message.
+    // The resolver degrades to [] on failure and never throws.
+    let skillIds: string[];
+    try {
+      skillIds = await this.skillResolver.resolve(
+        typeof userId === 'string' ? parseInt(userId, 10) : userId,
+        id,
+      );
+    } catch (e) {
+      // Defensive — SkillResolverService.resolve already swallows errors and
+      // returns []; this catch is a belt-and-suspenders guard.
+      this.logger.warn(
+        `skill resolver threw unexpectedly for user=${userId} session=${id}: ${(e as Error).message}`,
+      );
+      skillIds = [];
+    }
+
     try {
       const adapter = this.registry.get(s.agentType);
       const result = await adapter.submitMessage(
         s.remoteSessionId,
         content,
         new AbortController().signal, // 提交阶段的 cancel 由 inflight 锁 + 后续 /cancel 端点控制
+        skillIds.map((skillId) => ({ id: skillId })),
+        userId, // ★ User-scope: forwarded so vibe can apply per-user skill injection
       );
       return result;
     } catch (e) {

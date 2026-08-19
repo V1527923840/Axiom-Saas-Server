@@ -61,18 +61,31 @@ export class VibeClientService {
    * 同步提交一条消息给上游 Vibe Trading。
    * 上游 POST /sessions/{remoteSessionId}/messages 同步返回 {message_id, attempt_id}，
    * 真正的流式输出走 GET /sessions/{remoteSessionId}/events（见 streamEvents）。
+   *
+   * @param skills ★ Skill Plaza — skill IDs already resolved by SkillResolverService
+   *               on the Saas side. Passed through verbatim as `skills` array in the
+   *               POST body. Empty array → no injection (zero intrusion).
+   * @param userId ★ User-scope — Saas-side user id. Forwarded both as the
+   *               `X-SaaS-User-Id` header (kebab-case, FastAPI-friendly)
+   *               and as the `_saas_user_id` body field (snake_case) so the
+   *               vibe upstream can apply user-scoped skill injection per turn.
    */
   async submitMessage(
     remoteSessionId: string,
     content: string,
     signal: AbortSignal,
+    skills: { id: string }[],
+    userId: number | string,
   ): Promise<{ messageId: string; attemptId: string }> {
     const res = await fetch(
       `${this.baseUrl()}/sessions/${remoteSessionId}/messages`,
       {
         method: 'POST',
-        headers: this.authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ content }),
+        headers: this.authHeaders({
+          'Content-Type': 'application/json',
+          'X-SaaS-User-Id': String(userId),
+        }),
+        body: JSON.stringify({ content, skills, _saas_user_id: userId }),
         signal,
       },
     );

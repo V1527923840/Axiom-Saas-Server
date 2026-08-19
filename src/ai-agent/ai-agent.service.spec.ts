@@ -29,6 +29,11 @@ describe('AiAgentService', () => {
   const quota = { checkAndIncrement: jest.fn() };
   const concurrency = { acquire: jest.fn(), release: jest.fn() };
   const cfg = { get: (k: string) => ({ 'aiAgent.ttlDays': 30 })[k] };
+  // ★ Skill Plaza: stub SkillResolverService for unit tests.
+  // Tests that care about skill resolution override resolve() per-case.
+  const skillResolver = {
+    resolve: jest.fn().mockResolvedValue([]),
+  };
 
   const svc = new AiAgentService(
     repo as any,
@@ -36,6 +41,7 @@ describe('AiAgentService', () => {
     quota as any,
     concurrency as any,
     cfg as any,
+    skillResolver as any,
   );
 
   beforeEach(() => {
@@ -44,6 +50,7 @@ describe('AiAgentService', () => {
     concurrency.release.mockResolvedValue(undefined);
     quota.checkAndIncrement.mockResolvedValue(undefined);
     registry.get.mockReturnValue(adapter);
+    skillResolver.resolve.mockResolvedValue([]);
   });
 
   it('should reject unknown agent type on createSession', async () => {
@@ -186,10 +193,72 @@ describe('AiAgentService', () => {
         'r1',
         'hi',
         expect.any(AbortSignal),
+        // ★ Skill Plaza: empty skills array by default
+        [],
+        'u1', // ★ User-scope: forwarded to adapter for vibe injection
       );
       expect(quota.checkAndIncrement).toHaveBeenCalledWith('s1');
       // inflight lock NOT released — events stream completion releases it
       expect(concurrency.release).not.toHaveBeenCalled();
+    });
+
+    // ★ Skill Plaza: when resolver returns IDs, adapter must receive them
+    // as the 4th positional arg in [{id}] shape (spec §6.2 unversioned contract).
+    it('should forward resolved skills to adapter (Skill Plaza injection)', async () => {
+      repo.findByIdAndUser.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        remoteSessionId: 'r1',
+        status: 'active',
+      });
+      adapter.submitMessage = jest.fn().mockResolvedValue({
+        messageId: 'm-1',
+        attemptId: 'a-1',
+      });
+      skillResolver.resolve.mockResolvedValue(['skill-A', 'skill-B']);
+
+      await svc.submitMessage('u1', 's1', 'hi');
+
+      // User id 'u1' is a non-numeric string in this test; the service tries
+      // parseInt('u1', 10) → NaN, which still goes through (resolver never
+      // throws on input validation, only on DB errors). Assert the call
+      // shape rather than the exact NaN value.
+      expect(skillResolver.resolve).toHaveBeenCalledTimes(1);
+      expect(skillResolver.resolve.mock.calls[0][1]).toBe('s1');
+      expect(adapter.submitMessage).toHaveBeenCalledWith(
+        'r1',
+        'hi',
+        expect.any(AbortSignal),
+        [{ id: 'skill-A' }, { id: 'skill-B' }],
+        'u1', // ★ User-scope: forwarded to adapter for vibe injection
+      );
+    });
+
+    // ★ Skill Plaza: resolver failure must NOT block the chat — degrade to [].
+    it('should degrade to empty skills when resolver throws', async () => {
+      repo.findByIdAndUser.mockResolvedValue({
+        id: 's1',
+        userId: 'u1',
+        agentType: 'vibe-trading',
+        remoteSessionId: 'r1',
+        status: 'active',
+      });
+      adapter.submitMessage = jest.fn().mockResolvedValue({
+        messageId: 'm-1',
+        attemptId: 'a-1',
+      });
+      skillResolver.resolve.mockRejectedValue(new Error('db down'));
+
+      const r = await svc.submitMessage('u1', 's1', 'hi');
+      expect(r).toEqual({ messageId: 'm-1', attemptId: 'a-1' });
+      expect(adapter.submitMessage).toHaveBeenCalledWith(
+        'r1',
+        'hi',
+        expect.any(AbortSignal),
+        [],
+        'u1', // ★ User-scope: forwarded even when resolver fails
+      );
     });
 
     it('should release inflight lock if submit fails', async () => {

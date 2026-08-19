@@ -52,6 +52,8 @@ describe('VibeClientService', () => {
       'r1',
       'hello',
       new AbortController().signal,
+      [], // ★ Skill Plaza: empty skills (no plaza injection)
+      42, // ★ User-scope: forwarded so vibe can apply per-user skill injection
     );
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -59,10 +61,78 @@ describe('VibeClientService', () => {
       expect.objectContaining({
         method: 'POST',
         headers: expect.objectContaining({ Authorization: 'Bearer tk' }),
-        body: JSON.stringify({ content: 'hello' }),
+        body: JSON.stringify({
+          content: 'hello',
+          skills: [],
+          _saas_user_id: 42,
+        }),
       }),
     );
     expect(r).toEqual({ messageId: 'm1', attemptId: 'a1' });
+  });
+
+  // ★ Skill Plaza: when caller passes skills, they must be forwarded
+  // verbatim in the body so VibeTrading can inject LoadSkill*Tool into
+  // the agent ToolRegistry.
+  it('should forward resolved skills in POST body (Skill Plaza injection)', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ message_id: 'm1', attempt_id: 'a1' }),
+    });
+
+    await svc.submitMessage(
+      'r1',
+      'hi',
+      new AbortController().signal,
+      [{ id: 'skill-A' }, { id: 'skill-B' }],
+      42,
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://vibe.local/sessions/r1/messages',
+      expect.objectContaining({
+        body: JSON.stringify({
+          content: 'hi',
+          skills: [{ id: 'skill-A' }, { id: 'skill-B' }],
+          _saas_user_id: 42,
+        }),
+      }),
+    );
+  });
+
+  // ★ User-scope: when caller passes userId, it must be forwarded both as the
+  // X-SaaS-User-Id header (String() normalized) and the _saas_user_id body
+  // field so vibe can apply user-scoped skill injection.
+  it('should forward X-SaaS-User-Id header and _saas_user_id body field', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ message_id: 'm1', attempt_id: 'a1' }),
+    });
+
+    await svc.submitMessage(
+      'r1',
+      'hi',
+      new AbortController().signal,
+      [],
+      42, // number — verifies String() normalization in header
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://vibe.local/sessions/r1/messages',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer tk',
+          'X-SaaS-User-Id': '42',
+        }),
+        body: JSON.stringify({
+          content: 'hi',
+          skills: [],
+          _saas_user_id: 42,
+        }),
+      }),
+    );
   });
 
   it('should throw HttpException when submitMessage receives non-ok response', async () => {
@@ -73,7 +143,7 @@ describe('VibeClientService', () => {
     });
 
     await expect(
-      svc.submitMessage('r1', 'hi', new AbortController().signal),
+      svc.submitMessage('r1', 'hi', new AbortController().signal, [], 42),
     ).rejects.toBeInstanceOf(HttpException);
   });
 

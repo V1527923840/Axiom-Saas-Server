@@ -3,6 +3,7 @@ import {
   AgentAdapter,
   AgentStreamEvent,
   MessageDto,
+  SkillRef,
 } from '../interfaces/agent-adapter.interface';
 import { VIBE_TRADING_AGENT_TYPE } from './vibe-trading.config';
 import { VibeClientService } from './vibe-client.service';
@@ -21,8 +22,20 @@ export class VibeTradingService implements AgentAdapter {
     remoteSessionId: string,
     content: string,
     signal: AbortSignal,
+    skills: SkillRef[],
+    userId: number | string,
   ): Promise<{ messageId: string; attemptId: string }> {
-    return this.client.submitMessage(remoteSessionId, content, signal);
+    // ★ Skill Plaza: forward resolved skills to VibeTrading so it can inject
+    // the 5 LoadSkill*Tool into the agent ToolRegistry on each attempt.
+    // ★ User-scope: forward userId so the vibe upstream can apply per-user
+    // skill injection on this attempt.
+    return this.client.submitMessage(
+      remoteSessionId,
+      content,
+      signal,
+      skills,
+      userId,
+    );
   }
 
   async *streamEvents(

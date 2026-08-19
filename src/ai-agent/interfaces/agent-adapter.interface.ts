@@ -14,6 +14,14 @@ export interface AgentStreamEvent {
   data: Record<string, unknown>;
 }
 
+/**
+ * Skill reference shape forwarded to upstream VibeTrading per spec §3.5.1.
+ * Unversioned — ID-only contract (upload overwrites).
+ */
+export interface SkillRef {
+  id: string;
+}
+
 export interface AgentAdapter {
   readonly agentType: string;
 
@@ -25,11 +33,22 @@ export interface AgentAdapter {
   /**
    * 同步提交一条消息，返回上游分配的 message_id 与 attempt_id。
    * 真正的流式输出通过 streamEvents() 走独立 SSE 通道。
+   *
+   * @param skills ★ Skill Plaza — resolved skill IDs from SkillResolverService,
+   *               already merged user baseline + session mount delta.
+   *               Empty array means "no skills attached this turn" (zero
+   *               intrusion for sessions that don't use Skill Plaza).
+   * @param userId ★ User-scope — Saas-side user id (number | string).
+   *               Forwarded to the vibe upstream so it can inject
+   *               user-scoped skills into the agent ToolRegistry per turn
+   *               (the "skill_resolver._saas_user_id" header/body contract).
    */
   submitMessage(
     remoteSessionId: string,
     content: string,
     signal: AbortSignal,
+    skills: SkillRef[],
+    userId: number | string,
   ): Promise<{ messageId: string; attemptId: string }>;
 
   /**
