@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { SkillEntity, SkillStatus } from '../entities/skill.entity';
@@ -23,6 +23,16 @@ export class SkillRepository {
 
   findByCode(code: string): Promise<SkillEntity | null> {
     return this.repository.findOne({ where: { code } });
+  }
+
+  /**
+   * Find skill by its content hash. Used by SkillUploadService.createUploadUrl
+   * idempotency — contentHash is stable across Phase 1/2, unlike `code`
+   * which Phase 2 overwrites via deriveCode(name, hash). Looking up by code
+   * would miss re-uploads of the same zip after Phase 2 has already run.
+   */
+  findByContentHash(contentHash: string): Promise<SkillEntity | null> {
+    return this.repository.findOne({ where: { contentHash } });
   }
 
   findByIds(ids: string[]): Promise<SkillEntity[]> {
@@ -68,7 +78,7 @@ export class SkillRepository {
 
   async update(id: string, patch: Partial<SkillEntity>): Promise<SkillEntity> {
     const existing = await this.findById(id);
-    if (!existing) throw new Error(`skill ${id} not found`);
+    if (!existing) throw new NotFoundException(`skill ${id} not found`);
     Object.assign(existing, patch);
     return this.repository.save(existing);
   }

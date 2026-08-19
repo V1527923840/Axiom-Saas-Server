@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { SessionEntity } from '../entities/session.entity';
@@ -46,7 +46,7 @@ export class SessionRelationalRepository implements SessionRepository {
     });
 
     if (!entity) {
-      throw new Error('Session not found');
+      throw new NotFoundException('Session not found');
     }
 
     const updatedEntity = await this.sessionRepository.save(
