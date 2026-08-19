@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import {
   AgentAdapter,
   AGENT_ADAPTERS,
@@ -19,7 +19,7 @@ export class AgentAdapterRegistry {
   get(agentType: string): AgentAdapter {
     const adapter = this.map.get(agentType);
     if (!adapter) {
-      throw new Error(`unknown agent type: ${agentType}`);
+      throw new BadRequestException(`unknown agent type: ${agentType}`);
     }
     return adapter;
   }

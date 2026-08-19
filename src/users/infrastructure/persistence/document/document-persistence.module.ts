@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, UnprocessableEntityException } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserSchema, UserSchemaClass } from './entities/user.schema';
 import { UserRepository } from '../user.repository';
@@ -9,7 +9,9 @@ import { UserMenuRepository } from '../user-menu.repository';
 // Stub implementation for MongoDB - user_roles and user_menu would need separate handling
 class StubUserRoleRepository implements UserRoleRepository {
   create(): Promise<any> {
-    throw new Error('UserRoleRepository not implemented for MongoDB');
+    throw new UnprocessableEntityException(
+      'UserRoleRepository not implemented for MongoDB',
+    );
   }
   findByUserId(): Promise<any[]> {
     return Promise.resolve([]);

@@ -1,4 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   DeleteObjectCommand,
@@ -42,7 +46,7 @@ export class SkillStorageService {
     const qiniu = skillCfg.qiniu;
 
     if (!qiniu.accessKey || !qiniu.secretKey) {
-      throw new Error(
+      throw new InternalServerErrorException(
         'SkillStorageService: QINIU_ACCESS_KEY / QINIU_SECRET_KEY not configured',
       );
     }

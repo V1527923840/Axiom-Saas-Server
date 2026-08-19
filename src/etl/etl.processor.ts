@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as fs from 'fs';
@@ -129,7 +129,7 @@ export class EtlProcessor {
         const content = fs.readFileSync(filePath, 'utf-8');
         return JSON.parse(content);
       }
-      throw new Error(`Cannot parse file: ${filePath}`);
+      throw new BadRequestException(`Cannot parse file: ${filePath}`);
     }
   }
 
