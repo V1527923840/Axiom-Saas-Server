@@ -197,19 +197,15 @@ export class InternalSkillToolService {
       );
     }
 
-    // ★ FIX-6: ossPath 现在是 zip 的 key;按 entry_name 从 zip 内提取
-    // 新布局 spec §2.1:entry_name 必填且是完整 zip entry 名(含 <slug>/)
-    // 旧数据 entry_name 为 null 时,fallback 用 relative_path(Vibe 端调用
-    // 的 path 就是相对路径)。legacy 数据 <slug>/files/ 布局,搜不到 → 404,
-    // 用户重新上传即可
+    // ★ FIX-6: ossPath 现在是 zip 的 key
     const zipBuffer = await this.storage.getObject(file.ossPath);
     const AdmZip = (await import('adm-zip')).default;
     const zip = new AdmZip(zipBuffer);
-    const lookupKey = file.entryName ?? file.relativePath;
-    const entry = zip.getEntry(lookupKey);
+    const entryName = file.entryName ?? `files/${path}`;
+    const entry = zip.getEntry(entryName);
     if (!entry) {
       throw new NotFoundException(
-        `entry '${lookupKey}' not found inside zip for skill ${skillId}`,
+        `entry '${entryName}' not found inside zip for skill ${skillId}`,
       );
     }
     const content = entry.getData().toString('utf-8');

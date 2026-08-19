@@ -7,6 +7,11 @@ import {
   ExecutionContext,
   UnauthorizedException as NestUnauthorized,
 } from '@nestjs/common';
+import { SkillRepository } from './infrastructure/persistence/relational/repositories/skill.repository';
+import { SkillFileRepository } from './infrastructure/persistence/relational/repositories/skill-file.repository';
+import { UserSkillBindingRepository } from './infrastructure/persistence/relational/repositories/user-skill-binding.repository';
+import { SkillStorageService } from './infrastructure/storage/skill-storage.service';
+import { ToolEndpointWhitelist } from './tool-endpoint-whitelist';
 
 /**
  * Spec for InternalUserSkillController.
@@ -201,6 +206,137 @@ describe('InternalUserSkillController', () => {
       // Note: assertion order means we throw BEFORE coercing to number,
       // because the callerContext check runs first.
       expect(svc.listVisibleSkills).not.toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================
+  // Real InternalSkillToolService filter test (audit I-3 invariant)
+  // ============================================================
+  //
+  // When a user has an enabled binding that points at a draft or
+  // archived skill, that skill MUST be filtered out of the response
+  // — never returned, even though the binding is enabled. This
+  // protects vibe's system-prompt injection from leaking unreleased
+  // or retired skill metadata.
+
+  describe('listVisibleSkills — status filter invariant (real service)', () => {
+    let realSvc: InternalSkillToolService;
+    let skillRepo: jest.Mocked<SkillRepository>;
+    let fileRepo: jest.Mocked<SkillFileRepository>;
+    let bindingRepo: jest.Mocked<UserSkillBindingRepository>;
+    let storage: jest.Mocked<SkillStorageService>;
+    let realController: InternalUserSkillController;
+
+    const headers = {
+      authorization: 'Bearer correct-token',
+      'x-user-id': '42',
+      'x-session-id': 'sess-1',
+      'x-attempt-id': 'att-1',
+    };
+
+    beforeEach(() => {
+      skillRepo = {
+        findById: jest.fn(),
+        findByIds: jest.fn(),
+      } as unknown as jest.Mocked<SkillRepository>;
+      fileRepo = {
+        listIndexBySkill: jest.fn(),
+        findOne: jest.fn(),
+      } as unknown as jest.Mocked<SkillFileRepository>;
+      bindingRepo = {
+        findEnabledByUser: jest.fn(),
+      } as unknown as jest.Mocked<UserSkillBindingRepository>;
+      storage = {
+        getObject: jest.fn(),
+      } as unknown as jest.Mocked<SkillStorageService>;
+
+      realSvc = new InternalSkillToolService(
+        skillRepo,
+        fileRepo,
+        bindingRepo,
+        storage,
+        new ToolEndpointWhitelist(),
+      );
+      realController = new InternalUserSkillController(realSvc);
+    });
+
+    it('should filter out draft and archived skills from binding list', async () => {
+      // (1) Mock bindings: user has enabled bindings to 3 skills
+      //     (one published, one draft, one archived).
+      bindingRepo.findEnabledByUser.mockResolvedValue([
+        { userId: 42, skillId: 's-published', status: 'enabled' },
+        { userId: 42, skillId: 's-draft', status: 'enabled' },
+        { userId: 42, skillId: 's-archived', status: 'enabled' },
+      ] as any);
+
+      // (2) Mock skillRepo.findByIds returns the corresponding skill
+      //     entities with mixed statuses.
+      skillRepo.findByIds.mockResolvedValue([
+        {
+          id: 's-published',
+          name: 'Published Skill',
+          description: 'Live',
+          category: 'trading',
+          tags: ['finance'],
+          status: 'published',
+          contentHash: 'a'.repeat(64),
+          tools: [{ name: 't1' }],
+          manifestTokenEstimate: 100,
+          totalTokenEstimate: 500,
+        },
+        {
+          id: 's-draft',
+          name: 'Draft Skill',
+          description: 'WIP',
+          category: 'trading',
+          tags: null,
+          status: 'draft',
+          contentHash: null,
+          tools: [],
+          manifestTokenEstimate: null,
+          totalTokenEstimate: null,
+        },
+        {
+          id: 's-archived',
+          name: 'Archived Skill',
+          description: 'Retired',
+          category: 'trading',
+          tags: null,
+          status: 'archived',
+          contentHash: 'b'.repeat(64),
+          tools: [],
+          manifestTokenEstimate: null,
+          totalTokenEstimate: null,
+        },
+      ] as any);
+
+      const out = await realController.listUserSkills('42', req('42', headers));
+
+      // (3) Assert: only the published skill is in the response.
+      expect(out).toEqual({
+        data: [
+          {
+            id: 's-published',
+            name: 'Published Skill',
+            description: 'Live',
+            category: 'trading',
+            tags: ['finance'],
+            contentHash: 'a'.repeat(64),
+            toolsCount: 1,
+            manifestTokenEstimate: 100,
+            totalTokenEstimate: 500,
+          },
+        ],
+      });
+
+      // Bindings were queried once for this user.
+      expect(bindingRepo.findEnabledByUser).toHaveBeenCalledWith(42);
+      // findByIds was called with all 3 unique ids (dedupe step).
+      expect(skillRepo.findByIds).toHaveBeenCalledWith([
+        's-published',
+        's-draft',
+        's-archived',
+      ]);
     });
   });
 });
