@@ -5,12 +5,14 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Post,
   Query,
   Req,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ServiceTokenGuard } from './service-token.guard';
 import { InternalSkillToolService } from './internal-skill-tool.service';
 import {
@@ -152,6 +154,34 @@ export class InternalSkillController {
       ctx,
     );
     return { data: { content } };
+  }
+
+  // ============================================================
+  // GET /internal/skills/:id/zip
+  // ★ Task 7 fix: PlazaCache lazy zip download.
+  // No :uid consistency check (ServiceTokenGuard is the only auth,
+  // the zip endpoint is not bound to a specific user). No binding
+  // check — vibe PlazaCache validates `sid ∈ requested_skills` on
+  // its own side. SaaS only checks the skill's own status.
+  // ============================================================
+
+  @ApiOperation({
+    summary: 'Download full skill zip (for PlazaCache lazy download)',
+  })
+  @Get(':id/zip')
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', format: 'uuid' })
+  async getSkillZip(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<StreamableFile> {
+    const { buffer, downloadFilename } = await this.toolService.getSkillZip(
+      id,
+    );
+
+    return new StreamableFile(buffer, {
+      type: 'application/zip',
+      disposition: `attachment; filename="${downloadFilename}.zip"`,
+    });
   }
 
   // ============================================================

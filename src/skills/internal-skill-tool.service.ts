@@ -358,6 +358,34 @@ export class InternalSkillToolService {
   }
 
   // ============================================================
+  // GET /internal/skills/{id}/zip
+  // ★ Task 7 fix (PlazaCache lazy zip download): stream the raw
+  // skill zip to Vibe so it can extract SKILL.md + references
+  // locally. No per-user binding check (the cache verifies
+  // `sid ∈ requested_skills` on the Vibe side; SaaS only checks
+  // the skill's own status).
+  // ============================================================
+
+  async getSkillZip(
+    skillId: string,
+  ): Promise<{ buffer: Buffer; downloadFilename: string }> {
+    const skill = await this.skillRepo.findById(skillId);
+    if (!skill) {
+      throw new NotFoundException(`skill ${skillId} not found`);
+    }
+    if (skill.status !== 'published') {
+      throw new NotFoundException(`skill ${skillId} not published`);
+    }
+
+    const buffer = await this.storage.getObject(skill.filesDirPath);
+
+    // ★ Sanitize filename for Content-Disposition header to avoid
+    // header injection from unusual `code` values.
+    const safeCode = (skill.code || skillId).replace(/[^A-Za-z0-9_.-]/g, '_');
+    return { buffer, downloadFilename: safeCode };
+  }
+
+  // ============================================================
   // Internal helpers
   // ============================================================
 

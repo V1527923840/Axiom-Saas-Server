@@ -36,6 +36,7 @@ describe('InternalSkillController', () => {
       getMeta: jest.fn(),
       getManifest: jest.fn(),
       getFileContent: jest.fn(),
+      getSkillZip: jest.fn(),
       executeTool: jest.fn(),
     } as unknown as jest.Mocked<InternalSkillToolService>;
 
@@ -98,6 +99,42 @@ describe('InternalSkillController', () => {
         expect.any(Object),
       );
       expect(out).toEqual({ data: { content: '# Principles' } });
+    });
+  });
+
+  // ============================================================
+  // GET /internal/skills/:id/zip
+  // ★ Task 7 fix: PlazaCache lazy zip download wiring. Surface-level
+  // check — defence (status guard, file-not-found) lives in service.
+  // ============================================================
+
+  describe('getSkillZip', () => {
+    it('should return a StreamableFile with application/zip + attachment disposition', async () => {
+      svc.getSkillZip.mockResolvedValue({
+        buffer: Buffer.from('PK') as any,
+        downloadFilename: 'trading-101',
+      });
+
+      const out = await controller.getSkillZip('s1');
+
+      expect(svc.getSkillZip).toHaveBeenCalledWith('s1');
+      // StreamableFile shape: { read: ..., filename?, length?, ...options }
+      // We at least want the content-type to match without inspecting Stream internals.
+      const anyOut = out as unknown as {
+        options: { type?: string; disposition?: string };
+      };
+      expect(anyOut.options.type).toBe('application/zip');
+      expect(anyOut.options.disposition).toContain('attachment');
+      expect(anyOut.options.disposition).toContain('trading-101.zip');
+    });
+
+    it('should propagate service errors (NotFound for unknown / not published)', async () => {
+      svc.getSkillZip.mockRejectedValue(
+        new NotFoundException(`skill s1 not published`),
+      );
+      await expect(controller.getSkillZip('s1')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 
