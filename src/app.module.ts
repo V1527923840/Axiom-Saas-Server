@@ -43,6 +43,7 @@ import { IndustryChainModule } from './industry-chain/industry-chain.module';
 import { OssModule } from './oss/oss.module';
 import { ScrapeLogModule } from './scrape-log/scrape-log.module';
 import { ParseTaskModule } from './parse-task/parse-task.module';
+import { VersionsModule } from './versions/versions.module';
 import { IntelligenceModule } from './intelligence/intelligence.module';
 import { ResearchModule } from './research/research.module';
 import { AiAgentModule } from './ai-agent/ai-agent.module';
@@ -133,6 +134,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     OssModule,
     ScrapeLogModule,
     ParseTaskModule,
+    VersionsModule,
     IntelligenceModule,
     ResearchModule,
     ScheduleModule.forRoot(),

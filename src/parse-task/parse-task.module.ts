@@ -1,7 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { ParseTaskController, VersionController } from './parse-tasks';
+import { ParseTaskController } from './parse-tasks';
 import { ParseTaskService } from './parse-task.service';
-import { VersionService } from '../services/version-service';
 import { RelationalParseTaskPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
 import { ScrapeLogModule } from '../scrape-log/scrape-log.module';
 import { OssModule } from '../oss/oss.module';
@@ -16,8 +15,8 @@ import { UsersModule } from '../users/users.module';
     forwardRef(() => MenusModule),
     forwardRef(() => UsersModule),
   ],
-  controllers: [ParseTaskController, VersionController],
-  providers: [ParseTaskService, VersionService],
+  controllers: [ParseTaskController],
+  providers: [ParseTaskService],
   exports: [ParseTaskService, RelationalParseTaskPersistenceModule],
 })
 export class ParseTaskModule {}
