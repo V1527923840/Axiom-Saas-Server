@@ -16,14 +16,8 @@ import {
   UpdatePaymentFlowDto,
 } from './dto/payment-flow.dto';
 import { CreateConsumptionDto } from './dto/consumption.dto';
-import {
-  FilterPaymentFlowDto,
-  QueryPaymentFlowDto,
-} from './dto/query-payment-flow.dto';
-import {
-  FilterConsumptionDto,
-  QueryConsumptionDto,
-} from './dto/query-consumption.dto';
+import { QueryPaymentFlowDto } from './dto/query-payment-flow.dto';
+import { QueryConsumptionDto } from './dto/query-consumption.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { MenuAccessGuard } from '../menus/menu-access.guard';
 import { MenuPaths } from '../menus/menu-paths.decorator';
@@ -62,39 +56,11 @@ export class BillsController {
   async findAllFlows(
     @Query() query: QueryPaymentFlowDto,
   ): Promise<PaginatedApiResponseDto<PaymentFlow>> {
-    const pageNum = query.page ?? 1;
-    const limitNum = query.pageSize ?? 10;
-
-    const filters: FilterPaymentFlowDto = {};
-    if (query.userName) filters.userName = query.userName;
-    if (query.userEmail) filters.userEmail = query.userEmail;
-    if (query.type) filters.type = query.type;
-    if (query.paymentMethod) filters.paymentMethod = query.paymentMethod;
-    if (query.status) filters.status = query.status;
-    if (query.dateFrom) filters.dateFrom = query.dateFrom;
-    if (query.dateTo) filters.dateTo = query.dateTo;
-
-    const sort = query.sortBy
-      ? [
-          {
-            orderBy: query.sortBy as keyof PaymentFlow,
-            order: query.sortOrder ?? 'ASC',
-          },
-        ]
-      : undefined;
-
-    const result = await this.billsService.findPaymentFlowsWithPagination({
-      filterOptions: Object.keys(filters).length ? filters : undefined,
-      sortOptions: sort ?? undefined,
-      paginationOptions: {
-        page: pageNum,
-        limit: limitNum,
-      },
-    });
-
+    const result =
+      await this.billsService.findPaymentFlowsWithPagination(query);
     return infinityPagination(
       result.data,
-      { page: pageNum, limit: limitNum },
+      { page: result.page, limit: result.limit },
       result.total,
     );
   }
@@ -133,38 +99,11 @@ export class BillsController {
   async findAllConsumptions(
     @Query() query: QueryConsumptionDto,
   ): Promise<PaginatedApiResponseDto<Consumption>> {
-    const pageNum = query.page ?? 1;
-    const limitNum = query.pageSize ?? 10;
-
-    const filters: FilterConsumptionDto = {};
-    if (query.userName) filters.userName = query.userName;
-    if (query.userEmail) filters.userEmail = query.userEmail;
-    if (query.consumeType) filters.consumeType = query.consumeType;
-    if (query.dateFrom) filters.dateFrom = query.dateFrom;
-    if (query.dateTo) filters.dateTo = query.dateTo;
-
-    const sort = query.sortBy
-      ? [
-          {
-            orderBy: query.sortBy as keyof Consumption,
-            order: query.sortOrder ?? 'ASC',
-          },
-        ]
-      : undefined;
-
     const result =
-      await this.consumptionsService.findConsumptionsWithPagination({
-        filterOptions: Object.keys(filters).length ? filters : undefined,
-        sortOptions: sort ?? undefined,
-        paginationOptions: {
-          page: pageNum,
-          limit: limitNum,
-        },
-      });
-
+      await this.consumptionsService.findConsumptionsWithPagination(query);
     return infinityPagination(
       result.data,
-      { page: pageNum, limit: limitNum },
+      { page: result.page, limit: result.limit },
       result.total,
     );
   }

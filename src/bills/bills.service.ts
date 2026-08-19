@@ -6,11 +6,11 @@ import {
 import { NullableType } from '../utils/types/nullable.type';
 import {
   FilterPaymentFlowDto,
+  QueryPaymentFlowDto,
   SortPaymentFlowDto,
 } from './dto/query-payment-flow.dto';
 import { PaymentFlowRepository } from './infrastructure/persistence/payment-flow.repository';
 import { PaymentFlow } from './domain/payment-flow';
-import { IPaginationOptions } from '../utils/types/pagination-options';
 
 @Injectable()
 export class BillsService {
@@ -34,20 +34,40 @@ export class BillsService {
     });
   }
 
-  findPaymentFlowsWithPagination({
-    filterOptions,
-    sortOptions,
-    paginationOptions,
-  }: {
-    filterOptions?: FilterPaymentFlowDto | null;
-    sortOptions?: SortPaymentFlowDto[] | null;
-    paginationOptions: IPaginationOptions;
-  }) {
-    return this.paymentFlowRepository.findManyWithPagination({
-      filterOptions,
-      sortOptions,
-      paginationOptions,
-    });
+  findPaymentFlowsWithPagination(query: QueryPaymentFlowDto): Promise<{
+    data: PaymentFlow[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const page = query.page ?? 1;
+    const limit = query.pageSize ?? 10;
+
+    const filters: FilterPaymentFlowDto = {};
+    if (query.userName) filters.userName = query.userName;
+    if (query.userEmail) filters.userEmail = query.userEmail;
+    if (query.type) filters.type = query.type;
+    if (query.paymentMethod) filters.paymentMethod = query.paymentMethod;
+    if (query.status) filters.status = query.status;
+    if (query.dateFrom) filters.dateFrom = query.dateFrom;
+    if (query.dateTo) filters.dateTo = query.dateTo;
+
+    const sort: SortPaymentFlowDto[] | undefined = query.sortBy
+      ? [
+          {
+            orderBy: query.sortBy as keyof PaymentFlow,
+            order: query.sortOrder ?? 'ASC',
+          },
+        ]
+      : undefined;
+
+    return this.paymentFlowRepository
+      .findManyWithPagination({
+        filterOptions: Object.keys(filters).length ? filters : undefined,
+        sortOptions: sort ?? undefined,
+        paginationOptions: { page, limit },
+      })
+      .then((result) => ({ ...result, page, limit }));
   }
 
   findPaymentFlowById(
