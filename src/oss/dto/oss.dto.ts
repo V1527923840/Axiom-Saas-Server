@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class OssListDto {
   @ApiPropertyOptional({ description: '目录路径，默认 /' })
@@ -14,7 +22,10 @@ export class OssListDto {
 
   @ApiPropertyOptional({ description: '最大返回数量，默认 100' })
   @IsOptional()
-  @IsString()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(1000)
   max_keys?: number;
 }
 
