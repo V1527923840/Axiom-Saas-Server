@@ -20,6 +20,7 @@ import { MenusModule } from '../menus/menus.module';
 import { UsersModule } from '../users/users.module';
 import { InternalSkillToolService } from './internal-skill-tool.service';
 import { InternalSkillController } from './internal-skill.controller';
+import { InternalUserSkillController } from './internal-user-skill.controller';
 import { SkillsService } from './skills.service';
 import { SkillsController } from './skills.controller';
 import { SkillUploadService } from './skill-upload.service';
@@ -63,7 +64,11 @@ import { SkillResolverService } from './skill-resolver.service';
     UsersModule,
     MenusModule,
   ],
-  controllers: [InternalSkillController, SkillsController],
+  controllers: [
+    InternalSkillController,
+    InternalUserSkillController,
+    SkillsController,
+  ],
   providers: [
     SkillRepository,
     SkillFileRepository,

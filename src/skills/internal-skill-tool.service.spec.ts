@@ -7,6 +7,7 @@ import {
 import { InternalSkillToolService } from './internal-skill-tool.service';
 import { SkillRepository } from './infrastructure/persistence/relational/repositories/skill.repository';
 import { SkillFileRepository } from './infrastructure/persistence/relational/repositories/skill-file.repository';
+import { UserSkillBindingRepository } from './infrastructure/persistence/relational/repositories/user-skill-binding.repository';
 import { SkillStorageService } from './infrastructure/storage/skill-storage.service';
 import { ToolEndpointWhitelist } from './tool-endpoint-whitelist';
 
@@ -24,6 +25,7 @@ describe('InternalSkillToolService', () => {
   let svc: InternalSkillToolService;
   let skillRepo: jest.Mocked<SkillRepository>;
   let fileRepo: jest.Mocked<SkillFileRepository>;
+  let bindingRepo: jest.Mocked<UserSkillBindingRepository>;
   let storage: jest.Mocked<SkillStorageService>;
 
   const ctx = { userId: 'u1', sessionId: 's1', attemptId: 'a1' };
@@ -55,12 +57,17 @@ describe('InternalSkillToolService', () => {
 
     skillRepo = {
       findById: jest.fn(),
+      findByIds: jest.fn(),
     } as unknown as jest.Mocked<SkillRepository>;
 
     fileRepo = {
       listIndexBySkill: jest.fn(),
       findOne: jest.fn(),
     } as unknown as jest.Mocked<SkillFileRepository>;
+
+    bindingRepo = {
+      findEnabledByUser: jest.fn(),
+    } as unknown as jest.Mocked<UserSkillBindingRepository>;
 
     storage = {
       getObject: jest.fn(),
@@ -69,6 +76,7 @@ describe('InternalSkillToolService', () => {
     svc = new InternalSkillToolService(
       skillRepo,
       fileRepo,
+      bindingRepo,
       storage,
       new ToolEndpointWhitelist(),
     );

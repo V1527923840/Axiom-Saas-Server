@@ -7,9 +7,11 @@ import {
 } from '@nestjs/common';
 import { SkillRepository } from './infrastructure/persistence/relational/repositories/skill.repository';
 import { SkillFileRepository } from './infrastructure/persistence/relational/repositories/skill-file.repository';
+import { UserSkillBindingRepository } from './infrastructure/persistence/relational/repositories/user-skill-binding.repository';
 import { SkillStorageService } from './infrastructure/storage/skill-storage.service';
 import { SkillToolSchema } from './infrastructure/persistence/relational/entities/skill.entity';
 import { ToolEndpointWhitelist } from './tool-endpoint-whitelist';
+import { SkillSummaryDto } from './dto/internal-user-skill.dto';
 import Ajv, { ValidateFunction } from 'ajv';
 
 /**
@@ -104,6 +106,7 @@ export class InternalSkillToolService {
   constructor(
     private readonly skillRepo: SkillRepository,
     private readonly fileRepo: SkillFileRepository,
+    private readonly bindingRepo: UserSkillBindingRepository,
     private readonly storage: SkillStorageService,
     private readonly whitelist: ToolEndpointWhitelist,
   ) {}
@@ -195,14 +198,18 @@ export class InternalSkillToolService {
     }
 
     // ★ FIX-6: ossPath 现在是 zip 的 key;按 entry_name 从 zip 内提取
+    // 新布局 spec §2.1:entry_name 必填且是完整 zip entry 名(含 <slug>/)
+    // 旧数据 entry_name 为 null 时,fallback 用 relative_path(Vibe 端调用
+    // 的 path 就是相对路径)。legacy 数据 <slug>/files/ 布局,搜不到 → 404,
+    // 用户重新上传即可
     const zipBuffer = await this.storage.getObject(file.ossPath);
     const AdmZip = (await import('adm-zip')).default;
     const zip = new AdmZip(zipBuffer);
-    const entryName = file.entryName ?? `files/${path}`;
-    const entry = zip.getEntry(entryName);
+    const lookupKey = file.entryName ?? file.relativePath;
+    const entry = zip.getEntry(lookupKey);
     if (!entry) {
       throw new NotFoundException(
-        `entry '${entryName}' not found inside zip for skill ${skillId}`,
+        `entry '${lookupKey}' not found inside zip for skill ${skillId}`,
       );
     }
     const content = entry.getData().toString('utf-8');
@@ -310,6 +317,48 @@ export class InternalSkillToolService {
         status: 'authorized',
       },
     };
+  }
+
+  // ============================================================
+  // GET /internal/users/{uid}/skills
+  // ★ Task 1 (Skill Plaza): list every published skill the caller
+  // has an enabled binding for. Mirrors the join + status filter
+  // shape of SkillsService.listMySkills (skills.service.ts:182) but
+  // returns the trimmed `SkillSummaryDto` shape vibe uses for its
+  // system-prompt injection.
+  // ============================================================
+
+  async listVisibleSkills(uid: number): Promise<SkillSummaryDto[]> {
+    // (1) bindings: only `enabled` rows (audit I-3 sibling — disabled
+    // bindings are "收藏未启用" and must NOT show up here).
+    const bindings = await this.bindingRepo.findEnabledByUser(uid);
+    if (bindings.length === 0) return [];
+
+    // (2) skills: dedupe binding.skillId, then load in one shot.
+    const skillIds = [...new Set(bindings.map((b) => b.skillId))];
+    const skills = await this.skillRepo.findByIds(skillIds);
+    if (skills.length === 0) return [];
+
+    // (3) status filter: only `published` skills (audit I-3) — drafts
+    // / archived skills silently drop out of the response. We don't
+    // 404 the whole endpoint when some bindings point at non-published
+    // skills; we just exclude them. Empty result is still 200 with [].
+    return skills
+      .filter((s) => s.status === 'published')
+      .map((s) => {
+        const tools: SkillToolSchema[] = Array.isArray(s.tools) ? s.tools : [];
+        return {
+          id: s.id,
+          name: s.name,
+          description: s.description ?? undefined,
+          category: s.category ?? undefined,
+          tags: Array.isArray(s.tags) ? s.tags : undefined,
+          contentHash: s.contentHash ?? undefined,
+          toolsCount: tools.length,
+          manifestTokenEstimate: s.manifestTokenEstimate ?? undefined,
+          totalTokenEstimate: s.totalTokenEstimate ?? undefined,
+        } satisfies SkillSummaryDto;
+      });
   }
 
   // ============================================================
