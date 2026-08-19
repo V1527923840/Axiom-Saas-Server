@@ -11,7 +11,18 @@ import { ApiBearerAuth, ApiTags, ApiParam } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { MenuAccessGuard } from '../menus/menu-access.guard';
 import { MenuPaths } from '../menus/menu-paths.decorator';
-import { VersionService } from './version.service';
+import {
+  VersionFileInfo,
+  VersionInfo,
+  VersionService,
+} from './version.service';
+
+/**
+ * A `VersionFileInfo` augmented with the `version` it came from. Built by the
+ * `getVersionFiles` endpoint when `version` query param is omitted (so we have
+ * to fan out across multiple versions).
+ */
+type VersionedFileInfo = VersionFileInfo & { version: string };
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), MenuAccessGuard)
@@ -27,7 +38,7 @@ export class VersionController {
   @HttpCode(HttpStatus.OK)
   @MenuPaths('/versions')
   async findAll(@Query('source') source?: string): Promise<{
-    data: any[];
+    data: VersionInfo[];
     total: number;
     page: number;
     pageSize: number;
@@ -67,7 +78,7 @@ export class VersionController {
     @Param('source') source: string,
     @Query('version') version?: string,
   ): Promise<{
-    data: any[];
+    data: VersionFileInfo[] | VersionedFileInfo[];
     total: number;
     page: number;
     pageSize: number;
@@ -75,7 +86,7 @@ export class VersionController {
     // If version is not provided, get files for all versions of this source
     if (!version) {
       const versionsResult = await this.versionService.getVersions(source);
-      const allFiles: any[] = [];
+      const allFiles: VersionedFileInfo[] = [];
 
       for (const v of versionsResult.versions) {
         const filesResult = await this.versionService.getVersionFiles(
