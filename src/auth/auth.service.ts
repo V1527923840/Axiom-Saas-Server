@@ -1,6 +1,7 @@
 import {
   HttpStatus,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
   UnprocessableEntityException,
@@ -31,6 +32,8 @@ import { User } from '../users/domain/user';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
@@ -237,7 +240,10 @@ export class AuthService {
       });
 
       userId = jwtData.confirmEmailUserId;
-    } catch {
+    } catch (error) {
+      this.logger.error(
+        `confirmEmail: invalid or expired hash: ${(error as Error)?.message ?? error}`,
+      );
       throw new UnprocessableEntityException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
         errors: {
@@ -281,7 +287,10 @@ export class AuthService {
 
       userId = jwtData.confirmEmailUserId;
       newEmail = jwtData.newEmail;
-    } catch {
+    } catch (error) {
+      this.logger.error(
+        `confirmNewEmail: invalid or expired hash: ${(error as Error)?.message ?? error}`,
+      );
       throw new UnprocessableEntityException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
         errors: {
@@ -359,7 +368,10 @@ export class AuthService {
       });
 
       userId = jwtData.forgotUserId;
-    } catch {
+    } catch (error) {
+      this.logger.error(
+        `resetPassword: invalid or expired hash: ${(error as Error)?.message ?? error}`,
+      );
       throw new UnprocessableEntityException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
         errors: {

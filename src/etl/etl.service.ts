@@ -55,7 +55,10 @@ export class EtlService {
       const content = fs.readFileSync(filePath, 'utf-8');
       const data = JSON.parse(content);
       estimatedItems = data.entries?.length || 1;
-    } catch {
+    } catch (error) {
+      this.logger.error(
+        `importFiles: failed to estimate entry count from ${filePath}: ${(error as Error)?.message ?? error}`,
+      );
       estimatedItems = 1;
     }
 
@@ -177,7 +180,10 @@ export class EtlService {
           size: stats.size,
           modifiedAt: stats.mtime.toISOString(),
         });
-      } catch {
+      } catch (error) {
+        this.logger.error(
+          `scanOutputDirectory: failed to read ${filename}: ${(error as Error)?.message ?? error}`,
+        );
         files.push({
           filename,
           parser: 'unknown',

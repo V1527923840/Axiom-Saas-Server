@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ScrapeLogService } from '../scrape-log/scrape-log.service';
 import { OssService } from '../oss/oss.service';
 import { parseOsspath } from '../db/parse-task-db';
@@ -20,6 +20,8 @@ export interface VersionFileInfo {
 
 @Injectable()
 export class VersionService {
+  private readonly logger = new Logger(VersionService.name);
+
   constructor(
     private readonly scrapeLogService: ScrapeLogService,
     private readonly ossService: OssService,
@@ -103,8 +105,11 @@ export class VersionService {
         }));
 
       return { files };
-    } catch {
-      // If path doesn't exist, return empty files
+    } catch (error) {
+      // If path doesn't exist, return empty files (this is the common case).
+      this.logger.error(
+        `getVersionFiles: listing failed for ${path}: ${(error as Error)?.message ?? error}`,
+      );
       return { files: [] };
     }
   }

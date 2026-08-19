@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
@@ -19,6 +20,8 @@ import { UserRepository } from '../users/infrastructure/persistence/user.reposit
 
 @Injectable()
 export class SubscriptionsService {
+  private readonly logger = new Logger(SubscriptionsService.name);
+
   constructor(
     private readonly subscriptionsRepository: SubscriptionRepository,
     private readonly plansService: PlansService,
@@ -121,7 +124,10 @@ export class SubscriptionsService {
     if (subscription.planId && uuidRegex.test(subscription.planId)) {
       try {
         plan = await this.plansService.findById(subscription.planId);
-      } catch {
+      } catch (error) {
+        this.logger.error(
+          `getCurrentSubscription: plan lookup failed for ${subscription.planId}: ${(error as Error)?.message ?? error}`,
+        );
         // Plan lookup failed, continue without plan details
         plan = null;
       }
@@ -172,7 +178,10 @@ export class SubscriptionsService {
         currentPlan = await this.plansService.findById(
           currentSubscription.planId,
         );
-      } catch {
+      } catch (error) {
+        this.logger.error(
+          `upgrade: current plan lookup failed for ${currentSubscription.planId}: ${(error as Error)?.message ?? error}`,
+        );
         // Current plan lookup failed, continue without it
         currentPlan = null;
       }
