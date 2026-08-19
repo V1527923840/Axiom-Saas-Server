@@ -83,6 +83,8 @@ describe('SkillUploadService', () => {
 
     skillRepo = {
       findById: jest.fn(),
+      findByCode: jest.fn().mockResolvedValue(null),
+      findByContentHash: jest.fn().mockResolvedValue(null),
       create: jest.fn(),
       update: jest.fn(),
     } as any;
@@ -224,9 +226,10 @@ describe('SkillUploadService', () => {
       '',
     );
     const fileContent = '# File body\nnew content here.';
+    // ★ spec §2.1 布局: <slug>/SKILL.md + <slug>/references/principles.md
     const zipBuffer = buildZip([
-      { name: 'SKILL.md', content: skillMd },
-      { name: 'files/principles.md', content: fileContent },
+      { name: 'test-skill/SKILL.md', content: skillMd },
+      { name: 'test-skill/references/principles.md', content: fileContent },
     ]);
     const newHash = crypto.createHash('sha256').update(zipBuffer).digest('hex');
     storage.getObject.mockResolvedValue(zipBuffer);
@@ -255,13 +258,19 @@ describe('SkillUploadService', () => {
     expect(updateArg.manifestContent).toContain('# body');
     expect(updateArg.changelog).toBe('initial');
     expect(updateArg.tools).toEqual([]);
+    // ★ description 是「给其他用户看的」skill 简介 — 用户任何非空输入
+    // 都尊重,不被 service 静默替换成 frontmatter 版本
+    expect(updateArg.description).toBe('Long enough description here yes.');
 
     // Files must have been replaced (deleted + recreated).
     expect(fileRepo.replaceForSkill).toHaveBeenCalledWith(skillId);
     expect(fileRepo.create).toHaveBeenCalledTimes(1);
     const created = fileRepo.create.mock.calls[0][0];
     expect(created.skillId).toBe(skillId);
-    expect(created.relativePath).toBe('principles.md');
+    // relativePath = strip `<slug>/`,保留 references/ 前缀
+    expect(created.relativePath).toBe('references/principles.md');
+    // entryName 完整 zip entry 名(含 <slug>/)
+    expect(created.entryName).toBe('test-skill/references/principles.md');
   });
 
   it('should reject if skill does not exist', async () => {
@@ -371,7 +380,10 @@ describe('SkillUploadService', () => {
       '# body',
       '',
     ].join('\n');
-    const zipBuffer = buildZip([{ name: 'SKILL.md', content: malformed }]);
+    // ★ spec §2.1: SKILL.md 在 <slug>/ 下
+    const zipBuffer = buildZip([
+      { name: 'test-skill/SKILL.md', content: malformed },
+    ]);
     const hash = crypto.createHash('sha256').update(zipBuffer).digest('hex');
     storage.getObject.mockResolvedValue(zipBuffer);
 
@@ -412,19 +424,21 @@ describe('SkillUploadService', () => {
       'name: WithIndex',
       'description: Has a files_index array',
       'version: 1',
+      // files_index.path 不带 <slug>/ 前缀(spec §6 例子)
       'files_index:',
-      '  - path: files/principles.md',
+      '  - path: references/principles.md',
       '    description: Core principles',
-      '  - path: files/checklist.md',
+      '  - path: references/checklist.md',
       '    description: Pre-trade checklist',
       '---',
       '# body',
       '',
     ].join('\n');
+    // ★ spec §2.1 布局
     const zipBuffer = buildZip([
-      { name: 'SKILL.md', content: skillMd },
-      { name: 'files/principles.md', content: '# Principles' },
-      { name: 'files/checklist.md', content: '# Checklist' },
+      { name: 'test-skill/SKILL.md', content: skillMd },
+      { name: 'test-skill/references/principles.md', content: '# Principles' },
+      { name: 'test-skill/references/checklist.md', content: '# Checklist' },
     ]);
     const hash = crypto.createHash('sha256').update(zipBuffer).digest('hex');
     storage.getObject.mockResolvedValue(zipBuffer);
@@ -445,11 +459,14 @@ describe('SkillUploadService', () => {
     const created = fileRepo.create.mock.calls.map((c) => c[0]);
     expect(created.every((c) => c.skillId === skillId)).toBe(true);
     const paths = created.map((c) => c.relativePath).sort();
-    expect(paths).toEqual(['checklist.md', 'principles.md']);
+    expect(paths).toEqual([
+      'references/checklist.md',
+      'references/principles.md',
+    ]);
 
     // description from files_index propagated to skill_file.description
     const principlesRow = created.find(
-      (c) => c.relativePath === 'principles.md',
+      (c) => c.relativePath === 'references/principles.md',
     );
     expect(principlesRow?.description).toBe('Core principles');
   });
@@ -474,13 +491,15 @@ describe('SkillUploadService', () => {
       'description: References nonexistent path in zip',
       'version: 1',
       'files_index:',
-      '  - path: files/does-not-exist.md',
+      '  - path: references/does-not-exist.md',
       '    description: phantom',
       '---',
       '# body',
       '',
     ].join('\n');
-    const zipBuffer = buildZip([{ name: 'SKILL.md', content: skillMd }]);
+    const zipBuffer = buildZip([
+      { name: 'test-skill/SKILL.md', content: skillMd },
+    ]);
     const hash = crypto.createHash('sha256').update(zipBuffer).digest('hex');
     storage.getObject.mockResolvedValue(zipBuffer);
 
@@ -520,7 +539,9 @@ describe('SkillUploadService', () => {
       'Long enough description here yes.',
       '',
     );
-    const zipBuffer = buildZip([{ name: 'SKILL.md', content: skillMd }]);
+    const zipBuffer = buildZip([
+      { name: 'test-skill/SKILL.md', content: skillMd },
+    ]);
     const hash = crypto.createHash('sha256').update(zipBuffer).digest('hex');
     storage.getObject.mockResolvedValue(zipBuffer);
 
@@ -536,5 +557,273 @@ describe('SkillUploadService', () => {
     });
 
     expect(skillRepo.create).not.toHaveBeenCalled();
+  });
+
+  // ★ Regression: empty/whitespace `code` must NOT be persisted as-is — DTO
+  // should already reject, but the service is the last line of defense, so
+  // we treat blank code as "not provided" and derive from name + hash.
+  it('should derive code from name when code is blank/undefined', async () => {
+    const skillId = crypto.randomUUID();
+    const skill = {
+      id: skillId,
+      code: 'placeholder',
+      name: 'Placeholder',
+      description: 'Placeholder description',
+      status: 'draft',
+      contentHash: null,
+      manifestContent: '',
+      tools: [],
+    } as any;
+    skillRepo.findById.mockResolvedValue(skill);
+    skillRepo.update.mockResolvedValue(skill as any);
+
+    const skillMd = frontmatter(
+      'Trading Principles',
+      'Long enough description here yes.',
+      '',
+    );
+    // ★ spec §2.1: SKILL.md 在 <slug>/ 下
+    const zipBuffer = buildZip([
+      { name: 'test-skill/SKILL.md', content: skillMd },
+    ]);
+    const hash = crypto.createHash('sha256').update(zipBuffer).digest('hex');
+    storage.getObject.mockResolvedValue(zipBuffer);
+
+    // case 1: code: '' (empty string — bypasses DTO, hits service)
+    await svc.confirmUpload({
+      skillId,
+      ossKey: `skills/${skillId}/${hash}.zip`,
+      hash,
+      sourceFormat: 'zip',
+      code: '',
+      name: 'Trading Principles',
+      description: 'Long enough description here yes.',
+      userId: 1,
+    });
+
+    let updateArg = skillRepo.update.mock.calls[0][1];
+    expect(updateArg.code).toMatch(/^trading-principles-[a-f0-9]{4}$/);
+    expect(updateArg.code).not.toBe('');
+    expect((updateArg.code ?? '').length).toBeGreaterThan(1);
+
+    // case 2: code: undefined (the common path from the UI now)
+    skillRepo.update.mockClear();
+    await svc.confirmUpload({
+      skillId,
+      ossKey: `skills/${skillId}/${hash}.zip`,
+      hash,
+      sourceFormat: 'zip',
+      code: undefined,
+      name: 'Trading Principles',
+      description: 'Long enough description here yes.',
+      userId: 1,
+    });
+    updateArg = skillRepo.update.mock.calls[0][1];
+    expect(updateArg.code).toMatch(/^trading-principles-[a-f0-9]{4}$/);
+
+    // case 3: code: '   ' (whitespace) — must also fall back
+    skillRepo.update.mockClear();
+    await svc.confirmUpload({
+      skillId,
+      ossKey: `skills/${skillId}/${hash}.zip`,
+      hash,
+      sourceFormat: 'zip',
+      code: '   ',
+      name: 'Trading Principles',
+      description: 'Long enough description here yes.',
+      userId: 1,
+    });
+    updateArg = skillRepo.update.mock.calls[0][1];
+    expect(updateArg.code).toMatch(/^trading-principles-[a-f0-9]{4}$/);
+
+    // case 4: CJK-only name with no code — falls back to skill-<hash12>-<rand4>
+    skillRepo.update.mockClear();
+    await svc.confirmUpload({
+      skillId,
+      ossKey: `skills/${skillId}/${hash}.zip`,
+      hash,
+      sourceFormat: 'zip',
+      code: undefined,
+      name: '财报基础',
+      description: 'Long enough description here yes.',
+      userId: 1,
+    });
+    updateArg = skillRepo.update.mock.calls[0][1];
+    expect(updateArg.code).toMatch(/^skill-[a-f0-9]{12}-[a-f0-9]{4}$/);
+  });
+
+  // ★ spec §2.2 / §3.1 白名单:<slug>/(references|templates|examples|assets)/
+  // 之外的文件被忽略(不报 400,只是不入库),并 warn log。
+  it('should ignore zip entries outside the references|templates|examples|assets whitelist', async () => {
+    const skillId = crypto.randomUUID();
+    const skill = {
+      id: skillId,
+      code: 'c',
+      name: 'n',
+      description: 'd',
+      status: 'draft',
+      contentHash: null,
+      manifestContent: '',
+      tools: [],
+    } as any;
+    skillRepo.findById.mockResolvedValue(skill);
+    skillRepo.update.mockResolvedValue(skill as any);
+
+    const skillMd = frontmatter(
+      'WhitelistTest',
+      'Long enough description here yes.',
+      '',
+    );
+    const zipBuffer = buildZip([
+      { name: 'test-skill/SKILL.md', content: skillMd },
+      // 白名单内:应入库
+      { name: 'test-skill/references/keep.md', content: '# kept' },
+      // 白名单外:应被忽略,不报 400
+      { name: 'test-skill/random/skip.md', content: '# skipped' },
+      // 顶层散落文件(没有放在 <slug>/ 子目录下,本身算在 <slug> 下但子目录非白名单)
+      { name: 'test-skill/stray.txt', content: '# stray' },
+    ]);
+    const hash = crypto.createHash('sha256').update(zipBuffer).digest('hex');
+    storage.getObject.mockResolvedValue(zipBuffer);
+
+    const out = await svc.confirmUpload({
+      skillId,
+      ossKey: `skills/${skillId}/${hash}.zip`,
+      hash,
+      sourceFormat: 'zip',
+      code: 'c',
+      name: 'WhitelistTest',
+      description: 'Long enough description here yes.',
+      userId: 1,
+    });
+
+    expect(out.filesCount).toBe(1);
+    expect(fileRepo.create).toHaveBeenCalledTimes(1);
+    const created = fileRepo.create.mock.calls[0][0];
+    expect(created.relativePath).toBe('references/keep.md');
+  });
+
+  // ★ description 短字符串(如 "test")不能被 service fallback 静默替换
+  it('should preserve short user-provided description (not override with frontmatter)', async () => {
+    const skillId = crypto.randomUUID();
+    const skill = {
+      id: skillId,
+      code: 'c',
+      name: 'n',
+      description: 'old desc',
+      status: 'draft',
+      contentHash: null, // 强制走完整 Phase 2,不命中 idempotent short-circuit
+      manifestContent: '',
+      tools: [],
+    } as any;
+    skillRepo.findById.mockResolvedValue(skill);
+    skillRepo.update.mockResolvedValue(skill as any);
+
+    const skillMd = frontmatter(
+      'LongNameFromFrontmatter',
+      'This is the LLM-facing description in frontmatter, much longer than ten chars.',
+      '',
+    );
+    const zipBuffer = buildZip([
+      { name: 'test-skill/SKILL.md', content: skillMd },
+    ]);
+    const hash = crypto.createHash('sha256').update(zipBuffer).digest('hex');
+    storage.getObject.mockResolvedValue(zipBuffer);
+
+    await svc.confirmUpload({
+      skillId,
+      ossKey: `skills/${skillId}/${hash}.zip`,
+      hash,
+      sourceFormat: 'zip',
+      code: undefined,
+      name: 'n',
+      description: 'test', // 短描述 — 之前会被静默替换成 frontmatter
+      userId: 1,
+    });
+
+    expect(skillRepo.update).toHaveBeenCalledTimes(1);
+    const updateArg = skillRepo.update.mock.calls[0][1];
+    // 用户的 "test" 必须保留,不变成 frontmatter 的版本
+    expect(updateArg.description).toBe('test');
+  });
+
+  // ★ description 空字符串才 fallback 到 frontmatter
+  it('should fall back to frontmatter description when user provides empty string', async () => {
+    const skillId = crypto.randomUUID();
+    const skill = {
+      id: skillId,
+      code: 'c',
+      name: 'n',
+      description: 'old desc',
+      status: 'draft',
+      contentHash: null,
+      manifestContent: '',
+      tools: [],
+    } as any;
+    skillRepo.findById.mockResolvedValue(skill);
+    skillRepo.update.mockResolvedValue(skill as any);
+
+    const skillMd = frontmatter(
+      'NameFromFrontmatter',
+      'Fallback description from frontmatter that is long enough.',
+      '',
+    );
+    const zipBuffer = buildZip([
+      { name: 'test-skill/SKILL.md', content: skillMd },
+    ]);
+    const hash = crypto.createHash('sha256').update(zipBuffer).digest('hex');
+    storage.getObject.mockResolvedValue(zipBuffer);
+
+    await svc.confirmUpload({
+      skillId,
+      ossKey: `skills/${skillId}/${hash}.zip`,
+      hash,
+      sourceFormat: 'zip',
+      code: undefined,
+      name: 'n',
+      description: '', // 空字符串 → fallback
+      userId: 1,
+    });
+
+    const updateArg = skillRepo.update.mock.calls[0][1];
+    expect(updateArg.description).toBe(
+      'Fallback description from frontmatter that is long enough.',
+    );
+  });
+
+  // ★ spec §2.1: 顶层只允许 1 个目录
+  it('should reject zip with multiple top-level directories', async () => {
+    const skillId = crypto.randomUUID();
+    const skill = {
+      id: skillId,
+      code: 'c',
+      name: 'n',
+      description: 'd',
+      status: 'draft',
+      contentHash: null,
+      manifestContent: '',
+      tools: [],
+    } as any;
+    skillRepo.findById.mockResolvedValue(skill);
+
+    const zipBuffer = buildZip([
+      { name: 'foo/SKILL.md', content: '# foo' },
+      { name: 'bar/SKILL.md', content: '# bar' },
+    ]);
+    const hash = crypto.createHash('sha256').update(zipBuffer).digest('hex');
+    storage.getObject.mockResolvedValue(zipBuffer);
+
+    await expect(
+      svc.confirmUpload({
+        skillId,
+        ossKey: `skills/${skillId}/${hash}.zip`,
+        hash,
+        sourceFormat: 'zip',
+        code: 'c',
+        name: 'n',
+        description: 'description-long-enough',
+        userId: 1,
+      }),
+    ).rejects.toThrow(/顶层目录/);
   });
 });

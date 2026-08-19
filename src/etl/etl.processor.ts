@@ -148,7 +148,9 @@ export class EtlProcessor {
 
     if (parser === 'zsxq_parser') {
       // Handle zsxq multi-entry format
-      const rawEntries = (Array.isArray(data.entries) ? data.entries : []) as Record<string, unknown>[];
+      const rawEntries = (
+        Array.isArray(data.entries) ? data.entries : []
+      ) as Record<string, unknown>[];
       for (const entry of rawEntries) {
         entries.push({
           title: (entry.title as string) || 'Untitled',
@@ -163,8 +165,8 @@ export class EtlProcessor {
           companies: (Array.isArray(entry.companies)
             ? entry.companies
             : []) as { name: string; code?: string; context?: string }[],
-          sentiment: ((entry.sentiment as Record<string, unknown> | undefined)
-            ?.overall as string | undefined),
+          sentiment: (entry.sentiment as Record<string, unknown> | undefined)
+            ?.overall as string | undefined,
           parser: parser,
           sourceFile: data.document_path as string | undefined,
           metadata: {
@@ -191,11 +193,13 @@ export class EtlProcessor {
         contentTimestamp: this.parseTimestamp(
           data.timestamp as string | number | undefined,
         ),
-        companies: (Array.isArray(data.companies)
-          ? data.companies
-          : []) as { name: string; code?: string; context?: string }[],
-        sentiment: ((data.sentiment as Record<string, unknown> | undefined)
-          ?.overall as string | undefined),
+        companies: (Array.isArray(data.companies) ? data.companies : []) as {
+          name: string;
+          code?: string;
+          context?: string;
+        }[],
+        sentiment: (data.sentiment as Record<string, unknown> | undefined)
+          ?.overall as string | undefined,
         parser: parser,
         sourceFile: data.document_path as string | undefined,
         metadata: {

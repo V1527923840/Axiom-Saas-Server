@@ -12,7 +12,12 @@ import {
   StreamableFile,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ServiceTokenGuard } from './service-token.guard';
 import { InternalSkillToolService } from './internal-skill-tool.service';
 import {
@@ -174,9 +179,7 @@ export class InternalSkillController {
   async getSkillZip(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<StreamableFile> {
-    const { buffer, downloadFilename } = await this.toolService.getSkillZip(
-      id,
-    );
+    const { buffer, downloadFilename } = await this.toolService.getSkillZip(id);
 
     return new StreamableFile(buffer, {
       type: 'application/zip',
