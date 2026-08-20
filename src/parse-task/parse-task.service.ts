@@ -7,6 +7,7 @@ import { ParseTaskRepository } from './infrastructure/persistence/parse-task.rep
 import { ParseTask } from './domain/parse-task';
 import { CreateParseTaskDto, ParseTaskQueryDto } from './dto/parse-task.dto';
 import { ScrapeLogService } from '../scrape-log/scrape-log.service';
+import { ScrapeLog } from '../scrape-log/domain/scrape-log';
 import { OssService } from '../oss/oss.service';
 import { isValidStatusTransition } from '../db/parse-task-db';
 
@@ -190,7 +191,7 @@ export class ParseTaskService {
     return updatedTask;
   }
 
-  private async findScrapeLogsBySource(source: string): Promise<any[]> {
+  private async findScrapeLogsBySource(source: string): Promise<ScrapeLog[]> {
     // Find all scrape logs for a given source
     const result = await this.scrapeLogService.findAllWithPagination({
       paginationOptions: { page: 1, limit: 100 },
