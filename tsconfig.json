@@ -17,6 +17,14 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    // ★ 路径别名:`src/*` 解析为项目根的 `src/*`。
+    // 全项目用 `import ... from 'src/...'`(无 `./` 前缀)的约定源自这里。
+    // 配合 src/main.ts 顶部的 `import 'tsconfig-paths/register'`,
+    // 这样无论是 nest --watch(ts-node)还是 fallback 跑 dist/src/main.js,
+    // Node 都能在运行时解析 `src/...` 字符串。
+    "paths": {
+      "src/*": ["src/*"]
+    }
   }
 }

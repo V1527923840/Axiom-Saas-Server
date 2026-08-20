@@ -1,4 +1,9 @@
 import 'dotenv/config';
+// ★ 必须放在 NestFactory 之前:整个项目用 `import ... from 'src/...'` 的
+// 路径别名约定(tsconfig.paths),在 nest --watch 下由 ts-node 自动注册;
+// 但当 watcher fallback 跑 dist/src/main.js 时,Node 不知道 tsconfig.paths,
+// 会抛 "Cannot find module 'src/content/...'"。这里手动 register 兜底。
+import 'tsconfig-paths/register';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
