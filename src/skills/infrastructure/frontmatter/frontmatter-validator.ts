@@ -6,7 +6,6 @@ export interface SkillFrontmatter {
   description: string;
   category?: string;
   tags?: string[];
-  version: number;
   files_index?: Array<{ path: string; description?: string }>;
 }
 
@@ -46,9 +45,8 @@ export class FrontmatterValidator {
         'frontmatter.description must be 10-500 chars',
       );
     }
-    if (!fm.version || typeof fm.version !== 'number') {
-      throw new BadRequestException('frontmatter.version must be a number');
-    }
+    // ★ 2026-08-18:version 字段已废弃 — Skill 表是 unversioned,
+    // upload 是 idempotent overwrite,不再需要 skill 版本号。
 
     return {
       frontmatter: {
@@ -56,7 +54,6 @@ export class FrontmatterValidator {
         description: fm.description,
         category: fm.category,
         tags: fm.tags,
-        version: fm.version,
         files_index: fm.files_index ?? [],
       },
       body: parsed.content,

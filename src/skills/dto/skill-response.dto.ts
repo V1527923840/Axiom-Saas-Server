@@ -115,6 +115,22 @@ export class MountSkillDto {
 }
 
 /**
+ * Personal-skill DTO returned by GET /users/me/skills.
+ *
+ * Extends SkillResponseDto with the binding's `enabled` flag so the
+ * client can render enabled vs favorited-only cards differently.
+ * Status defaults to false when the binding exists but is disabled
+ * (收藏后未启用).
+ */
+export class MySkillDto extends SkillResponseDto {
+  @ApiProperty({
+    description:
+      'true = binding is enabled (user can mount to sessions); false = favorited but not enabled.',
+  })
+  enabled!: boolean;
+}
+
+/**
  * Session-mount list item for GET /sessions/{id}/skills.
  */
 export class SessionSkillMountItemDto {

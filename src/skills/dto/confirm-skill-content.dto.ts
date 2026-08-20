@@ -31,24 +31,42 @@ export class ConfirmSkillContentDto {
   @IsIn(['md', 'zip'])
   sourceFormat!: 'md' | 'zip';
 
-  @ApiProperty({ example: 'principles-skill', maxLength: 64 })
+  // ★ code 现在由后端从前端传入的 name 自动生成(slugify + 短 hash fallback)
+  // — UI 隐藏此字段;为了向后兼容老的客户端仍允许显式传入。
+  @ApiPropertyOptional({
+    example: 'principles-skill',
+    maxLength: 64,
+    description:
+      'Optional override. When omitted, the backend derives code from `name` (slug + hash fallback).',
+  })
+  @IsOptional()
   @IsString()
   @Length(1, 64)
-  code!: string;
+  code?: string;
 
   @ApiProperty({ example: 'Trading Principles', maxLength: 128 })
   @IsString()
   @Length(1, 128)
   name!: string;
 
-  @ApiProperty({
+  // ★ changelog 字段已从前端 UI 移除;DTO 保留可选以兼容未来手动调用。
+  // 当前前端永远不传,后端会用 "Initial publish" 占位。
+
+  // ★ description 可选 + fallback:如果 DTO 收到的 description 太短(< 10)
+  // 或缺失,service 用 SKILL.md frontmatter 的 description 兜底。
+  // 跟 category 走同样的「DTO 放宽 + service 兜底」模式 — curl payload 写
+  // "test" 不再 422,UI 自动填的 description 优先级仍然最高。
+  @ApiPropertyOptional({
     example: 'Core principles for evaluating trade setups',
     minLength: 10,
     maxLength: 500,
+    description:
+      'Optional. If omitted or shorter than 10 chars, the service falls back to the description parsed from <slug>/SKILL.md frontmatter.',
   })
+  @IsOptional()
   @IsString()
-  @Length(10, 500)
-  description!: string;
+  @MaxLength(500)
+  description?: string;
 
   @ApiPropertyOptional({ example: 'First publish' })
   @IsOptional()

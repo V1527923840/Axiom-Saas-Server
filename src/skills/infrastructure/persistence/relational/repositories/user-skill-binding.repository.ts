@@ -27,6 +27,18 @@ export class UserSkillBindingRepository {
     });
   }
 
+  /**
+   * All bindings for a user, regardless of status. Used by
+   * `listMySkills` (the "我的 Skill" tab) which shows both enabled and
+   * favorited-but-disabled cards.
+   */
+  findAllByUser(userId: number): Promise<UserSkillBindingEntity[]> {
+    return this.repository.find({
+      where: { userId },
+      order: { enabledAt: 'DESC' },
+    });
+  }
+
   findByUserAndSkill(
     userId: number,
     skillId: string,
@@ -87,6 +99,59 @@ export class UserSkillBindingRepository {
         ? { userId, skillId, source, sourceRefId: IsNull() }
         : { userId, skillId, source, sourceRefId };
     await this.repository.update(where, { status: 'disabled' });
+  }
+
+  /**
+   * Favorite a skill for a user without enabling it. Idempotent — if a
+   * binding already exists (any status) we leave it alone; only inserts a
+   * new `disabled` row when there's no `user_self` row for this (user, skill).
+   */
+  async favorite(input: Partial<UserSkillBindingEntity>): Promise<void> {
+    const where =
+      input.sourceRefId == null
+        ? {
+            userId: input.userId!,
+            skillId: input.skillId!,
+            source: input.source!,
+            sourceRefId: IsNull(),
+          }
+        : {
+            userId: input.userId!,
+            skillId: input.skillId!,
+            source: input.source!,
+            sourceRefId: input.sourceRefId,
+          };
+    const existing = await this.repository.findOne({ where });
+    if (existing) return; // 已收藏 / 已启用 → 跳过
+
+    const entity = this.repository.create({
+      ...input,
+      status: 'disabled',
+    });
+    await this.repository.save(entity);
+  }
+
+  /**
+   * Delete a user's `user_self` binding. Idempotent — if the row is
+   * missing we silently return `wasEnabled=false`. Plan / admin_assigned
+   * bindings are NOT touched (per spec §4.4: the user's collection comes
+   * from the plan, not from themselves).
+   *
+   * Returns the previous enabled state so the caller can surface it
+   * ("X was enabled — disabled it before removing").
+   */
+  async removeUserSelfBinding(
+    userId: number,
+    skillId: string,
+  ): Promise<{ wasEnabled: boolean }> {
+    const existing = await this.repository.findOne({
+      where: { userId, skillId, source: 'user_self', sourceRefId: IsNull() },
+    });
+    if (!existing) return { wasEnabled: false };
+
+    const wasEnabled = existing.status === 'enabled';
+    await this.repository.delete({ id: existing.id });
+    return { wasEnabled };
   }
 
   /**

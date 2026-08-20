@@ -18,6 +18,7 @@ import {
   SkillToolSummaryDto,
 } from './dto/skill-response.dto';
 import { QuerySkillsDto } from './dto/query-skills.dto';
+import { MySkillDto } from './dto/skill-response.dto';
 
 /**
  * SkillsService — orchestration layer for the public SkillsController.
@@ -170,8 +171,33 @@ export class SkillsService {
   // ============================================================
 
   /**
-   * List the caller's enabled bindings, joined with the skill row so the
-   * client can render the marketplace tile directly.
+   * List the caller's personal skill collection — every binding row
+   * (enabled or disabled), joined with the skill row. The frontend uses
+   * `enabled` to differentiate "已启用" cards from "已收藏但未启用" cards.
+   *
+   * This used to be `listMyEnabledSkills` and only returned enabled rows;
+   * renamed to `listMySkills` because the contract is now "我的 Skill" =
+   * 收藏集 (binding exists), not "已启用集".
+   */
+  async listMySkills(userId: number): Promise<MySkillDto[]> {
+    const bindings = await this.bindingRepo.findAllByUser(userId);
+    if (bindings.length === 0) return [];
+
+    const skillIds = [...new Set(bindings.map((b) => b.skillId))];
+    const skills = await this.skillRepo.findByIds(skillIds);
+    const enabledSet = new Set(
+      bindings.filter((b) => b.status === 'enabled').map((b) => b.skillId),
+    );
+
+    return skills.map((s) => ({
+      ...this.toResponseDto(s),
+      enabled: enabledSet.has(s.id),
+    }));
+  }
+
+  /**
+   * Backward-compat shim — only enabled bindings, joined with skill rows.
+   * Used by VibeTrading's session resolver which only mounts enabled skills.
    */
   async listMyEnabledSkills(userId: number): Promise<SkillResponseDto[]> {
     const bindings = await this.bindingRepo.findEnabledByUser(userId);
@@ -220,6 +246,59 @@ export class SkillsService {
   ): Promise<{ data: { skillId: string; enabled: false } }> {
     await this.bindingRepo.disable(userId, skillId, 'user_self', null);
     return { data: { skillId, enabled: false } };
+  }
+
+  /**
+   * Bookmark / favorite a skill for the caller without enabling it.
+   *
+   * Idempotent: if a `user_self` binding already exists (enabled or
+   * disabled), the call leaves it as-is. Otherwise creates a new
+   * disabled binding so the skill shows up in "我的 Skill".
+   */
+  async favoriteForUser(
+    userId: number,
+    skillId: string,
+  ): Promise<{ data: { skillId: string; favorited: true; enabled: boolean } }> {
+    const skill = await this.skillRepo.findById(skillId);
+    if (!skill) throw new NotFoundException(`skill ${skillId} not found`);
+    if (skill.status !== 'published') {
+      throw new ForbiddenException(
+        `skill ${skillId} is not published (status=${skill.status})`,
+      );
+    }
+
+    await this.bindingRepo.favorite({
+      userId,
+      skillId,
+      source: 'user_self',
+      sourceRefId: null,
+      enabledBy: userId,
+    });
+
+    const bindings = await this.bindingRepo.findByUserAndSkill(userId, skillId);
+    const enabled = bindings.some((b) => b.status === 'enabled');
+
+    return { data: { skillId, favorited: true, enabled } };
+  }
+
+  /**
+   * Remove the caller's `user_self` binding for a skill — they no longer
+   * see it in "我的 Skill". If the binding was enabled, return
+   * `wasEnabled: true` so the UI can show the correct confirmation message.
+   *
+   * Idempotent: removing an absent binding is a no-op.
+   */
+  async removeFromMyCollection(
+    userId: number,
+    skillId: string,
+  ): Promise<{
+    data: { skillId: string; removed: true; wasEnabled: boolean };
+  }> {
+    const { wasEnabled } = await this.bindingRepo.removeUserSelfBinding(
+      userId,
+      skillId,
+    );
+    return { data: { skillId, removed: true, wasEnabled } };
   }
 
   // ============================================================

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -35,6 +36,7 @@ import { QuerySkillsDto } from './dto/query-skills.dto';
 import { SkillContentHashQueryDto } from './dto/skill-content-query.dto';
 import {
   MountSkillDto,
+  MySkillDto,
   SessionSkillMountItemDto,
   SkillFileIndexDto,
   SkillResponseDto,
@@ -239,15 +241,15 @@ export class SkillsController {
   // User bindings (under /users/me)
   // ============================================================
 
-  @ApiOkResponse({ type: SkillResponseDto, isArray: true })
+  @ApiOkResponse({ type: MySkillDto, isArray: true })
   @Get('users/me/skills')
   @HttpCode(HttpStatus.OK)
   @MenuPaths('/skills')
   async listMySkills(
     @Req() req: AuthenticatedRequest,
-  ): Promise<{ data: SkillResponseDto[] }> {
+  ): Promise<{ data: MySkillDto[] }> {
     const userId = this.userIdOf(req);
-    const skills = await this.skillsService.listMyEnabledSkills(userId);
+    const skills = await this.skillsService.listMySkills(userId);
     return { data: skills };
   }
 
@@ -279,6 +281,64 @@ export class SkillsController {
   ): Promise<{ data: { skillId: string; enabled: false } }> {
     const userId = this.userIdOf(req);
     return this.skillsService.disableForUser(userId, id);
+  }
+
+  /**
+   * Bookmark / favorite a skill (收藏). Idempotent.
+   *
+   * Distinct from `enable` (which both favorites AND activates). The
+   * "收藏" button on the public plaza opens a confirm dialog that lets
+   * the caller pick between this and `enable`. The disabled binding
+   * still shows up in "我的 Skill" so users can find their bookmarks.
+   */
+  @ApiOkResponse({
+    schema: {
+      example: {
+        data: { skillId: 'uuid', favorited: true, enabled: false },
+      },
+    },
+  })
+  @Post('skills/:id/favorite')
+  @HttpCode(HttpStatus.OK)
+  @MenuPaths('/skills')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  async favorite(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<{
+    data: { skillId: string; favorited: true; enabled: boolean };
+  }> {
+    const userId = this.userIdOf(req);
+    return this.skillsService.favoriteForUser(userId, id);
+  }
+
+  /**
+   * Remove a skill from the caller's personal collection ("我的 Skill" tab).
+   *
+   * Idempotent — if the binding is already absent, returns
+   * `wasEnabled=false`. If it WAS enabled, the caller had to explicitly
+   * confirm "停用并移除" via the UI; this endpoint just enforces the
+   * resulting state.
+   */
+  @ApiOkResponse({
+    schema: {
+      example: {
+        data: { skillId: 'uuid', removed: true, wasEnabled: false },
+      },
+    },
+  })
+  @Delete('users/me/skills/:id')
+  @HttpCode(HttpStatus.OK)
+  @MenuPaths('/skills')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  async removeFromMySkills(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<{
+    data: { skillId: string; removed: true; wasEnabled: boolean };
+  }> {
+    const userId = this.userIdOf(req);
+    return this.skillsService.removeFromMyCollection(userId, id);
   }
 
   // ============================================================
