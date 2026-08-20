@@ -102,9 +102,11 @@ describe('VibeClientService', () => {
   });
 
   // ★ User-scope: when caller passes userId, it must be forwarded both as the
-  // X-SaaS-User-Id header (String() normalized) and the _saas_user_id body
-  // field so vibe can apply user-scoped skill injection.
-  it('should forward X-SaaS-User-Id header and _saas_user_id body field', async () => {
+  // X-User-Id header (String() normalized; matches vibe `sessions_routes.py:633`
+  // Header alias and the Vibe→SaaS internal API convention in
+  // `skill_internal_api.py:77`) and the _saas_user_id body field so vibe can
+  // apply user-scoped skill injection.
+  it('should forward X-User-Id header and _saas_user_id body field', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
@@ -124,7 +126,7 @@ describe('VibeClientService', () => {
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: 'Bearer tk',
-          'X-SaaS-User-Id': '42',
+          'X-User-Id': '42',
         }),
         body: JSON.stringify({
           content: 'hi',

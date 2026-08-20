@@ -3,6 +3,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
+import { SkillsModule } from '../skills/skills.module';
 import { AiAgentController } from './ai-agent.controller';
 import { AiAgentService } from './ai-agent.service';
 import { AgentAdapterRegistry } from './infrastructure/agent-adapter.registry';
@@ -16,6 +17,10 @@ import { VibeTradingModule } from './vibe-trading/vibe-trading.module';
   imports: [
     AuthModule,
     UsersModule,
+    // ★ Skill Plaza: AiAgentService.submitMessage now resolves active skills
+    // (user baseline + session mount delta) via SkillResolverService on each
+    // sendMessage call and forwards them to VibeTrading.
+    SkillsModule,
     RelationalAiSessionPersistenceModule,
     VibeTradingModule,
     MulterModule.register({

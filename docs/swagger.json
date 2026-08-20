@@ -6383,6 +6383,39 @@
         ]
       }
     },
+    "/api/v1/internal/skills/{id}/zip": {
+      "get": {
+        "operationId": "InternalSkillController_getSkillZip_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Download full skill zip (for PlazaCache lazy download)",
+        "tags": [
+          "internal-skills"
+        ]
+      }
+    },
     "/api/v1/internal/skills/{id}/tools/{toolName}/execute": {
       "post": {
         "operationId": "InternalSkillController_executeTool_v1",
@@ -6455,6 +6488,61 @@
         },
         "tags": [
           "internal-skills"
+        ]
+      }
+    },
+    "/api/v1/internal/users/{uid}/skills": {
+      "get": {
+        "operationId": "InternalUserSkillController_listUserSkills_v1",
+        "parameters": [
+          {
+            "name": "uid",
+            "required": true,
+            "in": "path",
+            "description": "Numeric user id; must equal X-User-Id header.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": [
+                      {
+                        "id": "uuid",
+                        "name": "Trading Principles",
+                        "description": "Core principles",
+                        "category": "trading",
+                        "tags": [
+                          "finance"
+                        ],
+                        "contentHash": "sha256...",
+                        "toolsCount": 2,
+                        "manifestTokenEstimate": 100,
+                        "totalTokenEstimate": 500
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "internal-users"
         ]
       }
     },
@@ -6856,7 +6944,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/SkillResponseDto"
+                    "$ref": "#/components/schemas/MySkillDto"
                   }
                 }
               }
@@ -6954,6 +7042,106 @@
                     "data": {
                       "skillId": "uuid",
                       "enabled": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Skills"
+        ]
+      }
+    },
+    "/api/v1/skills/{id}/favorite": {
+      "post": {
+        "operationId": "SkillsController_favorite_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "skillId": "uuid",
+                      "favorited": true,
+                      "enabled": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Skills"
+        ]
+      }
+    },
+    "/api/v1/users/me/skills/{id}": {
+      "delete": {
+        "operationId": "SkillsController_removeFromMySkills_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "required": false,
+            "name": "x-custom-lang",
+            "schema": {
+              "example": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "data": {
+                      "skillId": "uuid",
+                      "removed": true,
+                      "wasEnabled": false
                     }
                   }
                 }
@@ -8893,7 +9081,8 @@
           "code": {
             "type": "string",
             "example": "principles-skill",
-            "maxLength": 64
+            "maxLength": 64,
+            "description": "Optional override. When omitted, the backend derives code from `name` (slug + hash fallback)."
           },
           "name": {
             "type": "string",
@@ -8904,20 +9093,24 @@
             "type": "string",
             "example": "Core principles for evaluating trade setups",
             "minLength": 10,
-            "maxLength": 500
+            "maxLength": 500,
+            "description": "Optional. If omitted or shorter than 10 chars, the service falls back to the description parsed from <slug>/SKILL.md frontmatter."
           },
           "changelog": {
             "type": "string",
             "example": "First publish"
+          },
+          "category": {
+            "type": "string",
+            "example": "量化",
+            "description": "Predefined category that overrides frontmatter. One of 宏观 / 行业 / 量化 or any custom string (max 64 chars)."
           }
         },
         "required": [
           "ossKey",
           "hash",
           "sourceFormat",
-          "code",
-          "name",
-          "description"
+          "name"
         ]
       },
       "SkillResponseDto": {
@@ -9088,6 +9281,115 @@
           "description",
           "parameters",
           "tokenEstimate"
+        ]
+      },
+      "MySkillDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "example": "principles-skill"
+          },
+          "name": {
+            "type": "string",
+            "example": "Trading Principles"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "object",
+            "nullable": true
+          },
+          "tags": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "thumbnailUrl": {
+            "type": "object",
+            "nullable": true
+          },
+          "uploaderType": {
+            "type": "string",
+            "enum": [
+              "platform",
+              "user_self",
+              "third_party"
+            ]
+          },
+          "marketplaceStatus": {
+            "type": "string",
+            "enum": [
+              "private",
+              "pending",
+              "listed"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ]
+          },
+          "contentHash": {
+            "type": "object",
+            "nullable": true
+          },
+          "publishedAt": {
+            "type": "object",
+            "nullable": true
+          },
+          "changelog": {
+            "type": "object",
+            "nullable": true
+          },
+          "tools": {
+            "description": "Tool schema list (jsonb)",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "true = binding is enabled (user can mount to sessions); false = favorited but not enabled."
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "description",
+          "category",
+          "tags",
+          "thumbnailUrl",
+          "uploaderType",
+          "marketplaceStatus",
+          "status",
+          "contentHash",
+          "publishedAt",
+          "changelog",
+          "tools",
+          "createdAt",
+          "updatedAt",
+          "enabled"
         ]
       },
       "SessionSkillMountItemDto": {

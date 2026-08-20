@@ -66,7 +66,9 @@ export class VibeClientService {
    *               on the Saas side. Passed through verbatim as `skills` array in the
    *               POST body. Empty array → no injection (zero intrusion).
    * @param userId ★ User-scope — Saas-side user id. Forwarded both as the
-   *               `X-SaaS-User-Id` header (kebab-case, FastAPI-friendly)
+   *               `X-User-Id` header (kebab-case, FastAPI-friendly; matches
+   *               vibe `sessions_routes.py:633` Header alias and the Vibe→SaaS
+   *               internal API convention in `skill_internal_api.py:77`)
    *               and as the `_saas_user_id` body field (snake_case) so the
    *               vibe upstream can apply user-scoped skill injection per turn.
    */
@@ -83,7 +85,7 @@ export class VibeClientService {
         method: 'POST',
         headers: this.authHeaders({
           'Content-Type': 'application/json',
-          'X-SaaS-User-Id': String(userId),
+          'X-User-Id': String(userId),
         }),
         body: JSON.stringify({ content, skills, _saas_user_id: userId }),
         signal,
