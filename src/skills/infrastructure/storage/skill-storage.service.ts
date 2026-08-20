@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -13,6 +14,7 @@ import {
   S3ClientConfig,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { NodeHttpHandler } from '@smithy/node-http-handler';
 import * as crypto from 'crypto';
 import { AllConfigType } from '../../../config/config.type';
 
@@ -20,6 +22,15 @@ export interface UploadResult {
   key: string;
   hash: string;
 }
+
+/** 50MB hard cap for a single skill zip. */
+export const MAX_SKILL_ZIP_BYTES = 50 * 1024 * 1024;
+/** Max time we wait for the *next* chunk of a streaming body before aborting. */
+export const IDLE_READ_TIMEOUT_MS = 15_000;
+/** TCP connect timeout for the Qiniu S3 endpoint. */
+export const CONNECTION_TIMEOUT_MS = 5_000;
+/** Socket read/write idle timeout enforced by the HTTP handler. */
+export const SOCKET_TIMEOUT_MS = 30_000;
 
 /**
  * SkillStorageService — 七牛云 S3 兼容模式(★ 2026-08-18 替换原 MinIO)
@@ -40,8 +51,20 @@ export class SkillStorageService {
   private readonly s3: S3Client;
   private readonly bucket: string;
   private readonly cdnDomain: string;
+  private readonly idleReadTimeoutMs: number;
+  private readonly maxZipBytes: number;
 
-  constructor(configService: ConfigService<AllConfigType>) {
+  constructor(
+    configService: ConfigService<AllConfigType>,
+    // ★ 2026-08-20 修复:NestJS DI 不识别 TS 默认参数,会试图把
+    // `number` 当成 provider 解析 → UnknownDependenciesException。
+    // 用 @Optional() 让 Nest 跳过这两个原始类型注入,直接走 TS 默认值。
+    @Optional() idleReadTimeoutMs?: number,
+    @Optional() maxZipBytes?: number,
+  ) {
+    this.idleReadTimeoutMs = idleReadTimeoutMs ?? IDLE_READ_TIMEOUT_MS;
+    this.maxZipBytes = maxZipBytes ?? MAX_SKILL_ZIP_BYTES;
+
     const skillCfg = configService.getOrThrow('skill', { infer: true });
     const qiniu = skillCfg.qiniu;
 
@@ -62,6 +85,16 @@ export class SkillStorageService {
         accessKeyId: qiniu.accessKey,
         secretAccessKey: qiniu.secretKey,
       },
+      // ★ 2026-08-20 生产事故修复:SDK 默认 socketTimeout=300s × maxAttempts=3
+      // ≈ 982s 才失败,导致 load_skill_file 工具调用长时间卡死无响应。
+      maxAttempts: 2, // 1 original + 1 retry
+      requestHandler: new NodeHttpHandler({
+        connectionTimeout: CONNECTION_TIMEOUT_MS,
+        socketTimeout: SOCKET_TIMEOUT_MS,
+        requestTimeout: SOCKET_TIMEOUT_MS,
+        // smithy v4: requestTimeout 默认只打 warning,必须显式 opt-in 才会抛错
+        throwOnRequestTimeout: true,
+      }),
     };
 
     this.s3 = new S3Client(clientConfig);
@@ -156,16 +189,87 @@ export class SkillStorageService {
    * confirm pipeline to re-verify sha256 against the client claim.
    *
    * 七牛云 S3 兼容:GET Object 用同一 S3Client 即可。
+   *
+   * 有界性保证(★ 2026-08-20):
+   *  - send() 由 S3Client 的 connection/socket/request timeout + maxAttempts=2 兜底
+   *  - 流式读取由 idleReadTimeoutMs 兜底(每个 chunk 之间独立计时)
+   *  - 总字节数由 maxBytes 兜底,超限立即 destroy 连接
    */
-  async getObject(key: string): Promise<Buffer> {
-    const result = await this.s3.send(
-      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
-    );
-    const body = result.Body as NodeJS.ReadableStream;
-    const chunks: Buffer[] = [];
-    for await (const chunk of body) {
-      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  async getObject(
+    key: string,
+    maxBytes: number = this.maxZipBytes,
+  ): Promise<Buffer> {
+    const start = Date.now();
+    this.logger.log(`getObject start key=${key}`);
+
+    let result: { Body?: unknown };
+    try {
+      result = await this.s3.send(
+        new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+      );
+    } catch (err) {
+      this.logger.warn(
+        `getObject send-failed key=${key} ms=${Date.now() - start} err=${(err as Error).message}`,
+      );
+      throw err;
     }
+
+    const body = result.Body as NodeJS.ReadableStream & {
+      destroy: (err?: Error) => void;
+    };
+    const chunks: Buffer[] = [];
+    let total = 0;
+
+    // 用 iterator 协议 + Promise.race 实现 idle-read 超时:
+    // 不能 wrap 整个 for-await,否则慢而稳定的大文件会被误杀 —
+    // 我们要限制的是「相邻两个 chunk 之间的静默时间」,不是总时长。
+    const iter = body[Symbol.asyncIterator]();
+    try {
+      for (;;) {
+        let timer: NodeJS.Timeout | undefined;
+        const chunk = await Promise.race([
+          iter.next(),
+          new Promise<never>((_, reject) => {
+            timer = setTimeout(
+              () =>
+                reject(
+                  new Error(
+                    `idle read timeout after ${this.idleReadTimeoutMs}ms`,
+                  ),
+                ),
+              this.idleReadTimeoutMs,
+            );
+          }),
+        ]).finally(() => {
+          if (timer) clearTimeout(timer);
+        });
+
+        if (chunk.done) break;
+
+        const buf = Buffer.isBuffer(chunk.value)
+          ? chunk.value
+          : Buffer.from(chunk.value);
+        chunks.push(buf);
+        total += buf.length;
+
+        if (total > maxBytes) {
+          throw new InternalServerErrorException(
+            `skill zip exceeds ${maxBytes} bytes`,
+          );
+        }
+      }
+    } catch (err) {
+      // 必须 destroy,否则 socket 会挂在 agent pool 里泄漏
+      body.destroy(err instanceof Error ? err : undefined);
+      this.logger.warn(
+        `getObject stream-failed key=${key} bytes=${total} ms=${Date.now() - start} err=${(err as Error).message}`,
+      );
+      throw err;
+    }
+
+    this.logger.log(
+      `getObject ok key=${key} bytes=${total} ms=${Date.now() - start}`,
+    );
     return Buffer.concat(chunks);
   }
 
