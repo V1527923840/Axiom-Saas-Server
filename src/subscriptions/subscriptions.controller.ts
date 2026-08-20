@@ -69,7 +69,7 @@ export class SubscriptionsController {
     @Body() createSubscriptionDto: CreateSubscriptionDto,
     @Request() req: AuthedRequest,
   ): Promise<Subscription> {
-    const userId = req.user.id;
+    const userId = String(req.user.id);
     return this.subscriptionsService.create(createSubscriptionDto, userId);
   }
 
@@ -120,7 +120,7 @@ export class SubscriptionsController {
   @Get('current')
   @HttpCode(HttpStatus.OK)
   async getCurrentSubscription(@Request() req: AuthedRequest): Promise<any> {
-    const userId = req.user.id;
+    const userId = String(req.user.id);
     return this.subscriptionsService.getCurrentSubscription(userId);
   }
 
@@ -130,7 +130,7 @@ export class SubscriptionsController {
     @Body() upgradeSubscriptionDto: UpgradeSubscriptionDto,
     @Request() req: AuthedRequest,
   ): Promise<any> {
-    const userId = req.user.id;
+    const userId = String(req.user.id);
     return this.subscriptionsService.upgrade(upgradeSubscriptionDto, userId);
   }
 
@@ -140,7 +140,7 @@ export class SubscriptionsController {
     @Request() req: AuthedRequest,
     @Query() query: QuerySubscriptionDto,
   ): Promise<PaginatedApiResponseDto<Subscription>> {
-    const userId = req.user.id;
+    const userId = String(req.user.id);
     const pageNum = query.page ?? 1;
     const limitNum = query.pageSize ?? 10;
 
