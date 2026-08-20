@@ -168,9 +168,9 @@ export class AiAgentService {
     // merged with any session-level add/remove deltas (spec §3.5.1).
     // Real-time (no cache) — user toggles take effect on the next message.
     // The resolver degrades to [] on failure and never throws.
-    let skillIds: string[];
+    let resolvedSkills: { id: string; code: string; name: string }[];
     try {
-      skillIds = await this.skillResolver.resolve(
+      resolvedSkills = await this.skillResolver.resolve(
         typeof userId === 'string' ? parseInt(userId, 10) : userId,
         id,
       );
@@ -180,16 +180,24 @@ export class AiAgentService {
       this.logger.warn(
         `skill resolver threw unexpectedly for user=${userId} session=${id}: ${(e as Error).message}`,
       );
-      skillIds = [];
+      resolvedSkills = [];
     }
 
     try {
       const adapter = this.registry.get(s.agentType);
+      // Forward {id, code, name} so VibeTrading's allowed_ids set can accept
+      // any of the three — see SkillRef / allowed_ids rationale in the
+      // agent-adapter interface docstring (2026-08-20).
+      const skillRefs = resolvedSkills.map((s) => ({
+        id: s.id,
+        code: s.code,
+        name: s.name,
+      }));
       const result = await adapter.submitMessage(
         s.remoteSessionId,
         content,
         new AbortController().signal, // 提交阶段的 cancel 由 inflight 锁 + 后续 /cancel 端点控制
-        skillIds.map((skillId) => ({ id: skillId })),
+        skillRefs,
         userId, // ★ User-scope: forwarded so vibe can apply per-user skill injection
       );
       return result;

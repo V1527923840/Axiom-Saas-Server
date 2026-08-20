@@ -216,7 +216,10 @@ describe('AiAgentService', () => {
         messageId: 'm-1',
         attemptId: 'a-1',
       });
-      skillResolver.resolve.mockResolvedValue(['skill-A', 'skill-B']);
+      skillResolver.resolve.mockResolvedValue([
+        { id: 'skill-A', code: 'skill-a-code', name: 'skill-a-name' },
+        { id: 'skill-B', code: 'skill-b-code', name: 'skill-b-name' },
+      ]);
 
       await svc.submitMessage('u1', 's1', 'hi');
 
@@ -230,7 +233,10 @@ describe('AiAgentService', () => {
         'r1',
         'hi',
         expect.any(AbortSignal),
-        [{ id: 'skill-A' }, { id: 'skill-B' }],
+        [
+          { id: 'skill-A', code: 'skill-a-code', name: 'skill-a-name' },
+          { id: 'skill-B', code: 'skill-b-code', name: 'skill-b-name' },
+        ],
         'u1', // ★ User-scope: forwarded to adapter for vibe injection
       );
     });

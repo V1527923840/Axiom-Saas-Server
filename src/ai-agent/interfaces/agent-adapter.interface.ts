@@ -17,9 +17,19 @@ export interface AgentStreamEvent {
 /**
  * Skill reference shape forwarded to upstream VibeTrading per spec §3.5.1.
  * Unversioned — ID-only contract (upload overwrites).
+ *
+ * ★ 2026-08-20 augmentation: also forward `code` and `name` so VibeTrading's
+ *   register_skill_tools can build an `allowed_ids` set that accepts any of
+ *   {id, code, name} as a load_skill_* tool argument. The LLM is told the
+ *   full UUID in the system prompt but may still call tools with the more
+ *   readable code/name; without this, the guard rejects the call as
+ *   "not in current request's requested_skills" even though the binding
+ *   is valid.
  */
 export interface SkillRef {
   id: string;
+  code?: string;
+  name?: string;
 }
 
 export interface AgentAdapter {

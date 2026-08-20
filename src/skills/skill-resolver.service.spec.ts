@@ -37,13 +37,26 @@ describe('SkillResolverService', () => {
   function setup(params: {
     enabledSkillIds?: string[];
     mounts?: Array<{ skillId: string; op: 'add' | 'remove' }>;
-    skills?: Array<{ id: string; status: 'published' | 'draft' | 'archived' }>;
+    skills?: Array<{
+      id: string;
+      code?: string;
+      name?: string;
+      status: 'published' | 'draft' | 'archived';
+    }>;
   }) {
     bindingRepo.findEnabledByUser.mockResolvedValue(
       (params.enabledSkillIds ?? []).map((skillId) => ({ skillId })),
     );
     mountRepo.findBySession.mockResolvedValue(params.mounts ?? []);
-    skillRepo.findByIds.mockResolvedValue(params.skills ?? []);
+    // Default code/name to id-derived values so tests can assert on the
+    // {id, code, name} shape without each test repeating the boilerplate.
+    skillRepo.findByIds.mockResolvedValue(
+      (params.skills ?? []).map((s) => ({
+        code: s.code ?? `${s.id}-code`,
+        name: s.name ?? `${s.id}-name`,
+        ...s,
+      })),
+    );
   }
 
   // ===== Baseline behavior (no session mounts) =====
@@ -61,7 +74,11 @@ describe('SkillResolverService', () => {
 
     const result = await resolver.resolve(1, 'old-session-1');
 
-    expect([...result].sort()).toEqual(['X', 's1']);
+    // Sort by raw Unicode code-point so test is locale-independent.
+    expect([...result].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))).toEqual([
+      { id: 'X', code: 'X-code', name: 'X-name' },
+      { id: 's1', code: 's1-code', name: 's1-name' },
+    ]);
   });
 
   it('should exclude newly-disabled skill X on next resolve (no mount)', async () => {
@@ -74,7 +91,7 @@ describe('SkillResolverService', () => {
 
     const result = await resolver.resolve(1, 'old-session-1');
 
-    expect(result).toEqual(['s1']);
+    expect(result).toEqual([{ id: 's1', code: 's1-code', name: 's1-name' }]);
   });
 
   // ===== Delta overrides baseline =====
@@ -89,7 +106,7 @@ describe('SkillResolverService', () => {
 
     const result = await resolver.resolve(1, 'old-session-1');
 
-    expect(result).toEqual(['s1']);
+    expect(result).toEqual([{ id: 's1', code: 's1-code', name: 's1-name' }]);
   });
 
   it('should include X even if newly-disabled, when old session has add mount', async () => {
@@ -105,12 +122,15 @@ describe('SkillResolverService', () => {
 
     const result = await resolver.resolve(1, 'old-session-1');
 
-    expect([...result].sort()).toEqual(['X', 's1']);
+    expect([...result].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))).toEqual([
+      { id: 'X', code: 'X-code', name: 'X-name' },
+      { id: 's1', code: 's1-code', name: 's1-name' },
+    ]);
   });
 
   // ===== Additional confidence tests =====
 
-  it('should return only IDs (not objects with version)', async () => {
+  it('should return {id, code, name} (not strings, no version)', async () => {
     setup({
       enabledSkillIds: ['s1'],
       mounts: [],
@@ -120,10 +140,11 @@ describe('SkillResolverService', () => {
     const result = await resolver.resolve(1, 'session-1');
 
     expect(Array.isArray(result)).toBe(true);
-    expect(result).toEqual(['s1']);
+    expect(result).toEqual([{ id: 's1', code: 's1-code', name: 's1-name' }]);
     // ★ Architectural invariant: never return {id, version}
     for (const item of result) {
-      expect(typeof item).toBe('string');
+      expect(typeof item).toBe('object');
+      expect('version' in item).toBe(false);
     }
   });
 
@@ -140,7 +161,7 @@ describe('SkillResolverService', () => {
 
     const result = await resolver.resolve(1, 'session-1');
 
-    expect(result).toEqual(['s1']);
+    expect(result).toEqual([{ id: 's1', code: 's1-code', name: 's1-name' }]);
   });
 
   it('should return empty array when baseline is empty and no mounts', async () => {
@@ -160,17 +181,22 @@ describe('SkillResolverService', () => {
       .mockResolvedValueOnce([{ skillId: 's1' }, { skillId: 's2' }]);
     mountRepo.findBySession.mockResolvedValue([]);
     skillRepo.findByIds
-      .mockResolvedValueOnce([{ id: 's1', status: 'published' }])
       .mockResolvedValueOnce([
-        { id: 's1', status: 'published' },
-        { id: 's2', status: 'published' },
+        { id: 's1', code: 's1-code', name: 's1-name', status: 'published' },
+      ])
+      .mockResolvedValueOnce([
+        { id: 's1', code: 's1-code', name: 's1-name', status: 'published' },
+        { id: 's2', code: 's2-code', name: 's2-name', status: 'published' },
       ]);
 
     const r1 = await resolver.resolve(1, 'sess-1');
     const r2 = await resolver.resolve(1, 'sess-1');
 
-    expect(r1).toEqual(['s1']);
-    expect([...r2].sort()).toEqual(['s1', 's2']);
+    expect(r1).toEqual([{ id: 's1', code: 's1-code', name: 's1-name' }]);
+    expect([...r2].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))).toEqual([
+      { id: 's1', code: 's1-code', name: 's1-name' },
+      { id: 's2', code: 's2-code', name: 's2-name' },
+    ]);
   });
 
   it('should fail soft to empty array on binding query failure', async () => {

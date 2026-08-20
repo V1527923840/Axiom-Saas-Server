@@ -12,7 +12,11 @@ import { SessionSkillMountRepository } from './infrastructure/persistence/relati
  *   1. Baseline: user_skill_binding WHERE user_id = ? AND status = 'enabled'
  *   2. Session delta: session_skill_mount WHERE session_id = ?
  *   3. Apply delta (add → union, remove → subtract)
- *   4. Return only {id: string}[] — no version, no content
+ *   4. Return ResolvedSkill[] — {id, code, name} for each binding so the
+ *      upstream VibeTrading tool guard can accept any of the three as a
+ *      load_skill_* tool argument (the LLM is told the UUID in the system
+ *      prompt but may still pass code/name; without this the guard rejects
+ *      with "skill 'X' not in current request's requested_skills").
  *
  * Per spec §3.5.2 the 4 boundary cases are:
  *   - Enable  X / no mount      → contains X       (baseline wins)
@@ -27,6 +31,22 @@ import { SessionSkillMountRepository } from './infrastructure/persistence/relati
  * Per spec §3.5.4 / §8.2:
  *   - On any failure, return [] and log a warn. Never block the chat.
  */
+
+/**
+ * ★ 2026-08-20 augmented return shape.
+ *
+ * `id` is the canonical key (UUID). `code` and `name` are forwarded so
+ * downstream code may treat any of the three as the same skill identity —
+ * the goal is to be tolerant of an LLM passing `code`/`name` instead of
+ * `id` to load_skill_* tool calls. All three are unique per skill row,
+ * so any one is safe to use as a set key.
+ */
+export interface ResolvedSkill {
+  id: string;
+  code: string;
+  name: string;
+}
+
 @Injectable()
 export class SkillResolverService {
   private readonly logger = new Logger(SkillResolverService.name);
@@ -38,13 +58,16 @@ export class SkillResolverService {
   ) {}
 
   /**
-   * Resolve the skill IDs that should be active for this user/session at
+   * Resolve the skills that should be active for this user/session at
    * THIS sendMessage call. Real-time, not cached.
    *
-   * @returns array of skill IDs (strings only, no version, no content).
-   *          Returns [] on any failure (never throws).
+   * @returns array of ResolvedSkill ({id, code, name}). Returns [] on any
+   *          failure (never throws).
    */
-  async resolve(userId: number, sessionId: string): Promise<string[]> {
+  async resolve(
+    userId: number,
+    sessionId: string,
+  ): Promise<ResolvedSkill[]> {
     try {
       // 1. Baseline: user's enabled bindings.
       const userBindings = await this.bindingRepo.findEnabledByUser(userId);
@@ -67,11 +90,15 @@ export class SkillResolverService {
       // 4. Only return published skills (skip draft / archived).
       const ids = [...candidateIds];
       const skills = await this.skillRepo.findByIds(ids);
-      const published = skills
+      return skills
         .filter((s) => s.status === 'published')
-        .map((s) => s.id);
-
-      return published;
+        .map(
+          (s): ResolvedSkill => ({
+            id: s.id,
+            code: s.code,
+            name: s.name,
+          }),
+        );
     } catch (e) {
       // ★ Resolve failure must NEVER block the chat — degrade to empty.
       this.logger.warn(
