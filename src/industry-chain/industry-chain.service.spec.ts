@@ -87,7 +87,7 @@ describe('IndustryChainService', () => {
           id: 1,
           version: 1,
           createTime: new Date('2026-07-03T01:57:39Z'),
-          qiniuUrl: 'https://cdn.efficientinvest.cn/chains/test.md',
+          qiniuUrl: 'https://example.com/chains/test.md',
         },
       ],
       total: 1,

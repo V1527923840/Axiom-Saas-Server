@@ -39,7 +39,11 @@ export default registerAs('skill', () => {
       accessKey: process.env.QINIU_ACCESS_KEY || '',
       secretKey: process.env.QINIU_SECRET_KEY || '',
       bucket: process.env.QINIU_BUCKET || 'axiom',
-      domain: process.env.QINIU_DOMAIN || 'https://cdn.efficientinvest.cn',
+      // ★ QINIU_DOMAIN 必须由环境变量注入 —— 不要 hardcode 生产 CDN host。
+      //   没有该变量时 buildPublicUrl 会落到空字符串，调用方会立刻
+      //   看到 502 而不是沉默失败。如果你的环境没设它，先去 .env 或
+      //   secrets manager 配置，不要在这里加 fallback URL。
+      domain: process.env.QINIU_DOMAIN || '',
       // 七牛云 S3 兼容端点(华东 cn-east-1 默认)
       s3Endpoint: process.env.QINIU_S3_ENDPOINT || 's3-cn-south-1.qiniucs.com',
       s3Region: process.env.QINIU_S3_REGION || 'cn-south-1',

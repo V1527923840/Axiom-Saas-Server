@@ -40,8 +40,8 @@ export const SOCKET_TIMEOUT_MS = 30_000;
  *
  *   桶:   axiom (QINIU_BUCKET)
  *   key:  skills/{skillId}/{contentHash}.zip     ← ★ 用户要求 /skills/ 前缀
- *   端点: https://{bucket}.{s3Endpoint}   (e.g. axiom.s3-cn-east-1.qiniucs.com)
- *   CDN:  https://cdn.efficientinvest.cn
+ *   端点: https://{bucket}.{s3Endpoint}   (e.g. axiom.s3-cn-south-1.qiniucs.com)
+ *   CDN:  https://{QINIU_DOMAIN}              ← 配置项,不要 hardcode 生产 host
  *
  * 客户端上传走 presigned PUT URL(Phase 1),后端校验走 GET(Phase 2)。
  */
