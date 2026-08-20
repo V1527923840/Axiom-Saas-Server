@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { PassThrough } from 'node:stream';
 import { InternalSkillController } from './internal-skill.controller';
 import { InternalSkillToolService } from './internal-skill-tool.service';
 import { ToolEndpointWhitelist } from './tool-endpoint-whitelist';
@@ -109,32 +110,37 @@ describe('InternalSkillController', () => {
   // ============================================================
 
   describe('getSkillZip', () => {
-    it('should return a StreamableFile with application/zip + attachment disposition', async () => {
+    it('should pipe the zip buffer to the express response (verbatim)', async () => {
+      const buf = Buffer.from('PK-mock-bytes');
       svc.getSkillZip.mockResolvedValue({
-        buffer: Buffer.from('PK') as any,
+        buffer: buf as any,
         downloadFilename: 'trading-101',
       });
 
-      const out = await controller.getSkillZip('s1');
+      // Use a real PassThrough as the Express response stub. Capture what
+      // got piped to it so we can assert the body bytes match the expected
+      // PK-prefixed zip buffer.
+      const sink = new PassThrough();
+      const chunks: Buffer[] = [];
+      sink.on('data', (c: Buffer) => chunks.push(c));
+      const done = new Promise<void>((resolve) =>
+        sink.on('end', () => resolve()),
+      );
 
-      expect(svc.getSkillZip).toHaveBeenCalledWith('s1');
-      // StreamableFile shape: { read: ..., filename?, length?, ...options }
-      // We at least want the content-type to match without inspecting Stream internals.
-      const anyOut = out as unknown as {
-        options: { type?: string; disposition?: string };
-      };
-      expect(anyOut.options.type).toBe('application/zip');
-      expect(anyOut.options.disposition).toContain('attachment');
-      expect(anyOut.options.disposition).toContain('trading-101.zip');
+      await controller.getSkillZip('s1', sink as any);
+
+      await done;
+      expect(Buffer.concat(chunks).toString('utf-8')).toBe('PK-mock-bytes');
     });
 
     it('should propagate service errors (NotFound for unknown / not published)', async () => {
       svc.getSkillZip.mockRejectedValue(
         new NotFoundException(`skill s1 not published`),
       );
-      await expect(controller.getSkillZip('s1')).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
+      const fakeRes: any = { pipe: jest.fn() };
+      await expect(
+        controller.getSkillZip('s1', fakeRes),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 

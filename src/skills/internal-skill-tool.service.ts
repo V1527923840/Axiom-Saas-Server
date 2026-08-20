@@ -377,7 +377,21 @@ export class InternalSkillToolService {
       throw new NotFoundException(`skill ${skillId} not published`);
     }
 
-    const buffer = await this.storage.getObject(skill.filesDirPath);
+    // ★ FIX-7: read the actual zip object. After Task 7 consolidated
+    // references into a single zip, `skill.filesDirPath` (legacy
+    // "skills/<sid>/references") no longer points to a real OSS key
+    // — the zip is stored at `skills/<sid>/<contentHash>.zip` (written
+    // by skill-upload.service.ts:397). The same OSS key is what
+    // `getFileContent` resolves via `file.ossPath`; for the zip endpoint
+    // we synthesize the key from the skill's own contentHash field.
+    if (!skill.contentHash) {
+      throw new NotFoundException(
+        `skill ${skillId} has no content hash; cannot locate zip object`,
+      );
+    }
+    const buffer = await this.storage.getObject(
+      `skills/${skillId}/${skill.contentHash}.zip`,
+    );
 
     // ★ Sanitize filename for Content-Disposition header to avoid
     // header injection from unusual `code` values.

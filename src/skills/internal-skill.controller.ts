@@ -9,9 +9,11 @@ import {
   Post,
   Query,
   Req,
+  Res,
   StreamableFile,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import {
   ApiOkResponse,
   ApiOperation,
@@ -178,13 +180,22 @@ export class InternalSkillController {
   @ApiParam({ name: 'id', format: 'uuid' })
   async getSkillZip(
     @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<StreamableFile> {
+    @Res({ passthrough: false }) res: Response,
+  ): Promise<void> {
     const { buffer, downloadFilename } = await this.toolService.getSkillZip(id);
 
-    return new StreamableFile(buffer, {
+    // ★ FIX-7: use @Res() to bypass the global ClassSerializerInterceptor.
+    // StreamableFile's `stream` field is a Buffer; the serializer's
+    // classToPlain() dereferences it as an instance object and crashes
+    // StreamableFile.handleError with "Cannot read properties of
+    // undefined (reading 'destroyed')". Returning the raw Response
+    // skips serialization entirely.
+    new StreamableFile(buffer, {
       type: 'application/zip',
       disposition: `attachment; filename="${downloadFilename}.zip"`,
-    });
+    })
+      .getStream()
+      .pipe(res);
   }
 
   // ============================================================
