@@ -34,6 +34,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    # ★ Skill Plaza: 把同级 .env 注入容器，让 SKILL_SERVICE_TOKEN
+    #   等 NestJS-side 密钥真正生效（image build 阶段 baked-in 的
+    #   env-example-relational 没有这些 key，光靠它会让 guard 走
+    #   代码默认值 'dev-skill-service-token'，production VibeTrading
+    #   侧对不上 → 401 → list_user_skills fail-soft 到 [] →
+    #   system prompt 没有 Plaza skill → "skill not loaded"）。
+    #   重新 `docker compose up -d` 后 env_file 生效，restart API 后
+    #   NestJS 进程读到正确 token。
+    env_file:
+      - .env
     ports:
       - ${APP_PORT}:${APP_PORT}
 
