@@ -59,8 +59,12 @@ import { SkillResolverService } from './skill-resolver.service';
       PlanSkillEntity,
     ]),
     SkillStorageModule,
-    // MenuAccessGuard (used by SkillsController) needs UsersService.getUserAllMenus + isSuperAdmin.
-    // Both are exported by UsersModule; MenusModule exports MenuAccessGuard itself.
+    // MenuAccessGuard (used by SkillsController) needs UsersService.getUserAllMenus +
+    // isSuperAdmin. NestJS resolves guard dependencies in the controller's home module
+    // scope, so every consumer module must import BOTH MenusModule (for the guard
+    // class) AND UsersModule (so UsersService is visible to the guard's injector).
+    // MenusModule also exports MenuAccessGuard for hygiene, but this does not change
+    // the DI resolution scope.
     UsersModule,
     MenusModule,
   ],
