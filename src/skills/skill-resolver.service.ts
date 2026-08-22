@@ -64,10 +64,7 @@ export class SkillResolverService {
    * @returns array of ResolvedSkill ({id, code, name}). Returns [] on any
    *          failure (never throws).
    */
-  async resolve(
-    userId: number,
-    sessionId: string,
-  ): Promise<ResolvedSkill[]> {
+  async resolve(userId: number, sessionId: string): Promise<ResolvedSkill[]> {
     try {
       // 1. Baseline: user's enabled bindings.
       const userBindings = await this.bindingRepo.findEnabledByUser(userId);

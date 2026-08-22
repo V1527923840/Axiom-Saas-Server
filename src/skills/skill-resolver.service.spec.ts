@@ -75,7 +75,9 @@ describe('SkillResolverService', () => {
     const result = await resolver.resolve(1, 'old-session-1');
 
     // Sort by raw Unicode code-point so test is locale-independent.
-    expect([...result].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))).toEqual([
+    expect(
+      [...result].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)),
+    ).toEqual([
       { id: 'X', code: 'X-code', name: 'X-name' },
       { id: 's1', code: 's1-code', name: 's1-name' },
     ]);
@@ -122,7 +124,9 @@ describe('SkillResolverService', () => {
 
     const result = await resolver.resolve(1, 'old-session-1');
 
-    expect([...result].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))).toEqual([
+    expect(
+      [...result].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)),
+    ).toEqual([
       { id: 'X', code: 'X-code', name: 'X-name' },
       { id: 's1', code: 's1-code', name: 's1-name' },
     ]);
@@ -193,7 +197,9 @@ describe('SkillResolverService', () => {
     const r2 = await resolver.resolve(1, 'sess-1');
 
     expect(r1).toEqual([{ id: 's1', code: 's1-code', name: 's1-name' }]);
-    expect([...r2].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))).toEqual([
+    expect(
+      [...r2].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)),
+    ).toEqual([
       { id: 's1', code: 's1-code', name: 's1-name' },
       { id: 's2', code: 's2-code', name: 's2-name' },
     ]);
