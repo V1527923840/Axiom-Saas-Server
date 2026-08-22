@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 
 export type SkillUpdateEventAction = 'update' | 'archive' | 'restore';
 export type SkillUpdateEventActorRole = 'self' | 'admin' | 'super_admin';
@@ -40,11 +41,17 @@ export class ArchiveSkillDto {
     example: '违规内容',
     description: '可选:停用原因,会写入事件 changelog',
   })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
   reason?: string;
 }
 
 export class RestoreSkillDto {
   @ApiPropertyOptional({ example: '审核通过', description: '可选:恢复原因' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
   reason?: string;
 }
 
