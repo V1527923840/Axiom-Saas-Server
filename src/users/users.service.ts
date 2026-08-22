@@ -211,6 +211,26 @@ export class UsersService {
     return roles.some((r) => r.code === 'super_admin');
   }
 
+  /**
+   * Returns true if the user has either the `admin` (role.id=2) or
+   * `super_admin` role code. Mirror of isSuperAdmin but covers both
+   * admin tiers — used by skill update / archive / restore auth checks.
+   */
+  async isAdmin(userId: number): Promise<boolean> {
+    if (await this.isSuperAdmin(userId)) return true;
+    const user = await this.usersRepository.findById(userId);
+    if (!user) return false;
+    const ids = new Set<number>();
+    if (user.role?.id) ids.add(Number(user.role.id));
+    const junction = await this.userRoleRepository.findByUserId(userId);
+    for (const r of junction) ids.add(Number(r.roleId));
+    if (ids.size === 0) return false;
+    const roles = await this.usersServiceRoleRepository.find({
+      where: { id: In([...ids]) },
+    });
+    return roles.some((r) => r.code === 'admin' || r.code === 'super_admin');
+  }
+
   findManyWithPagination({
     filterOptions,
     sortOptions,
