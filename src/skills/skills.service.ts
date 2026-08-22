@@ -376,6 +376,7 @@ export class SkillsService {
       tags: skill.tags,
       thumbnailUrl: skill.thumbnailUrl,
       uploaderType: skill.uploaderType,
+      uploaderId: skill.uploaderId,
       marketplaceStatus: skill.marketplaceStatus,
       status: skill.status,
       contentHash: skill.contentHash,

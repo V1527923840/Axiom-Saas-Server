@@ -36,6 +36,9 @@ export class SkillResponseDto {
   @ApiProperty({ enum: ['platform', 'user_self', 'third_party'] })
   uploaderType!: SkillEntity['uploaderType'];
 
+  @ApiProperty({ nullable: true, example: 42 })
+  uploaderId!: number | null;
+
   @ApiProperty({ enum: ['private', 'pending', 'listed'] })
   marketplaceStatus!: SkillEntity['marketplaceStatus'];
 
