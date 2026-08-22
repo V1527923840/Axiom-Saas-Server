@@ -406,7 +406,7 @@ describe('SkillUploadService', () => {
         description: 'short',
         userId: 1,
       }),
-    ).rejects.toThrow(/frontmatter|description|10-500/i);
+    ).rejects.toThrow(/frontmatter|description|10-2000/i);
 
     // Reference badSkillMd to suppress unused warning under strict mode.
     expect(badSkillMd).toBeDefined();

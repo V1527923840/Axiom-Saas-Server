@@ -39,10 +39,10 @@ export class FrontmatterValidator {
       !fm.description ||
       typeof fm.description !== 'string' ||
       fm.description.length < 10 ||
-      fm.description.length > 500
+      fm.description.length > 2000
     ) {
       throw new BadRequestException(
-        'frontmatter.description must be 10-500 chars',
+        'frontmatter.description must be 10-2000 chars',
       );
     }
     // ★ 2026-08-18:version 字段已废弃 — Skill 表是 unversioned,
