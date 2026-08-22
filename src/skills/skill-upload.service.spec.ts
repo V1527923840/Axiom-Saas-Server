@@ -6,6 +6,7 @@ import { SkillUploadService } from './skill-upload.service';
 import { SkillStorageService } from './infrastructure/storage/skill-storage.service';
 import { SkillRepository } from './infrastructure/persistence/relational/repositories/skill.repository';
 import { SkillFileRepository } from './infrastructure/persistence/relational/repositories/skill-file.repository';
+import { SkillUpdateEventRepository } from './infrastructure/persistence/relational/repositories/skill-update-event.repository';
 
 /**
  * Spec for SkillUploadService — the two-stage commit pipeline.
@@ -25,6 +26,7 @@ describe('SkillUploadService', () => {
   let skillRepo: jest.Mocked<SkillRepository>;
   let fileRepo: jest.Mocked<SkillFileRepository>;
   let bindingRepo: any;
+  let eventRepo: jest.Mocked<SkillUpdateEventRepository>;
   let config: { get: jest.Mock };
 
   function frontmatter(name: string, description: string, extra = ''): string {
@@ -101,6 +103,11 @@ describe('SkillUploadService', () => {
       create: jest.fn(),
     };
 
+    eventRepo = {
+      create: jest.fn().mockResolvedValue({ id: 'ev-default' }),
+      findBySkill: jest.fn(),
+    } as any;
+
     config = makeConfigStub();
 
     svc = new SkillUploadService(
@@ -109,6 +116,7 @@ describe('SkillUploadService', () => {
       fileRepo,
       bindingRepo,
       config as unknown as ConfigService,
+      eventRepo,
     );
   });
 
@@ -825,5 +833,251 @@ describe('SkillUploadService', () => {
         userId: 1,
       }),
     ).rejects.toThrow(/顶层目录/);
+  });
+
+  // ============================================================
+  // Update path (D5/D6/D7/D9 + §3.4 optimistic lock) — Task 5
+  // ============================================================
+
+  describe('SkillUploadService — update path', () => {
+    let eventRepo: jest.Mocked<SkillUpdateEventRepository>;
+
+    beforeEach(() => {
+      eventRepo = {
+        create: jest
+          .fn()
+          .mockImplementation((i) => Promise.resolve({ id: 'ev1', ...i })),
+        findBySkill: jest.fn(),
+      } as any;
+      svc = new SkillUploadService(
+        storage,
+        skillRepo,
+        fileRepo,
+        bindingRepo,
+        config as any,
+        eventRepo,
+      );
+    });
+
+    it('should not create a placeholder row when createUploadUrl is called with an existing skillId', async () => {
+      skillRepo.findById.mockResolvedValue({
+        id: 's1',
+        uploaderType: 'user_self',
+        uploaderId: 42,
+        status: 'published',
+      } as any);
+
+      const out = await svc.createUploadUrl({
+        filename: 'pkg.zip',
+        size: 1024,
+        sourceFormat: 'zip',
+        hash: 'h2',
+        userId: 42,
+        skillId: 's1',
+      } as any);
+
+      expect(skillRepo.create).not.toHaveBeenCalled();
+      expect(out.skillId).toBe('s1');
+      expect(storage.createUploadUrl).toHaveBeenCalledWith('s1', 'h2');
+    });
+
+    it('should throw NotFoundException when createUploadUrl is called with a missing skillId', async () => {
+      skillRepo.findById.mockResolvedValue(null);
+      await expect(
+        svc.createUploadUrl({
+          filename: 'pkg.zip',
+          size: 1024,
+          sourceFormat: 'zip',
+          hash: 'h',
+          userId: 1,
+          skillId: 'missing',
+        } as any),
+      ).rejects.toThrow(/not found/i);
+    });
+
+    it('should write skill_update_event when confirmUpload is called with isUpdate=true', async () => {
+      // ★ Note: hash must equal sha256 of mocked zip buffer so confirmUpload's
+      // post-download hash re-check passes (see brief concern).
+      const zipBuffer = Buffer.from(
+        buildZip([
+          {
+            name: 'pkg/SKILL.md',
+            content: frontmatter('x', 'desc-long-enough') + 'body',
+          },
+        ]),
+      );
+      const newHash = crypto
+        .createHash('sha256')
+        .update(zipBuffer)
+        .digest('hex');
+
+      skillRepo.findById.mockResolvedValue({
+        id: 's1',
+        code: 'c',
+        uploaderType: 'user_self',
+        uploaderId: 42,
+        status: 'published',
+        contentHash: 'oldHash',
+        updatedAt: new Date('2026-08-22T00:00:00Z'),
+        manifestContent: 'old',
+        tools: [],
+        uploaderType2: undefined,
+      } as any);
+      skillRepo.update.mockResolvedValue({ id: 's1' } as any);
+      fileRepo.replaceForSkill.mockResolvedValue(0 as any);
+      fileRepo.listBySkill.mockResolvedValue([]);
+      fileRepo.create.mockResolvedValue({} as any);
+      storage.getObject.mockResolvedValue(zipBuffer);
+
+      await svc.confirmUpload({
+        skillId: 's1',
+        ossKey: `skills/s1/${newHash}.zip`,
+        hash: newHash,
+        sourceFormat: 'zip',
+        name: 'pkg',
+        description: 'desc',
+        userId: 42,
+        isUpdate: true,
+        actorRole: 'self',
+        changelog: 'fix typo',
+        expectedUpdatedAt: undefined,
+      } as any);
+
+      expect(eventRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skillId: 's1',
+          actorUserId: 42,
+          actorRole: 'self',
+          action: 'update',
+          oldHash: 'oldHash',
+          newHash,
+          ossKey: `skills/s1/${newHash}.zip`,
+          sourceFormat: 'zip',
+          changelog: 'fix typo',
+        }),
+      );
+    });
+
+    it('should preserve status (not force published) when confirmUpload is called with isUpdate=true', async () => {
+      // ★ Note: hash must equal sha256 of mocked zip buffer (see brief concern).
+      const zipBuffer = Buffer.from(
+        buildZip([
+          {
+            name: 'pkg/SKILL.md',
+            content: frontmatter('x', 'desc-long-enough') + 'body',
+          },
+        ]),
+      );
+      const newHash = crypto
+        .createHash('sha256')
+        .update(zipBuffer)
+        .digest('hex');
+
+      skillRepo.findById.mockResolvedValue({
+        id: 's1',
+        code: 'c',
+        uploaderType: 'user_self',
+        uploaderId: 42,
+        status: 'archived',
+        contentHash: 'old',
+        updatedAt: new Date(),
+        manifestContent: 'old',
+        tools: [],
+      } as any);
+      skillRepo.update.mockResolvedValue({ id: 's1' } as any);
+      fileRepo.replaceForSkill.mockResolvedValue(0 as any);
+      fileRepo.listBySkill.mockResolvedValue([]);
+      storage.getObject.mockResolvedValue(zipBuffer);
+
+      await svc.confirmUpload({
+        skillId: 's1',
+        ossKey: `skills/s1/${newHash}.zip`,
+        hash: newHash,
+        sourceFormat: 'zip',
+        name: 'x',
+        description: 'd',
+        userId: 42,
+        isUpdate: true,
+        actorRole: 'self',
+      } as any);
+
+      const updateArg = skillRepo.update.mock.calls[0][1];
+      expect(updateArg.status).toBe('archived');
+    });
+
+    it('should throw ConflictException when confirmUpload isUpdate=true and expectedUpdatedAt mismatches skill.updatedAt', async () => {
+      skillRepo.findById.mockResolvedValue({
+        id: 's1',
+        code: 'c',
+        uploaderType: 'user_self',
+        uploaderId: 42,
+        status: 'published',
+        contentHash: 'old',
+        updatedAt: new Date('2026-08-22T00:00:00Z'),
+        manifestContent: 'old',
+        tools: [],
+      } as any);
+
+      await expect(
+        svc.confirmUpload({
+          skillId: 's1',
+          ossKey: 'k',
+          hash: 'newHash',
+          sourceFormat: 'zip',
+          name: 'x',
+          description: 'd',
+          userId: 42,
+          isUpdate: true,
+          actorRole: 'self',
+          expectedUpdatedAt: '2026-08-22T01:00:00Z', // mismatch
+        } as any),
+      ).rejects.toThrow(/modified by another request/);
+    });
+
+    it('should not write event when confirmUpload is called without isUpdate (original upload path unchanged)', async () => {
+      // ★ Note: simulate a fresh-upload placeholder row so confirmUpload can run
+      // past the findById 404 guard (see brief concern). contentHash=null +
+      // manifestContent='' means the idempotent short-circuit is skipped.
+      const zipBuffer = Buffer.from(
+        buildZip([
+          {
+            name: 'pkg/SKILL.md',
+            content: frontmatter('x', 'desc-long-enough') + 'body',
+          },
+        ]),
+      );
+      const newHash = crypto
+        .createHash('sha256')
+        .update(zipBuffer)
+        .digest('hex');
+
+      skillRepo.findById.mockResolvedValue({
+        id: 's1',
+        code: 'placeholder',
+        uploaderType: 'platform',
+        uploaderId: 1,
+        status: 'draft',
+        contentHash: null,
+        manifestContent: '',
+        tools: [],
+      } as any);
+      skillRepo.create.mockResolvedValue({ id: 's1' } as any);
+      skillRepo.update.mockResolvedValue({ id: 's1' } as any);
+      fileRepo.replaceForSkill.mockResolvedValue(0 as any);
+      fileRepo.listBySkill.mockResolvedValue([]);
+      storage.getObject.mockResolvedValue(zipBuffer);
+
+      await svc.confirmUpload({
+        skillId: 's1',
+        ossKey: `skills/s1/${newHash}.zip`,
+        hash: newHash,
+        sourceFormat: 'zip',
+        name: 'x',
+        description: 'd',
+        userId: 1,
+      } as any);
+
+      expect(eventRepo.create).not.toHaveBeenCalled();
+    });
   });
 });

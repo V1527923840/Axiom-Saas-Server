@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   Logger,
   NotFoundException,
@@ -14,6 +15,8 @@ import { SkillFileRepository } from './infrastructure/persistence/relational/rep
 import { UserSkillBindingRepository } from './infrastructure/persistence/relational/repositories/user-skill-binding.repository';
 import { FrontmatterValidator } from './infrastructure/frontmatter/frontmatter-validator';
 import { SkillToolSchema } from './infrastructure/persistence/relational/entities/skill.entity';
+import { SkillUpdateEventRepository } from './infrastructure/persistence/relational/repositories/skill-update-event.repository';
+import type { ActorRole } from './skill-access';
 import { AllConfigType } from '../config/config.type';
 
 /**
@@ -38,6 +41,9 @@ export interface CreateUploadUrlInput {
   sourceFormat: 'md' | 'zip';
   hash: string;
   userId: number;
+  // ★ NEW: when present, bind to existing skill (update path —
+  // controller already gated via assertCanUpdateSkill)
+  skillId?: string;
 }
 
 export interface CreateUploadUrlOutput {
@@ -61,6 +67,12 @@ export interface ConfirmUploadInput {
   // ★ Optional category override — 见 DTO 上的注释
   category?: string;
   userId: number;
+  // ★ NEW (Task 5 update path): flag flows down from controller.
+  isUpdate?: boolean;
+  // ★ NEW: only used when isUpdate=true.
+  actorRole?: ActorRole;
+  // ★ NEW: ISO 8601; only used when isUpdate=true.
+  expectedUpdatedAt?: string;
 }
 
 export interface ConfirmUploadOutput {
@@ -84,6 +96,7 @@ export class SkillUploadService {
     private readonly fileRepo: SkillFileRepository,
     private readonly bindingRepo: UserSkillBindingRepository,
     private readonly configService: ConfigService<AllConfigType>,
+    private readonly eventRepo: SkillUpdateEventRepository,
   ) {}
 
   // ============================================================
@@ -101,6 +114,26 @@ export class SkillUploadService {
       throw new PayloadTooLargeException(
         `zip too large: ${input.size} bytes > ${maxBytes} bytes`,
       );
+    }
+
+    // ★ Update path: bind to existing skillId. Authorization happens at the
+    // controller layer via assertCanUpdateSkill.
+    if (input.skillId) {
+      const existing = await this.skillRepo.findById(input.skillId);
+      if (!existing) {
+        throw new NotFoundException(`skill ${input.skillId} not found`);
+      }
+      const presigned = await this.storage.createUploadUrl(
+        input.skillId,
+        input.hash,
+      );
+      return {
+        uploadUrl: presigned.uploadUrl,
+        key: presigned.key,
+        skillId: presigned.skillId,
+        cdnUrl: presigned.cdnUrl,
+        expiresAt: presigned.expiresAt,
+      };
     }
 
     // ★ NO VERSIONING: skillId is the sole identity. Use uuid v4.
@@ -142,15 +175,39 @@ export class SkillUploadService {
       throw new NotFoundException(`skill ${input.skillId} not found`);
     }
 
-    // ── Idempotent short-circuit ─────────────────────────────────────────
-    // If the skill already has the same content hash and a manifest, this
-    // upload is a duplicate (client retry / network blip). Return existing
-    // state without touching anything.
+    // ── Optimistic lock + hash short-circuit ─────────────────────────
+    if (input.isUpdate) {
+      if (
+        input.expectedUpdatedAt &&
+        skill.updatedAt.toISOString() !== input.expectedUpdatedAt
+      ) {
+        throw new ConflictException(
+          `skill ${input.skillId} was modified by another request; refresh and retry`,
+        );
+      }
+    }
+
     if (
       skill.contentHash === input.hash &&
       skill.manifestContent &&
       skill.manifestContent.length > 0
     ) {
+      // For isUpdate=true: same hash resubmission still records an event
+      // (user re-confirmed upload with no change — audit log is the source
+      // of truth, not the content diff).
+      if (input.isUpdate) {
+        await this.eventRepo.create({
+          skillId: input.skillId,
+          actorUserId: input.userId,
+          actorRole: input.actorRole ?? 'self',
+          action: 'update',
+          ossKey: `skills/${input.skillId}/${input.hash}.zip`,
+          oldHash: skill.contentHash,
+          newHash: input.hash,
+          sourceFormat: input.sourceFormat,
+          changelog: input.changelog ?? 'Resubmit (no change)',
+        });
+      }
       const existingFiles = await this.fileRepo.listBySkill(input.skillId);
       const existingTools = Array.isArray(skill.tools) ? skill.tools : [];
       return {
@@ -296,9 +353,19 @@ export class SkillUploadService {
     // "" 会通过 @IsString 校验但被 @Length(1,64) 拦下 — 但万一有客户端绕过
     // DTO 直接走 service,我们也兜底:空白视为未提供,走 deriveCode。
     const rawCode = input.code?.trim();
+    const oldHash = skill.contentHash;
+    // ★ D5: 更新不改 status — preserve whatever the row already has
+    // (could be 'published' for normal updates, 'archived' for restoring via
+    // admin restore path, or 'draft' if someone re-uploads a never-published skill)
+    const targetStatus = input.isUpdate ? skill.status : 'published';
+
     await this.skillRepo.update(input.skillId, {
-      code:
-        rawCode && rawCode.length > 0
+      // code/uploaderType/uploaderId/createdBy are identity fields — NEVER
+      // touched in update mode (D7). For initial upload we derive / set them;
+      // for update we carry through the existing values.
+      code: input.isUpdate
+        ? skill.code
+        : rawCode && rawCode.length > 0
           ? rawCode
           : this.deriveCode(input.name, input.hash),
       name: input.name,
@@ -321,12 +388,31 @@ export class SkillUploadService {
       toolsDirPath: `skills/${input.skillId}/tools`,
       manifestTokenEstimate: estimateTokens(parsed.body),
       contentHash: input.hash,
-      changelog: input.changelog ?? 'Initial publish',
-      publishedAt: new Date(),
-      createdBy: input.userId,
+      changelog:
+        input.changelog ?? (input.isUpdate ? 'Update' : 'Initial publish'),
+      publishedAt: input.isUpdate ? skill.publishedAt : new Date(),
+      // createdBy stays whatever it was — only set on initial create.
+      createdBy: input.isUpdate ? skill.createdBy : input.userId,
       tools: toolsSchema,
-      status: 'published',
+      status: targetStatus,
     });
+
+    // ★ Write audit event for update (D9). Same-hash resubmissions are handled
+    // above in the idempotent short-circuit branch; this only fires when
+    // content actually changed.
+    if (input.isUpdate) {
+      await this.eventRepo.create({
+        skillId: input.skillId,
+        actorUserId: input.userId,
+        actorRole: input.actorRole ?? 'self',
+        action: 'update',
+        ossKey: `skills/${input.skillId}/${input.hash}.zip`,
+        oldHash,
+        newHash: input.hash,
+        sourceFormat: input.sourceFormat,
+        changelog: input.changelog ?? null,
+      });
+    }
 
     // ── Replace skill_file rows atomically (delete + insert) ────────────
     await this.fileRepo.replaceForSkill(input.skillId);
