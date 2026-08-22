@@ -6,12 +6,14 @@ import { SkillFileEntity } from './infrastructure/persistence/relational/entitie
 import { UserSkillBindingEntity } from './infrastructure/persistence/relational/entities/user-skill-binding.entity';
 import { SessionSkillMountEntity } from './infrastructure/persistence/relational/entities/session-skill-mount.entity';
 import { PlanSkillEntity } from './infrastructure/persistence/relational/entities/plan-skill.entity';
+import { SkillUpdateEventEntity } from './infrastructure/persistence/relational/entities/skill-update-event.entity';
 
 import { SkillRepository } from './infrastructure/persistence/relational/repositories/skill.repository';
 import { SkillFileRepository } from './infrastructure/persistence/relational/repositories/skill-file.repository';
 import { UserSkillBindingRepository } from './infrastructure/persistence/relational/repositories/user-skill-binding.repository';
 import { SessionSkillMountRepository } from './infrastructure/persistence/relational/repositories/session-skill-mount.repository';
 import { PlanSkillRepository } from './infrastructure/persistence/relational/repositories/plan-skill.repository';
+import { SkillUpdateEventRepository } from './infrastructure/persistence/relational/repositories/skill-update-event.repository';
 
 import { SkillStorageModule } from './infrastructure/storage/skill-storage.module';
 import { ToolEndpointWhitelist } from './tool-endpoint-whitelist';
@@ -57,6 +59,7 @@ import { SkillResolverService } from './skill-resolver.service';
       UserSkillBindingEntity,
       SessionSkillMountEntity,
       PlanSkillEntity,
+      SkillUpdateEventEntity,
     ]),
     SkillStorageModule,
     // MenuAccessGuard (used by SkillsController) needs UsersService.getUserAllMenus +
@@ -79,6 +82,7 @@ import { SkillResolverService } from './skill-resolver.service';
     UserSkillBindingRepository,
     SessionSkillMountRepository,
     PlanSkillRepository,
+    SkillUpdateEventRepository,
     ToolEndpointWhitelist,
     InternalSkillToolService,
     SkillsService,

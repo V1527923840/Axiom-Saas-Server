@@ -185,6 +185,16 @@ export class SkillUploadService {
           `skill ${input.skillId} was modified by another request; refresh and retry`,
         );
       }
+      // ★ Guard: actorRole MUST be set when isUpdate=true. The controller
+      // computes this via assertCanUpdateSkill; if it's missing here, a code
+      // path bypassed that check (or actorRole was never set in the DTO) and
+      // writing the audit event with a silent 'self' fallback would corrupt
+      // the audit trail.
+      if (!input.actorRole) {
+        throw new BadRequestException(
+          'actorRole is required when isUpdate=true (controller must call assertCanUpdateSkill)',
+        );
+      }
     }
 
     if (
@@ -199,7 +209,7 @@ export class SkillUploadService {
         await this.eventRepo.create({
           skillId: input.skillId,
           actorUserId: input.userId,
-          actorRole: input.actorRole ?? 'self',
+          actorRole: input.actorRole!,
           action: 'update',
           ossKey: `skills/${input.skillId}/${input.hash}.zip`,
           oldHash: skill.contentHash,
@@ -404,7 +414,7 @@ export class SkillUploadService {
       await this.eventRepo.create({
         skillId: input.skillId,
         actorUserId: input.userId,
-        actorRole: input.actorRole ?? 'self',
+        actorRole: input.actorRole!,
         action: 'update',
         ossKey: `skills/${input.skillId}/${input.hash}.zip`,
         oldHash,
