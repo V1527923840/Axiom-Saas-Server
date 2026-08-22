@@ -86,6 +86,17 @@ export class SkillsService {
   }
 
   /**
+   * Raw entity lookup used by admin endpoints (update / archive /
+   * restore / events) that need the actual row (with uploaderType,
+   * uploaderId, status, updatedAt) for authorization and audit, NOT
+   * the public DTO. Returns null when not found — callers decide
+   * whether to translate that into 404.
+   */
+  async findByIdRaw(id: string): Promise<SkillEntity | null> {
+    return this.skillRepo.findById(id);
+  }
+
+  /**
    * Public mapper used by controllers that receive raw entities (e.g.
    * the paginated list endpoint, which wants to avoid an extra round-
    * trip per row). Mirrors `findById`'s return shape.

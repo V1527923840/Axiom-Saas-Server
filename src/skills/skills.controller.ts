@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -28,12 +29,26 @@ import {
   PaginatedApiResponseDto,
 } from '../utils/dto/infinity-pagination-response.dto';
 
+import { UsersService } from '../users/users.service';
 import { SkillsService } from './skills.service';
 import { SkillUploadService } from './skill-upload.service';
+import { SkillLifecycleService } from './skill-lifecycle.service';
+import { SkillUpdateEventRepository } from './infrastructure/persistence/relational/repositories/skill-update-event.repository';
+import {
+  assertCanArchiveOrRestore,
+  assertCanUpdateSkill,
+  type RoleFlags,
+} from './skill-access';
 import { CreateSkillUploadUrlDto } from './dto/create-skill-upload-url.dto';
 import { ConfirmSkillContentDto } from './dto/confirm-skill-content.dto';
 import { QuerySkillsDto } from './dto/query-skills.dto';
 import { SkillContentHashQueryDto } from './dto/skill-content-query.dto';
+import {
+  ArchiveSkillDto,
+  RestoreSkillDto,
+  SkillUpdateEventDto,
+  UpdateSkillUploadUrlOutputDto,
+} from './dto/skill-update.dto';
 import {
   MountSkillDto,
   MySkillDto,
@@ -91,6 +106,9 @@ export class SkillsController {
   constructor(
     private readonly skillsService: SkillsService,
     private readonly uploadService: SkillUploadService,
+    private readonly lifecycleService: SkillLifecycleService,
+    private readonly eventRepo: SkillUpdateEventRepository,
+    private readonly usersService: UsersService,
   ) {}
 
   // ============================================================
@@ -128,15 +146,46 @@ export class SkillsController {
     return { data: out };
   }
 
+  @ApiCreatedResponse({ type: UpdateSkillUploadUrlOutputDto })
+  @Post('skills/:id/upload-url')
+  @HttpCode(HttpStatus.CREATED)
+  @MenuPaths('/skills/admin')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  async createUpdateUploadUrl(
+    @Param('id') id: string,
+    @Body() body: CreateSkillUploadUrlDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<{ data: UpdateSkillUploadUrlOutputDto }> {
+    const userId = this.userIdOf(req);
+    const skill = await this.skillsService.findByIdRaw(id);
+    if (!skill) throw new NotFoundException(`skill ${id} not found`);
+    const flags = await this.resolveRoleFlags(userId);
+    const actorRole = assertCanUpdateSkill(skill, userId, flags);
+    const out = await this.uploadService.createUploadUrl({
+      filename: body.filename,
+      size: body.size,
+      sourceFormat: body.sourceFormat,
+      hash: body.hash,
+      userId,
+      skillId: id,
+    });
+    return {
+      data: {
+        uploadUrl: out.uploadUrl,
+        key: out.key,
+        skillId: out.skillId,
+        cdnUrl: out.cdnUrl,
+        expiresAt: out.expiresAt,
+        updatedAt: skill.updatedAt.toISOString(),
+        actorRole,
+      },
+    };
+  }
+
   @ApiOkResponse({
     schema: {
       example: {
-        data: {
-          version: 1,
-          skillId: 'uuid',
-          filesCount: 3,
-          toolsCount: 2,
-        },
+        data: { version: 1, skillId: 'uuid', filesCount: 3, toolsCount: 2 },
       },
     },
   })
@@ -157,6 +206,10 @@ export class SkillsController {
     };
   }> {
     const userId = this.userIdOf(req);
+    const skill = await this.skillsService.findByIdRaw(id);
+    if (!skill) throw new NotFoundException(`skill ${id} not found`);
+    const flags = await this.resolveRoleFlags(userId);
+    const actorRole = assertCanUpdateSkill(skill, userId, flags);
     const out = await this.uploadService.confirmUpload({
       skillId: id,
       ossKey: body.ossKey,
@@ -168,6 +221,9 @@ export class SkillsController {
       changelog: body.changelog,
       category: body.category,
       userId,
+      isUpdate: true,
+      actorRole,
+      expectedUpdatedAt: body.expectedUpdatedAt,
     });
     return { data: out };
   }
@@ -283,6 +339,79 @@ export class SkillsController {
     return this.skillsService.disableForUser(userId, id);
   }
 
+  // ============================================================
+  // Lifecycle (admin) — archive / restore / event log
+  // ============================================================
+
+  @ApiOkResponse({
+    schema: { example: { data: { skillId: 'uuid', status: 'archived' } } },
+  })
+  @Post('skills/:id/archive')
+  @HttpCode(HttpStatus.OK)
+  @MenuPaths('/skills/admin')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  async archive(
+    @Param('id') id: string,
+    @Body() body: ArchiveSkillDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<{ data: { skillId: string; status: 'archived' } }> {
+    const userId = this.userIdOf(req);
+    const skill = await this.skillsService.findByIdRaw(id);
+    if (!skill) throw new NotFoundException(`skill ${id} not found`);
+    const flags = await this.resolveRoleFlags(userId);
+    const actorRole = assertCanArchiveOrRestore(skill, flags);
+    await this.lifecycleService.archive(id, userId, actorRole, body.reason);
+    return { data: { skillId: id, status: 'archived' } };
+  }
+
+  @ApiOkResponse({
+    schema: { example: { data: { skillId: 'uuid', status: 'published' } } },
+  })
+  @Post('skills/:id/restore')
+  @HttpCode(HttpStatus.OK)
+  @MenuPaths('/skills/admin')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  async restore(
+    @Param('id') id: string,
+    @Body() body: RestoreSkillDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<{ data: { skillId: string; status: 'published' } }> {
+    const userId = this.userIdOf(req);
+    const skill = await this.skillsService.findByIdRaw(id);
+    if (!skill) throw new NotFoundException(`skill ${id} not found`);
+    const flags = await this.resolveRoleFlags(userId);
+    const actorRole = assertCanArchiveOrRestore(skill, flags);
+    await this.lifecycleService.restore(id, userId, actorRole, body.reason);
+    return { data: { skillId: id, status: 'published' } };
+  }
+
+  @ApiOkResponse({ type: SkillUpdateEventDto, isArray: true })
+  @Get('skills/:id/updates')
+  @HttpCode(HttpStatus.OK)
+  @MenuPaths('/skills/admin')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  async listUpdateEvents(
+    @Param('id') id: string,
+  ): Promise<{ data: SkillUpdateEventDto[] }> {
+    const skill = await this.skillsService.findByIdRaw(id);
+    if (!skill) throw new NotFoundException(`skill ${id} not found`);
+    const events = await this.eventRepo.findBySkill(id);
+    return {
+      data: events.map((e) => ({
+        id: e.id,
+        action: e.action,
+        actorUserId: e.actorUserId,
+        actorRole: e.actorRole,
+        ossKey: e.ossKey,
+        oldHash: e.oldHash,
+        newHash: e.newHash,
+        sourceFormat: e.sourceFormat,
+        changelog: e.changelog,
+        createdAt: e.createdAt.toISOString(),
+      })),
+    };
+  }
+
   /**
    * Bookmark / favorite a skill (收藏). Idempotent.
    *
@@ -391,5 +520,16 @@ export class SkillsController {
   private userIdOf(req: AuthenticatedRequest): number {
     const raw = req.user.id;
     return typeof raw === 'string' ? parseInt(raw, 10) : raw;
+  }
+
+  /**
+   * Resolve role flags for a user. Used by endpoints that need to gate
+   * by admin/super_admin/skill-author. Both flags are computed lazily
+   * — for self-only paths we skip the admin checks.
+   */
+  private async resolveRoleFlags(userId: number): Promise<RoleFlags> {
+    const isSuperAdmin = await this.usersService.isSuperAdmin(userId);
+    const isAdmin = isSuperAdmin || (await this.usersService.isAdmin(userId));
+    return { isSuperAdmin, isAdmin };
   }
 }

@@ -85,6 +85,17 @@ export class ConfirmSkillContentDto {
   @IsString()
   @MaxLength(64)
   category?: string;
+
+  // ★ Optional optimistic lock — used by update flow. When set, server
+  // enforces: if skill.updatedAt has changed since, returns 409 Conflict.
+  @ApiPropertyOptional({
+    example: '2026-08-22T10:30:00Z',
+    description:
+      'Optional ISO 8601. When set, server enforces optimistic lock: if skill.updatedAt has changed since, returns 409. Only used for update flows.',
+  })
+  @IsOptional()
+  @IsString()
+  expectedUpdatedAt?: string;
 }
 
 /**

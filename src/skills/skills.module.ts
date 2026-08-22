@@ -26,6 +26,7 @@ import { InternalUserSkillController } from './internal-user-skill.controller';
 import { SkillsService } from './skills.service';
 import { SkillsController } from './skills.controller';
 import { SkillUploadService } from './skill-upload.service';
+import { SkillLifecycleService } from './skill-lifecycle.service';
 import { SkillResolverService } from './skill-resolver.service';
 
 /**
@@ -87,12 +88,14 @@ import { SkillResolverService } from './skill-resolver.service';
     InternalSkillToolService,
     SkillsService,
     SkillUploadService,
+    SkillLifecycleService,
     SkillResolverService,
   ],
   exports: [
     InternalSkillToolService,
     SkillsService,
     SkillUploadService,
+    SkillLifecycleService,
     SkillResolverService,
     ToolEndpointWhitelist,
   ],
