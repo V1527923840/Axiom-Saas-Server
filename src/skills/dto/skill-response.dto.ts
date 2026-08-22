@@ -124,6 +124,11 @@ export class MountSkillDto {
  * client can render enabled vs favorited-only cards differently.
  * Status defaults to false when the binding exists but is disabled
  * (收藏后未启用).
+ *
+ * `archivedReason` is populated only when `status === 'archived'` —
+ * it's the changelog of the most recent skill_update_event row with
+ * action='archive'. Lets the UI tell the user *why* admin stopped
+ * the skill (违规内容 / 重复 / 维护中等).
  */
 export class MySkillDto extends SkillResponseDto {
   @ApiProperty({
@@ -131,6 +136,14 @@ export class MySkillDto extends SkillResponseDto {
       'true = binding is enabled (user can mount to sessions); false = favorited but not enabled.',
   })
   enabled!: boolean;
+
+  @ApiProperty({
+    description:
+      'Reason string from the most recent archive event. Populated only when status=archived; null otherwise.',
+    required: false,
+    nullable: true,
+  })
+  archivedReason?: string | null;
 }
 
 /**

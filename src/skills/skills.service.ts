@@ -7,6 +7,7 @@ import { SkillRepository } from './infrastructure/persistence/relational/reposit
 import { SkillFileRepository } from './infrastructure/persistence/relational/repositories/skill-file.repository';
 import { UserSkillBindingRepository } from './infrastructure/persistence/relational/repositories/user-skill-binding.repository';
 import { SessionSkillMountRepository } from './infrastructure/persistence/relational/repositories/session-skill-mount.repository';
+import { SkillUpdateEventRepository } from './infrastructure/persistence/relational/repositories/skill-update-event.repository';
 import {
   SkillEntity,
   SkillToolSchema,
@@ -44,6 +45,7 @@ export class SkillsService {
     private readonly fileRepo: SkillFileRepository,
     private readonly bindingRepo: UserSkillBindingRepository,
     private readonly mountRepo: SessionSkillMountRepository,
+    private readonly skillUpdateEventRepo: SkillUpdateEventRepository,
   ) {}
 
   // ============================================================
@@ -200,9 +202,20 @@ export class SkillsService {
       bindings.filter((b) => b.status === 'enabled').map((b) => b.skillId),
     );
 
+    // ★ Batch fetch latest archive reason for any archived skill in
+    // the result set. Avoids N+1: one IN-clause query for all archived
+    // skillIds, then a Map lookup per row.
+    const archivedSkills = skills.filter((s) => s.status === 'archived');
+    const archiveEventMap =
+      await this.skillUpdateEventRepo.findLatestByActionPerSkill(
+        archivedSkills.map((s) => s.id),
+        'archive',
+      );
+
     return skills.map((s) => ({
       ...this.toResponseDto(s),
       enabled: enabledSet.has(s.id),
+      archivedReason: archiveEventMap.get(s.id)?.changelog ?? null,
     }));
   }
 
