@@ -14,7 +14,7 @@ import { SkillRepository } from './infrastructure/persistence/relational/reposit
 import { SkillFileRepository } from './infrastructure/persistence/relational/repositories/skill-file.repository';
 import { UserSkillBindingRepository } from './infrastructure/persistence/relational/repositories/user-skill-binding.repository';
 import { FrontmatterValidator } from './infrastructure/frontmatter/frontmatter-validator';
-import { SkillToolSchema } from './infrastructure/persistence/relational/entities/skill.entity';
+import { SkillToolSchema, SkillEntity } from './infrastructure/persistence/relational/entities/skill.entity';
 import { SkillUpdateEventRepository } from './infrastructure/persistence/relational/repositories/skill-update-event.repository';
 import type { ActorRole } from './skill-access';
 import { AllConfigType } from '../config/config.type';
@@ -265,11 +265,33 @@ export class SkillUploadService {
       }
     }
 
-    // ── Parse zip + frontmatter ──────────────────────────────────────────
+    // ★ Server-side zip unavailable — happens with FILE_DRIVER=s3-presigned
+    // where the server has no way to read what the client just uploaded.
+    // Trust the content-addressed key (line 239-244 already verified
+    // `key = skills/{skillId}/{hash}.zip` ↔ input.hash), but skip the
+    // zip / frontmatter / files_index / tools parsing since we have no
+    // bytes to parse. Update only the metadata fields the client passed
+    // in the request body; leave manifestContent / tools / skill_file
+    // rows untouched. This is degraded — admin sees filesCount and
+    // toolsCount from the prior version — but it's the only sane
+    // behavior when the storage driver doesn't round-trip the blob.
     if (!zipBuffer) {
-      throw new BadRequestException(
-        'confirmUpload requires server-side zip access; please use direct upload via storage service',
-      );
+      await this.applyMetadataOnlyUpdate(skill, input);
+      if (input.isUpdate) {
+        await this.writeUpdateEvent(
+          input,
+          skill.contentHash,
+          'Update (server-side zip unavailable — file index not refreshed)',
+        );
+      }
+      const existingFiles = await this.fileRepo.listBySkill(input.skillId);
+      const existingTools = Array.isArray(skill.tools) ? skill.tools : [];
+      return {
+        version: 1,
+        skillId: input.skillId,
+        filesCount: existingFiles.length,
+        toolsCount: existingTools.length,
+      };
     }
 
     const zip = new AdmZip(zipBuffer);
@@ -411,17 +433,7 @@ export class SkillUploadService {
     // above in the idempotent short-circuit branch; this only fires when
     // content actually changed.
     if (input.isUpdate) {
-      await this.eventRepo.create({
-        skillId: input.skillId,
-        actorUserId: input.userId,
-        actorRole: input.actorRole!,
-        action: 'update',
-        ossKey: `skills/${input.skillId}/${input.hash}.zip`,
-        oldHash,
-        newHash: input.hash,
-        sourceFormat: input.sourceFormat,
-        changelog: input.changelog ?? null,
-      });
+      await this.writeUpdateEvent(input, oldHash);
     }
 
     // ── Replace skill_file rows atomically (delete + insert) ────────────
@@ -556,6 +568,57 @@ export class SkillUploadService {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Metadata-only update path used when the server cannot read the
+   * uploaded zip (s3-presigned driver). Only fields the client passed
+   * in the request body are touched; manifestContent / tools /
+   * skill_file rows are left at their previous values so the row never
+   * ends up with a half-parsed state.
+   *
+   * Documented degradation: callers in this path report `filesCount`
+   * and `toolsCount` from the prior revision, NOT from the new upload.
+   * The admin UI surfaces this via the audit event changelog suffix.
+   */
+  private async applyMetadataOnlyUpdate(
+    skill: SkillEntity,
+    input: ConfirmUploadInput,
+  ): Promise<void> {
+    const targetStatus = input.isUpdate ? skill.status : 'published';
+    await this.skillRepo.update(input.skillId, {
+      name: input.name,
+      description: input.description?.trim() || skill.description,
+      category: input.category ?? skill.category,
+      contentHash: input.hash,
+      changelog:
+        input.changelog ?? (input.isUpdate ? 'Update' : 'Initial publish'),
+      publishedAt: input.isUpdate ? skill.publishedAt : new Date(),
+      status: targetStatus,
+    });
+  }
+
+  /**
+   * Insert one skill_update_event row. Extracted from the inline write
+   * in confirmUpload so the s3-presigned fallback and the normal path
+   * share the same audit-trail shape.
+   */
+  private async writeUpdateEvent(
+    input: ConfirmUploadInput,
+    oldHash: string | null,
+    changelogOverride?: string,
+  ): Promise<void> {
+    await this.eventRepo.create({
+      skillId: input.skillId,
+      actorUserId: input.userId,
+      actorRole: input.actorRole!,
+      action: 'update',
+      ossKey: `skills/${input.skillId}/${input.hash}.zip`,
+      oldHash,
+      newHash: input.hash,
+      sourceFormat: input.sourceFormat,
+      changelog: changelogOverride ?? input.changelog ?? null,
+    });
   }
 }
 
