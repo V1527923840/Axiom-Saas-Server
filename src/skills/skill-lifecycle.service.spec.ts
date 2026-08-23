@@ -18,7 +18,12 @@ describe('SkillLifecycleService', () => {
     save: jest.Mock;
     createQueryBuilder: jest.Mock;
   };
-  let qb: { update: jest.Mock; set: jest.Mock; where: jest.Mock; execute: jest.Mock };
+  let qb: {
+    update: jest.Mock;
+    set: jest.Mock;
+    where: jest.Mock;
+    execute: jest.Mock;
+  };
 
   beforeEach(() => {
     skillRepo = {
@@ -42,14 +47,18 @@ describe('SkillLifecycleService', () => {
     };
     em = {
       findOne: jest.fn(),
-      save: jest.fn().mockImplementation((_entity, payload) =>
-        Promise.resolve(payload),
-      ),
+      save: jest
+        .fn()
+        .mockImplementation((_entity, payload) => Promise.resolve(payload)),
       createQueryBuilder: jest.fn().mockReturnValue(qb),
     };
 
     dataSource = {
-      transaction: jest.fn().mockImplementation(async (cb) => cb(em)),
+      transaction: jest
+        .fn()
+        .mockImplementation((cb: (em: unknown) => unknown) =>
+          Promise.resolve(cb(em)),
+        ),
     } as any;
 
     svc = new SkillLifecycleService(skillRepo, eventRepo, dataSource);
@@ -69,10 +78,10 @@ describe('SkillLifecycleService', () => {
 
       // 1) status flip persisted through the EntityManager (not the
       //    bare repository — that would skip the transaction)
-      expect(em.save).toHaveBeenCalledWith(
-        SkillEntity,
-        { id: 's1', status: 'archived' },
-      );
+      expect(em.save).toHaveBeenCalledWith(SkillEntity, {
+        id: 's1',
+        status: 'archived',
+      });
 
       // 2) audit event written
       expect(em.save).toHaveBeenCalledWith(
@@ -90,10 +99,10 @@ describe('SkillLifecycleService', () => {
       expect(em.createQueryBuilder).toHaveBeenCalledTimes(1);
       expect(qb.update).toHaveBeenCalled();
       expect(qb.set).toHaveBeenCalledWith({ status: 'disabled' });
-      expect(qb.where).toHaveBeenCalledWith(
-        'skill_id = :id AND status = :s',
-        { id: 's1', s: 'enabled' },
-      );
+      expect(qb.where).toHaveBeenCalledWith('skill_id = :id AND status = :s', {
+        id: 's1',
+        s: 'enabled',
+      });
       expect(qb.execute).toHaveBeenCalled();
 
       expect(out.status).toBe('archived');
@@ -114,10 +123,10 @@ describe('SkillLifecycleService', () => {
       em.findOne.mockResolvedValue({ id: 's1', status: 'archived' } as any);
       const out = await svc.restore('s1', 7, 'super_admin');
 
-      expect(em.save).toHaveBeenCalledWith(
-        SkillEntity,
-        { id: 's1', status: 'published' },
-      );
+      expect(em.save).toHaveBeenCalledWith(SkillEntity, {
+        id: 's1',
+        status: 'published',
+      });
       expect(em.save).toHaveBeenCalledWith(
         SkillUpdateEventEntity,
         expect.objectContaining({

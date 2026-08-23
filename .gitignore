@@ -42,3 +42,14 @@ lerna-debug.log*
 pnpm-lock.yaml
 /ormconfig.json
 .codegpt
+
+# ★ tsc 编译产物散落到源码目录 — 应该只输出到 ./dist。
+# Jest 不需要这些文件,e2e 也不依赖它们。已 ls-files 验证:
+# repo 里没有任何 tracked 的 .d.ts / .js.map。
+*.d.ts
+*.js.map
+
+# release-it 的配置 + tsc 把它复制到根目录的产物。
+/release.config.js
+/release.config.d.ts
+/release.config.js.map
