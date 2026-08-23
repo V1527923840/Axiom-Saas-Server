@@ -165,6 +165,20 @@ export class UserSkillBindingRepository {
     );
   }
 
+  /**
+   * Force-disable every enabled binding that points at a skill. Used by
+   * SkillLifecycleService.archive to cascade the take-down — plan /
+   * admin_assigned rows are NOT deleted (kept for audit), only flipped to
+   * `disabled`. Idempotent: re-archiving a skill is a no-op for the
+   * binding table.
+   */
+  async disableAllEnabledBySkill(skillId: string): Promise<void> {
+    await this.repository.update(
+      { skillId, status: 'enabled' },
+      { status: 'disabled' },
+    );
+  }
+
   async create(
     input: Partial<UserSkillBindingEntity>,
   ): Promise<UserSkillBindingEntity> {
