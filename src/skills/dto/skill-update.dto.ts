@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsDate,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export type SkillUpdateEventAction = 'update' | 'archive' | 'restore';
 export type SkillUpdateEventActorRole = 'self' | 'admin' | 'super_admin';
@@ -53,6 +62,33 @@ export class RestoreSkillDto {
   @IsString()
   @MaxLength(1000)
   reason?: string;
+}
+
+/**
+ * Cursor-paginated query for GET /skills/:id/updates.
+ *
+ * Pass `before` (the oldest `createdAt` from the previous page) to
+ * fetch the next batch — strictly newer-than is implicit via the DESC
+ * order + LessThan filter. `limit` defaults to 100 to keep the timeline
+ * drawer fast on first load.
+ */
+export class ListSkillUpdateEventsQueryDto {
+  @ApiPropertyOptional({
+    description: 'ISO 8601; fetch events with createdAt strictly before this',
+    example: '2026-08-22T10:30:00Z',
+  })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  before?: Date;
+
+  @ApiPropertyOptional({ example: 100, minimum: 1, maximum: 500 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(500)
+  limit?: number;
 }
 
 export class UpdateSkillUploadUrlOutputDto {

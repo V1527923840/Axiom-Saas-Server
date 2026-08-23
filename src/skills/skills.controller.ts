@@ -45,6 +45,7 @@ import { QuerySkillsDto } from './dto/query-skills.dto';
 import { SkillContentHashQueryDto } from './dto/skill-content-query.dto';
 import {
   ArchiveSkillDto,
+  ListSkillUpdateEventsQueryDto,
   RestoreSkillDto,
   SkillUpdateEventDto,
   UpdateSkillUploadUrlOutputDto,
@@ -392,10 +393,14 @@ export class SkillsController {
   @ApiParam({ name: 'id', format: 'uuid' })
   async listUpdateEvents(
     @Param('id') id: string,
+    @Query() query: ListSkillUpdateEventsQueryDto,
   ): Promise<{ data: SkillUpdateEventDto[] }> {
     const skill = await this.skillsService.findByIdRaw(id);
     if (!skill) throw new NotFoundException(`skill ${id} not found`);
-    const events = await this.eventRepo.findBySkill(id);
+    const events = await this.eventRepo.findBySkill(id, {
+      limit: query.limit,
+      before: query.before,
+    });
     return {
       data: events.map((e) => ({
         id: e.id,

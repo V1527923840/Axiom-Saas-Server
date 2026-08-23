@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { SkillUpdateEventEntity } from '../entities/skill-update-event.entity';
 
 export interface CreateSkillUpdateEventInput {
@@ -40,12 +40,28 @@ export class SkillUpdateEventRepository {
     );
   }
 
+  /**
+   * Page through update events for a skill, newest-first.
+   *
+   * Cursor pagination via `before` — pass the oldest `createdAt` from
+   * the previous page to get the next batch. Default limit is 100 to
+   * keep the timeline drawer snappy on first load; admins pull more
+   * via the explicit cursor by passing `before=<prev.lastCreatedAt>`
+   * and a smaller `limit` to avoid pulling thousands at once.
+   */
   async findBySkill(
     skillId: string,
-    limit = 100,
+    options: { limit?: number; before?: Date } = {},
   ): Promise<SkillUpdateEventEntity[]> {
+    const limit = options.limit ?? 100;
+    const where = options.before
+      ? {
+          skillId,
+          createdAt: LessThan(options.before),
+        }
+      : { skillId };
     return this.repo.find({
-      where: { skillId },
+      where,
       order: { createdAt: 'DESC' },
       take: limit,
     });

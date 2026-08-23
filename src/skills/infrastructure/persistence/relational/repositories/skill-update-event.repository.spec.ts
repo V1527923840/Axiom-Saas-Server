@@ -66,7 +66,7 @@ describe('SkillUpdateEventRepository (in-memory mock)', () => {
         newHash: `h${i}`,
       });
     }
-    const events = await repo.findBySkill('s1', 3);
+    const events = await repo.findBySkill('s1', { limit: 3 });
     expect(events).toHaveLength(3);
   });
 });
