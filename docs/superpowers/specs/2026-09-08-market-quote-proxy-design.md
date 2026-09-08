@@ -287,12 +287,7 @@ import { MarketQuoteService } from './market-quote.service';
 export class MarketQuoteModule {}
 ```
 
-**`vibe-trading.config.ts` 新增字段:**
-
-```ts
-// 在现有 VibeTradingConfig interface 加:
-quoteTimeoutMs?: number;  // optional; defaults to 30000 in service
-```
+**`vibe-trading.config.ts` 不需要改** — 已存在的 `timeoutMs` 字段(默认 60000ms)足以满足需求。MarketQuoteService 直接用 `configService.get('vibeTrading.timeoutMs')`。
 
 **`app.module.ts` 改动:**
 
@@ -332,9 +327,9 @@ MarketQuoteModule,
 
 | 变量 | 用途 | 默认 |
 |---|---|---|
-| `VIBE_TRADING_BASE_URL` | AxiomVibeTrading backend 地址 | 必填,启动时校验 |
+| `VIBE_TRADING_BASE_URL` | AxiomVibeTrading backend 地址 | `http://106.13.219.178:8899`(来自现有 config) |
 | `VIBE_TRADING_API_TOKEN` | service-to-service 鉴权 token | 必填 |
-| `VIBE_TRADING_QUOTE_TIMEOUT_MS`(新增可选)| 上游超时 | 30000 |
+| `VIBE_TRADING_TIMEOUT_MS` | 上游超时(复用现有字段) | 60000 |
 
 ### 5.2 配置示例(`.env`)
 
@@ -342,10 +337,10 @@ MarketQuoteModule,
 # 已有(其他 vibe-trading endpoint 用)
 VIBE_TRADING_BASE_URL=https://api.vibetrading.example.com
 VIBE_TRADING_API_TOKEN=your-service-account-token
-
-# 新增可选
-VIBE_TRADING_QUOTE_TIMEOUT_MS=30000
+VIBE_TRADING_TIMEOUT_MS=60000  # 默认,够用
 ```
+
+> 复用现有 `timeoutMs` 字段(默认 60s),无需新增 `quoteTimeoutMs`。
 
 ---
 
@@ -404,10 +399,11 @@ src/market-quote/market-quote.controller.spec.ts
 **修改:**
 ```
 src/app.module.ts                              # imports 加 MarketQuoteModule
-src/config/vibe-trading/vibe-trading.config.ts # interface 加 quoteTimeoutMs 字段
 ```
 
 **依赖新增:** 无
+
+> 注:不再修改 `vibe-trading.config.ts` — 现有 `timeoutMs` 字段(默认 60000ms)已可用。
 
 ---
 
