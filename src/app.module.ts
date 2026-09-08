@@ -3,6 +3,8 @@ import { UsersModule } from './users/users.module';
 import { FilesModule } from './files/files.module';
 import { AuthModule } from './auth/auth.module';
 import databaseConfig from './database/config/database.config';
+import neo4jConfig from './database/config/neo4j.config';
+import mysqlConfig from './database/config/mysql.config';
 import authConfig from './auth/config/auth.config';
 import appConfig from './config/app.config';
 import mailConfig from './mail/config/mail.config';
@@ -21,6 +23,7 @@ import { AuthFacebookModule } from './auth-facebook/auth-facebook.module';
 import { AuthGoogleModule } from './auth-google/auth-google.module';
 import { HeaderResolver, I18nModule } from 'nestjs-i18n';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
+import { MysqlConfigService } from './database/mysql-config.service';
 import { MailModule } from './mail/mail.module';
 import { HomeModule } from './home/home.module';
 import { DataSource, DataSourceOptions } from 'typeorm';
@@ -46,8 +49,10 @@ import { ParseTaskModule } from './parse-task/parse-task.module';
 import { VersionsModule } from './versions/versions.module';
 import { IntelligenceModule } from './intelligence/intelligence.module';
 import { ResearchModule } from './research/research.module';
+import { KnowledgeGraphModule } from './knowledge-graph/knowledge-graph.module';
 import { AiAgentModule } from './ai-agent/ai-agent.module';
 import { VibeTradingModule } from './ai-agent/vibe-trading/vibe-trading.module';
+import { MarketQuoteModule } from './market-quote/market-quote.module';
 import { SkillsModule } from './skills/skills.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
@@ -71,6 +76,8 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
       isGlobal: true,
       load: [
         databaseConfig,
+        neo4jConfig,
+        mysqlConfig,
         authConfig,
         appConfig,
         mailConfig,
@@ -85,6 +92,11 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
       envFilePath: ['.env'],
     }),
     infrastructureDatabaseModule,
+    // MySQL 连接 (申万行业数据)
+    TypeOrmModule.forRootAsync({
+      name: 'mysql',
+      useClass: MysqlConfigService,
+    }),
     I18nModule.forRootAsync({
       useFactory: (configService: ConfigService<AllConfigType>) => ({
         fallbackLanguage: configService.getOrThrow('app.fallbackLanguage', {
@@ -137,9 +149,11 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     VersionsModule,
     IntelligenceModule,
     ResearchModule,
+    KnowledgeGraphModule,
     ScheduleModule.forRoot(),
     AiAgentModule,
     VibeTradingModule,
+    MarketQuoteModule,
     SkillsModule,
   ],
 })
