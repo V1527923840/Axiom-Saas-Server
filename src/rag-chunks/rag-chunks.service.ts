@@ -17,7 +17,10 @@ export class RagChunksService {
   ) {}
 
   async resolveChunk(chunkId: number): Promise<{ data: ResolveResult | null }> {
-    const row = await this.repository.findOne({ where: { chunkId } });
+    const row = await this.repository.findOne({
+      where: { id: chunkId },
+      select: ['id', 'sourceTable', 'sourceRowId'],
+    });
     if (!row) return { data: null };
 
     if (!VALID_SOURCE_TABLES.includes(row.sourceTable as SourceTable)) {
