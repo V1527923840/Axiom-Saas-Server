@@ -46,6 +46,7 @@ import { ParseTaskModule } from './parse-task/parse-task.module';
 import { VersionsModule } from './versions/versions.module';
 import { IntelligenceModule } from './intelligence/intelligence.module';
 import { ResearchModule } from './research/research.module';
+import { RagChunksModule } from './rag-chunks/rag-chunks.module';
 import { AiAgentModule } from './ai-agent/ai-agent.module';
 import { VibeTradingModule } from './ai-agent/vibe-trading/vibe-trading.module';
 import { SkillsModule } from './skills/skills.module';
@@ -139,6 +140,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     VersionsModule,
     IntelligenceModule,
     ResearchModule,
+    RagChunksModule,
     ScheduleModule.forRoot(),
     AiAgentModule,
     VibeTradingModule,
