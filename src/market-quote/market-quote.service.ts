@@ -44,7 +44,9 @@ export class MarketQuoteService {
 
     const url = new URL('/api/market/quote/daily', baseUrl);
     url.searchParams.set('ts_code', dto.ts_code);
-    url.searchParams.set('range', dto.range);
+    url.searchParams.set('range', dto.range ?? '1d');
+    if (dto.start_date) url.searchParams.set('start_date', dto.start_date);
+    if (dto.end_date) url.searchParams.set('end_date', dto.end_date);
 
     const headers: Record<string, string> = {
       Authorization: `Bearer ${apiToken ?? ''}`,

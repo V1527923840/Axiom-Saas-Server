@@ -282,4 +282,64 @@ describe('MarketQuoteService', () => {
     await localSvc.proxyDailyQuote(dto, 42);
     expect(fetchMock).toHaveBeenCalled();
   });
+
+  // ----- custom date range -----
+
+  it('passes start_date and end_date to upstream when provided', async () => {
+    const upstream = {
+      ts_code: '600519.SH',
+      range: 'all',
+      bars: [],
+      cached: false,
+    };
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(upstream),
+    });
+
+    const dto: GetDailyQuoteDto = Object.assign(new GetDailyQuoteDto(), {
+      ts_code: '600519.SH',
+      range: 'all' as const,
+      start_date: '2026-01-01',
+      end_date: '2026-09-09',
+    });
+
+    await svc.proxyDailyQuote(dto, 42);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [calledUrl] = fetchMock.mock.calls[0];
+    expect(calledUrl).toBe(
+      'http://vibe.local/api/market/quote/daily?ts_code=600519.SH&range=all&start_date=2026-01-01&end_date=2026-09-09',
+    );
+  });
+
+  it('omits start_date / end_date query params when not provided', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve({
+          ts_code: '600519.SH',
+          range: '3m',
+          bars: [],
+          cached: false,
+        }),
+    });
+
+    const dto: GetDailyQuoteDto = Object.assign(new GetDailyQuoteDto(), {
+      ts_code: '600519.SH',
+      range: '3m' as const,
+    });
+
+    await svc.proxyDailyQuote(dto, 42);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [calledUrl] = fetchMock.mock.calls[0];
+    expect(calledUrl).toBe(
+      'http://vibe.local/api/market/quote/daily?ts_code=600519.SH&range=3m',
+    );
+    expect(calledUrl).not.toContain('start_date=');
+    expect(calledUrl).not.toContain('end_date=');
+  });
 });
