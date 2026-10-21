@@ -14,8 +14,12 @@ export class VibeTradingService implements AgentAdapter {
 
   constructor(private readonly client: VibeClientService) {}
 
-  createRemoteSession() {
-    return this.client.createRemoteSession();
+  createRemoteSession(userId?: number | string) {
+    // ★ 2026-10-21: forward the caller identity. The vibe upstream pins
+    // the session owner at creation time; without it the owner stays
+    // unknown until the first message, and the tenant resolution chain
+    // falls back to session.config / session_id.
+    return this.client.createRemoteSession(userId);
   }
 
   submitMessage(
@@ -41,19 +45,30 @@ export class VibeTradingService implements AgentAdapter {
   async *streamEvents(
     remoteSessionId: string,
     signal: AbortSignal,
+    userId?: number | string,
   ): AsyncGenerator<AgentStreamEvent> {
-    yield* this.client.streamEvents(remoteSessionId, signal);
+    yield* this.client.streamEvents(remoteSessionId, signal, userId);
   }
 
-  getMessages(remoteSessionId: string, cursor?: string): Promise<MessageDto[]> {
-    return this.client.getMessages(remoteSessionId, cursor);
+  getMessages(
+    remoteSessionId: string,
+    cursor?: string,
+    userId?: number | string,
+  ): Promise<MessageDto[]> {
+    return this.client.getMessages(remoteSessionId, cursor, userId);
   }
 
-  cancelRemoteSession(remoteSessionId: string): Promise<void> {
-    return this.client.cancelRemoteSession(remoteSessionId);
+  cancelRemoteSession(
+    remoteSessionId: string,
+    userId?: number | string,
+  ): Promise<void> {
+    return this.client.cancelRemoteSession(remoteSessionId, userId);
   }
 
-  deleteRemoteSession(remoteSessionId: string): Promise<void> {
-    return this.client.deleteRemoteSession(remoteSessionId);
+  deleteRemoteSession(
+    remoteSessionId: string,
+    userId?: number | string,
+  ): Promise<void> {
+    return this.client.deleteRemoteSession(remoteSessionId, userId);
   }
 }
