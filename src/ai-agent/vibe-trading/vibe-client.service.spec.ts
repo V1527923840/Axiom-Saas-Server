@@ -598,6 +598,151 @@ describe('VibeClientService', () => {
       });
     });
   });
+
+  // ---------------- X-User-Id on every session-scoped call ----------------
+  //
+  // Regression (2026-10-21): vibe's session-ownership gate rejects any
+  // request that omits `X-User-Id` with 403 "missing X-User-Id for session
+  // ... (owner=N)". Only `submitMessage` forwarded the caller identity, so
+  // the other session-scoped calls (GET messages, cancel, delete, upload,
+  // the 5 goal routes, the event stream) were all rejected → the SaaS
+  // surfaced them as 502 "Vibe get messages failed: 403".
+  //
+  // The vibe log's `owner_user_id: "13"` confirmed the owner WAS pinned
+  // correctly — the identity just never reached the read paths.
+
+  const SESSION_SCOPED_CALLS: Array<{
+    name: string;
+    invoke: (id: number | string) => Promise<unknown>;
+    method: string;
+    urlPart: string;
+  }> = [
+    {
+      name: 'getMessages',
+      method: 'GET',
+      urlPart: '/sessions/r1/messages',
+      invoke: (id) => svc.getMessages('r1', undefined, id),
+    },
+    {
+      name: 'cancelRemoteSession',
+      method: 'POST',
+      urlPart: '/sessions/r1/cancel',
+      invoke: (id) => svc.cancelRemoteSession('r1', id),
+    },
+    {
+      name: 'deleteRemoteSession',
+      method: 'DELETE',
+      urlPart: '/sessions/r1',
+      invoke: (id) => svc.deleteRemoteSession('r1', id),
+    },
+    {
+      name: 'createGoal',
+      method: 'POST',
+      urlPart: '/sessions/r1/goal',
+      invoke: (id) => svc.createGoal('r1', { objective: 'o' }, id),
+    },
+    {
+      name: 'getGoal',
+      method: 'GET',
+      urlPart: '/sessions/r1/goal',
+      invoke: (id) => svc.getGoal('r1', id),
+    },
+    {
+      name: 'updateGoal',
+      method: 'PATCH',
+      urlPart: '/sessions/r1/goal',
+      invoke: (id) =>
+        svc.updateGoal(
+          'r1',
+          { goal_id: 'g1', expected_goal_id: 'g1', objective: 'o' },
+          id,
+        ),
+    },
+    {
+      name: 'addGoalEvidence',
+      method: 'POST',
+      urlPart: '/sessions/r1/goal/evidence',
+      invoke: (id) =>
+        svc.addGoalEvidence(
+          'r1',
+          { goal_id: 'g1', expected_goal_id: 'g1', text: 't' },
+          id,
+        ),
+    },
+    {
+      name: 'updateGoalStatus',
+      method: 'PATCH',
+      urlPart: '/sessions/r1/goal/status',
+      invoke: (id) =>
+        svc.updateGoalStatus(
+          'r1',
+          {
+            goal_id: 'g1',
+            expected_goal_id: 'g1',
+            status: 'complete',
+          },
+          id,
+        ),
+    },
+  ];
+
+  describe('X-User-Id propagation on session-scoped calls', () => {
+    beforeEach(() => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({}),
+      });
+    });
+
+    it.each(SESSION_SCOPED_CALLS)(
+      'should forward X-User-Id for $name',
+      async ({ invoke, method, urlPart }) => {
+        await invoke(13);
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        const [url, init] = fetchMock.mock.calls[0];
+        expect(url).toContain(urlPart);
+        // fetch() defaults to GET when `method` is omitted, so accept
+        // either the explicit verb or an absent one for GET calls.
+        if (init.method !== undefined) {
+          expect(init.method).toBe(method);
+        } else {
+          expect(method).toBe('GET');
+        }
+        expect(init.headers['X-User-Id']).toBe('13');
+      },
+    );
+
+    it('should forward X-User-Id for uploadFile', async () => {
+      await svc.uploadFile(Buffer.from('x'), 'a.txt', 'text/plain', 13);
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(init.headers['X-User-Id']).toBe('13');
+    });
+
+    it('should forward X-User-Id for streamEvents', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        status: 200,
+        body: makeReadableStream(''),
+      });
+
+      // Drain the generator so the fetch actually happens.
+      const events = svc.streamEvents('r1', new AbortController().signal, 13);
+      await events.next();
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(init.headers['X-User-Id']).toBe('13');
+    });
+
+    it('should omit X-User-Id when no userId is supplied', async () => {
+      await svc.getMessages('r1', undefined);
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(init.headers).not.toHaveProperty('X-User-Id');
+    });
+  });
 });
 
 function makeReadableStream(text: string) {

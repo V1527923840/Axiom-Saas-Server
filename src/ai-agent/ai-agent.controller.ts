@@ -221,7 +221,7 @@ export class AiAgentController {
     @Body() dto: CreateGoalDto,
   ) {
     const remoteSessionId = await this.requireRemoteSessionId(user, id);
-    return this.vibeClient.createGoal(remoteSessionId, dto);
+    return this.vibeClient.createGoal(remoteSessionId, dto, user.id);
   }
 
   @Get('sessions/:id/goal')
@@ -232,7 +232,7 @@ export class AiAgentController {
     @Param('id') id: string,
   ) {
     const remoteSessionId = await this.requireRemoteSessionId(user, id);
-    const goal = await this.vibeClient.getGoal(remoteSessionId);
+    const goal = await this.vibeClient.getGoal(remoteSessionId, user.id);
     return { data: goal };
   }
 
@@ -245,7 +245,7 @@ export class AiAgentController {
     @Body() dto: UpdateGoalDto,
   ) {
     const remoteSessionId = await this.requireRemoteSessionId(user, id);
-    return this.vibeClient.updateGoal(remoteSessionId, dto);
+    return this.vibeClient.updateGoal(remoteSessionId, dto, user.id);
   }
 
   @Post('sessions/:id/goal/evidence')
@@ -257,7 +257,7 @@ export class AiAgentController {
     @Body() dto: AddGoalEvidenceDto,
   ) {
     const remoteSessionId = await this.requireRemoteSessionId(user, id);
-    return this.vibeClient.addGoalEvidence(remoteSessionId, dto);
+    return this.vibeClient.addGoalEvidence(remoteSessionId, dto, user.id);
   }
 
   @Patch('sessions/:id/goal/status')
@@ -269,7 +269,7 @@ export class AiAgentController {
     @Body() dto: UpdateGoalStatusDto,
   ) {
     const remoteSessionId = await this.requireRemoteSessionId(user, id);
-    return this.vibeClient.updateGoalStatus(remoteSessionId, dto);
+    return this.vibeClient.updateGoalStatus(remoteSessionId, dto, user.id);
   }
 
   // ---------------- Swarm (passthrough) ----------------
@@ -408,7 +408,10 @@ export class AiAgentController {
     }),
   )
   @HttpCode(HttpStatus.OK)
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+  async uploadFile(
+    @CurrentUser() user: CurrentUserShape,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     if (!file) throw new BadRequestException('Missing file');
     if (file.size > AiAgentController.MAX_UPLOAD_BYTES) {
       throw new PayloadTooLargeException('File exceeds 50MB limit');
@@ -426,6 +429,7 @@ export class AiAgentController {
       file.buffer,
       file.originalname,
       file.mimetype,
+      user.id,
     );
   }
 }

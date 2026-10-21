@@ -31,6 +31,28 @@ export class VibeClientService {
     };
   }
 
+  /**
+   * Build auth headers that ALSO carry the caller's user id.
+   *
+   * ★ 2026-10-21: vibe's session-ownership gate rejects any request that
+   * omits `X-User-Id` with 403 "missing X-User-Id for session ... (owner=N)".
+   * Only `submitMessage` used to forward the identity, so the other
+   * session-scoped calls (GET messages, cancel, delete, upload, the 5 goal
+   * routes, the event stream) were all rejected.
+   *
+   * The header is omitted when no userId is supplied, preserving the
+   * local-dev / no-auth call path.
+   */
+  private userHeaders(
+    userId: number | string | undefined,
+    extra: Record<string, string> = {},
+  ): Record<string, string> {
+    return this.authHeaders({
+      ...extra,
+      ...(userId != null ? { 'X-User-Id': String(userId) } : {}),
+    });
+  }
+
   private timeoutSignal(): AbortSignal {
     const ms =
       this.configService.get('vibeTrading.timeoutMs', { infer: true }) ?? 60000;
@@ -143,11 +165,12 @@ export class VibeClientService {
   async *streamEvents(
     remoteSessionId: string,
     signal: AbortSignal,
+    userId?: number | string,
   ): AsyncGenerator<AgentStreamEvent> {
     const res = await fetch(
       `${this.baseUrl()}/sessions/${remoteSessionId}/events`,
       {
-        headers: this.authHeaders({ Accept: 'text/event-stream' }),
+        headers: this.userHeaders(userId, { Accept: 'text/event-stream' }),
         signal,
       },
     );
@@ -184,6 +207,7 @@ export class VibeClientService {
   async getMessages(
     remoteSessionId: string,
     cursor?: string,
+    userId?: number | string,
   ): Promise<MessageDto[]> {
     const url = new URL(
       `${this.baseUrl()}/sessions/${remoteSessionId}/messages`,
@@ -191,7 +215,7 @@ export class VibeClientService {
     if (cursor) url.searchParams.set('cursor', cursor);
     const res = await fetch(url.toString(), {
       method: 'GET',
-      headers: this.authHeaders(),
+      headers: this.userHeaders(userId),
       signal: this.timeoutSignal(),
     });
     if (!res.ok) {
@@ -213,18 +237,24 @@ export class VibeClientService {
     }));
   }
 
-  async cancelRemoteSession(remoteSessionId: string): Promise<void> {
+  async cancelRemoteSession(
+    remoteSessionId: string,
+    userId?: number | string,
+  ): Promise<void> {
     await fetch(`${this.baseUrl()}/sessions/${remoteSessionId}/cancel`, {
       method: 'POST',
-      headers: this.authHeaders(),
+      headers: this.userHeaders(userId),
       signal: this.timeoutSignal(),
     });
   }
 
-  async deleteRemoteSession(remoteSessionId: string): Promise<void> {
+  async deleteRemoteSession(
+    remoteSessionId: string,
+    userId?: number | string,
+  ): Promise<void> {
     await fetch(`${this.baseUrl()}/sessions/${remoteSessionId}`, {
       method: 'DELETE',
-      headers: this.authHeaders(),
+      headers: this.userHeaders(userId),
       signal: this.timeoutSignal(),
     });
   }
@@ -233,6 +263,7 @@ export class VibeClientService {
     buffer: Buffer,
     filename: string,
     mimetype: string,
+    userId?: number | string,
   ): Promise<{ status: string; file_path: string; filename: string }> {
     const form = new FormData();
     const bytes = new Uint8Array(buffer);
@@ -243,7 +274,7 @@ export class VibeClientService {
       // Do NOT set Content-Type manually here. When body is FormData, fetch
       // auto-generates the multipart boundary in the Content-Type header.
       // Setting it ourselves without the boundary breaks upstream parsers.
-      headers: this.authHeaders(),
+      headers: this.userHeaders(userId),
       body: form,
       signal: this.timeoutSignal(),
     });
@@ -275,12 +306,15 @@ export class VibeClientService {
       turn_budget?: number;
       time_budget_seconds?: number;
     },
+    userId?: number | string,
   ): Promise<unknown> {
     const res = await fetch(
       `${this.baseUrl()}/sessions/${encodeURIComponent(remoteSessionId)}/goal`,
       {
         method: 'POST',
-        headers: this.authHeaders({ 'Content-Type': 'application/json' }),
+        headers: this.userHeaders(userId, {
+          'Content-Type': 'application/json',
+        }),
         body: JSON.stringify(body),
         signal: this.timeoutSignal(),
       },
@@ -296,11 +330,14 @@ export class VibeClientService {
     return res.json();
   }
 
-  async getGoal(remoteSessionId: string): Promise<unknown> {
+  async getGoal(
+    remoteSessionId: string,
+    userId?: number | string,
+  ): Promise<unknown> {
     const res = await fetch(
       `${this.baseUrl()}/sessions/${encodeURIComponent(remoteSessionId)}/goal`,
       {
-        headers: this.authHeaders(),
+        headers: this.userHeaders(userId),
         signal: this.timeoutSignal(),
       },
     );
@@ -324,12 +361,15 @@ export class VibeClientService {
       objective?: string;
       ui_summary?: string;
     },
+    userId?: number | string,
   ): Promise<unknown> {
     const res = await fetch(
       `${this.baseUrl()}/sessions/${encodeURIComponent(remoteSessionId)}/goal`,
       {
         method: 'PATCH',
-        headers: this.authHeaders({ 'Content-Type': 'application/json' }),
+        headers: this.userHeaders(userId, {
+          'Content-Type': 'application/json',
+        }),
         body: JSON.stringify(body),
         signal: this.timeoutSignal(),
       },
@@ -348,12 +388,15 @@ export class VibeClientService {
   async addGoalEvidence(
     remoteSessionId: string,
     body: unknown,
+    userId?: number | string,
   ): Promise<unknown> {
     const res = await fetch(
       `${this.baseUrl()}/sessions/${encodeURIComponent(remoteSessionId)}/goal/evidence`,
       {
         method: 'POST',
-        headers: this.authHeaders({ 'Content-Type': 'application/json' }),
+        headers: this.userHeaders(userId, {
+          'Content-Type': 'application/json',
+        }),
         body: JSON.stringify(body),
         signal: this.timeoutSignal(),
       },
@@ -378,12 +421,15 @@ export class VibeClientService {
       audit?: unknown;
       recap?: string;
     },
+    userId?: number | string,
   ): Promise<unknown> {
     const res = await fetch(
       `${this.baseUrl()}/sessions/${encodeURIComponent(remoteSessionId)}/goal/status`,
       {
         method: 'PATCH',
-        headers: this.authHeaders({ 'Content-Type': 'application/json' }),
+        headers: this.userHeaders(userId, {
+          'Content-Type': 'application/json',
+        }),
         body: JSON.stringify(body),
         signal: this.timeoutSignal(),
       },

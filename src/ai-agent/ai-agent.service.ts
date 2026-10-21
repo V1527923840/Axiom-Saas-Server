@@ -107,7 +107,7 @@ export class AiAgentService {
       try {
         await this.registry
           .get(s.agentType)
-          .deleteRemoteSession(s.remoteSessionId);
+          .deleteRemoteSession(s.remoteSessionId, userId);
       } catch {
         // 远端删除失败不阻塞 — 本地已软删
       }
@@ -123,7 +123,7 @@ export class AiAgentService {
     if (!s.remoteSessionId) return [];
     return this.registry
       .get(s.agentType)
-      .getMessages(s.remoteSessionId, cursor);
+      .getMessages(s.remoteSessionId, cursor, userId);
   }
 
   async cancelSession(userId: number | string, id: string): Promise<void> {
@@ -132,7 +132,9 @@ export class AiAgentService {
     // Cancel only stops the current attempt; the session itself stays active and
     // remains usable for new messages. Release the inflight lock so the next
     // submitMessage can acquire it.
-    await this.registry.get(s.agentType).cancelRemoteSession(s.remoteSessionId);
+    await this.registry
+      .get(s.agentType)
+      .cancelRemoteSession(s.remoteSessionId, userId);
     await this.concurrency.release(s.id);
   }
 
@@ -261,6 +263,7 @@ export class AiAgentService {
           for await (const ev of adapter.streamEvents(
             s.remoteSessionId,
             signal,
+            userId,
           )) {
             if (aborted) break;
             subscriber.next({ type: ev.event, data: ev.data });

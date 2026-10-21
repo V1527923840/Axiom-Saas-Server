@@ -151,7 +151,7 @@ describe('AiAgentService', () => {
     });
     await svc.deleteSession('u1', 'sid');
     expect(repo.softDeleteById).toHaveBeenCalledWith('sid');
-    expect(adapter.deleteRemoteSession).toHaveBeenCalledWith('r1');
+    expect(adapter.deleteRemoteSession).toHaveBeenCalledWith('r1', 'u1');
   });
 
   describe('submitMessage', () => {
@@ -425,7 +425,7 @@ describe('AiAgentService', () => {
       // cancel stops the current attempt only; the session status must stay
       // unchanged so the user can immediately send a new message.
       expect(concurrency.release).toHaveBeenCalledWith('s1');
-      expect(adapter.cancelRemoteSession).toHaveBeenCalledWith('r1');
+      expect(adapter.cancelRemoteSession).toHaveBeenCalledWith('r1', 'u1');
       expect(repo.update).not.toHaveBeenCalled();
     });
 

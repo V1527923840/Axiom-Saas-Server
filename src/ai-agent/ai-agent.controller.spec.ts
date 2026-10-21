@@ -6,6 +6,9 @@ import { AiAgentController } from './ai-agent.controller';
 import { AiAgentService } from './ai-agent.service';
 import { VibeClientService } from './vibe-trading/vibe-client.service';
 
+// ★ 2026-10-21: upload 路由现在也要带 X-User-Id 给上游做 ownership 校验。
+const USER = { id: 42 };
+
 describe('AiAgentController', () => {
   const svc = {
     listAgentTypes: jest.fn().mockReturnValue(['vibe-trading']),
@@ -94,9 +97,11 @@ describe('AiAgentController', () => {
         objective: 'reach 20% growth',
       } as any);
       expect(svc.getSession).toHaveBeenCalledWith('u1', 's1');
-      expect(vibe.createGoal).toHaveBeenCalledWith('r1', {
-        objective: 'reach 20% growth',
-      });
+      expect(vibe.createGoal).toHaveBeenCalledWith(
+        'r1',
+        { objective: 'reach 20% growth' },
+        'u1',
+      );
       expect(r).toEqual({ goal_id: 'g1', status: 'active' });
     });
 
@@ -117,7 +122,7 @@ describe('AiAgentController', () => {
       });
       const r = await ctrl.getGoal({ id: 'u1' } as any, 's1');
       expect(svc.getSession).toHaveBeenCalledWith('u1', 's1');
-      expect(vibe.getGoal).toHaveBeenCalledWith('r1');
+      expect(vibe.getGoal).toHaveBeenCalledWith('r1', 'u1');
       expect(r).toEqual({
         data: { goal_id: 'g1', status: 'active' },
       });
@@ -140,10 +145,14 @@ describe('AiAgentController', () => {
         expected_goal_id: 'g1',
       } as any);
       expect(svc.getSession).toHaveBeenCalledWith('u1', 's1');
-      expect(vibe.updateGoal).toHaveBeenCalledWith('r1', {
-        goal_id: 'g1',
-        expected_goal_id: 'g1',
-      });
+      expect(vibe.updateGoal).toHaveBeenCalledWith(
+        'r1',
+        {
+          goal_id: 'g1',
+          expected_goal_id: 'g1',
+        },
+        'u1',
+      );
       expect(r).toEqual({ goal_id: 'g1', status: 'updated' });
     });
 
@@ -158,11 +167,15 @@ describe('AiAgentController', () => {
         text: 'evidence',
       } as any);
       expect(svc.getSession).toHaveBeenCalledWith('u1', 's1');
-      expect(vibe.addGoalEvidence).toHaveBeenCalledWith('r1', {
-        goal_id: 'g1',
-        expected_goal_id: 'g1',
-        text: 'evidence',
-      });
+      expect(vibe.addGoalEvidence).toHaveBeenCalledWith(
+        'r1',
+        {
+          goal_id: 'g1',
+          expected_goal_id: 'g1',
+          text: 'evidence',
+        },
+        'u1',
+      );
       expect(r).toEqual({ status: 'accepted' });
     });
 
@@ -177,11 +190,15 @@ describe('AiAgentController', () => {
         status: 'achieved',
       } as any);
       expect(svc.getSession).toHaveBeenCalledWith('u1', 's1');
-      expect(vibe.updateGoalStatus).toHaveBeenCalledWith('r1', {
-        goal_id: 'g1',
-        expected_goal_id: 'g1',
-        status: 'achieved',
-      });
+      expect(vibe.updateGoalStatus).toHaveBeenCalledWith(
+        'r1',
+        {
+          goal_id: 'g1',
+          expected_goal_id: 'g1',
+          status: 'achieved',
+        },
+        'u1',
+      );
       expect(r).toEqual({ status: 'achieved' });
     });
 
@@ -331,11 +348,15 @@ describe('AiAgentController', () => {
         filename: 'x.pdf',
       };
       (vibe.uploadFile as jest.Mock).mockResolvedValue(vibeResp);
-      const r = await ctrl.uploadFile(makeFile({ originalname: 'doc.pdf' }));
+      const r = await ctrl.uploadFile(
+        USER,
+        makeFile({ originalname: 'doc.pdf' }),
+      );
       expect(vibe.uploadFile).toHaveBeenCalledWith(
         expect.any(Buffer),
         'doc.pdf',
         'application/pdf',
+        USER.id,
       );
       expect(r).toEqual(vibeResp);
     });
@@ -360,11 +381,15 @@ describe('AiAgentController', () => {
         filename: originalName,
       };
       (vibe.uploadFile as jest.Mock).mockResolvedValue(vibeResp);
-      const r = await ctrl.uploadFile(makeFile({ originalname: originalName }));
+      const r = await ctrl.uploadFile(
+        USER,
+        makeFile({ originalname: originalName }),
+      );
       expect(vibe.uploadFile).toHaveBeenCalledWith(
         expect.any(Buffer),
         originalName, // 必须严格相等,不允许任何编码转换
         'application/pdf',
+        USER.id,
       );
       // 返回值里的 filename 也必须保持中文 —— 这是前端 UI 渲染的字段。
       expect((r as any).filename).toBe(originalName);
@@ -375,7 +400,9 @@ describe('AiAgentController', () => {
         originalname: 'huge.pdf',
         size: 50 * 1024 * 1024 + 1,
       });
-      await expect(ctrl.uploadFile(big)).rejects.toBeInstanceOf(HttpException);
+      await expect(ctrl.uploadFile(USER, big)).rejects.toBeInstanceOf(
+        HttpException,
+      );
       expect(vibe.uploadFile).not.toHaveBeenCalled();
     });
 
@@ -384,7 +411,9 @@ describe('AiAgentController', () => {
         originalname: 'malware.exe',
         mimetype: 'application/octet-stream',
       });
-      await expect(ctrl.uploadFile(exe)).rejects.toBeInstanceOf(HttpException);
+      await expect(ctrl.uploadFile(USER, exe)).rejects.toBeInstanceOf(
+        HttpException,
+      );
       expect(vibe.uploadFile).not.toHaveBeenCalled();
     });
 
@@ -393,7 +422,7 @@ describe('AiAgentController', () => {
         new HttpException('upstream 502', 502),
       );
       await expect(
-        ctrl.uploadFile(makeFile({ originalname: 'doc.pdf' })),
+        ctrl.uploadFile(USER, makeFile({ originalname: 'doc.pdf' })),
       ).rejects.toBeInstanceOf(HttpException);
     });
   });

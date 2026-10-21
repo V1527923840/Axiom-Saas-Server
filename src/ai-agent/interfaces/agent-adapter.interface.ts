@@ -73,17 +73,48 @@ export interface AgentAdapter {
 
   /**
    * 长连接订阅一个 session 的事件流。返回 AsyncGenerator，调用方负责消费与中止。
+   *
+   * @param userId ★ 2026-10-21 — 下发给上游作为 `X-User-Id`。上游的
+   *   session-ownership 校验会对缺少该头的请求返回 403。
    */
   streamEvents(
     remoteSessionId: string,
     signal: AbortSignal,
+    userId?: number | string,
   ): AsyncGenerator<AgentStreamEvent>;
 
-  getMessages(remoteSessionId: string, cursor?: string): Promise<MessageDto[]>;
+  /**
+   * 读取一个 session 的消息列表。
+   *
+   * @param userId ★ 2026-10-21 — 下发给上游作为 `X-User-Id`。上游的
+   *   session-ownership 校验会对缺少该头的请求返回 403
+   *   ("missing X-User-Id for session ... (owner=N)")。
+   */
+  getMessages(
+    remoteSessionId: string,
+    cursor?: string,
+    userId?: number | string,
+  ): Promise<MessageDto[]>;
 
-  cancelRemoteSession(remoteSessionId: string): Promise<void>;
+  /**
+   * 取消一个 session 正在跑的 agent turn。
+   *
+   * @param userId ★ 2026-10-21 — 同上，缺失会被上游 403 拒绝。
+   */
+  cancelRemoteSession(
+    remoteSessionId: string,
+    userId?: number | string,
+  ): Promise<void>;
 
-  deleteRemoteSession(remoteSessionId: string): Promise<void>;
+  /**
+   * 删除一个 session。
+   *
+   * @param userId ★ 2026-10-21 — 同上，缺失会被上游 403 拒绝。
+   */
+  deleteRemoteSession(
+    remoteSessionId: string,
+    userId?: number | string,
+  ): Promise<void>;
 }
 
 export const AGENT_ADAPTERS = Symbol('AGENT_ADAPTERS');
