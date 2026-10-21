@@ -53,3 +53,6 @@ pnpm-lock.yaml
 /release.config.js
 /release.config.d.ts
 /release.config.js.map
+
+# 本地临时截图 / 调试产物
+/daily.png

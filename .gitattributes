@@ -1,0 +1,13 @@
+# 统一行尾：仓库内一律存 LF，工作区在 Windows 上也检出 LF。
+# 目的：prettier 默认 endOfLine: "lf"，若工作区被转成 CRLF，
+# pre-commit 的 eslint 会把每个 CR 报成一个错误，导致无法提交。
+* text=auto eol=lf
+
+# 二进制文件不做行尾转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary

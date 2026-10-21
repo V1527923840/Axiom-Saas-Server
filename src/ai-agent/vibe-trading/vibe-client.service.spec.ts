@@ -39,6 +39,63 @@ describe('VibeClientService', () => {
     expect(r).toEqual({ remoteSessionId: 'r1' });
   });
 
+  it('should forward the caller userId as X-User-Id when creating a session', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ session_id: 'r1' }),
+    });
+
+    await svc.createRemoteSession(13);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://vibe.local/sessions',
+      expect.objectContaining({
+        headers: expect.objectContaining({ 'X-User-Id': '13' }),
+      }),
+    );
+  });
+
+  it('should include user_id in the create body so vibe can pin the owner', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ session_id: 'r1' }),
+    });
+
+    await svc.createRemoteSession(13);
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(JSON.parse(init.body)).toMatchObject({ user_id: 13 });
+  });
+
+  it('should omit user identity entirely when no userId is supplied', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ session_id: 'r1' }),
+    });
+
+    await svc.createRemoteSession();
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(init.headers).not.toHaveProperty('X-User-Id');
+    expect(JSON.parse(init.body)).not.toHaveProperty('user_id');
+  });
+
+  it('should stringify a numeric-string userId for the header', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ session_id: 'r1' }),
+    });
+
+    await svc.createRemoteSession('13');
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(init.headers['X-User-Id']).toBe('13');
+  });
+
   // ---------------- submitMessage (sync POST) ----------------
 
   it('should POST /sessions/:id/messages and return {messageId, attemptId}', async () => {

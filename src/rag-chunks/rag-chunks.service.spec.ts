@@ -25,7 +25,7 @@ describe('RagChunksService', () => {
     return moduleRef.get(RagChunksService);
   }
 
-  it('resolves zsxq_posts row → sourceRowId as UUID string', async () => {
+  it('should resolve zsxq_posts row → sourceRowId as UUID string', async () => {
     const repo = buildRepoMock({
       id: 117850,
       sourceTable: 'zsxq_posts',
@@ -47,7 +47,7 @@ describe('RagChunksService', () => {
     });
   });
 
-  it('resolves research_analysis row → sourceRowId cast to number', async () => {
+  it('should resolve research_analysis row → sourceRowId cast to number', async () => {
     const repo = buildRepoMock({
       id: 42,
       sourceTable: 'research_analysis',
@@ -66,7 +66,7 @@ describe('RagChunksService', () => {
     expect(typeof (result.data as any).sourceRowId).toBe('number');
   });
 
-  it('returns data: null when chunk not found', async () => {
+  it('should return data: null when chunk not found', async () => {
     const repo = buildRepoMock(null);
     service = await makeService(repo);
 
@@ -75,7 +75,7 @@ describe('RagChunksService', () => {
     expect(result).toEqual({ data: null });
   });
 
-  it('throws BadRequestException on unknown source_table', async () => {
+  it('should throw BadRequestException on unknown source_table', async () => {
     const repo = buildRepoMock({
       id: 1,
       sourceTable: 'something_else',
@@ -88,7 +88,7 @@ describe('RagChunksService', () => {
     );
   });
 
-  it('throws BadRequestException when research_analysis sourceRowId is not numeric', async () => {
+  it('should throw BadRequestException when research_analysis sourceRowId is not numeric', async () => {
     const repo = buildRepoMock({
       id: 2,
       sourceTable: 'research_analysis',

@@ -66,7 +66,10 @@ describe('AiAgentService', () => {
     const created = { id: 'local-1', userId: 'u1', agentType: 'vibe-trading' };
     repo.create.mockResolvedValue(created);
     const r = await svc.createSession('u1', 'vibe-trading');
-    expect(adapter.createRemoteSession).toHaveBeenCalledWith();
+    // ★ 2026-10-21: the caller identity is forwarded so the upstream pins
+    // the session owner at creation time. Previously this was called with
+    // no args, leaving the owner unknown until the first message.
+    expect(adapter.createRemoteSession).toHaveBeenCalledWith('u1');
     expect(repo.create).toHaveBeenCalled();
     expect(r).toEqual(created);
   });

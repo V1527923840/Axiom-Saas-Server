@@ -45,7 +45,13 @@ export class AiAgentService {
     const ttlDays =
       this.configService.get('aiAgent.ttlDays', { infer: true }) ?? 30;
     const now = new Date();
-    const { remoteSessionId } = await adapter.createRemoteSession();
+    // ★ 2026-10-21: forward userId so vibe can pin the session owner at
+    // creation time. Previously the upstream session was created with no
+    // identity, leaving the owner unknown until the first message — during
+    // that window the tenant chain fell back to session.config / session_id,
+    // and one session's artifacts could split across two
+    // /tmp/axiom-artifacts/<tenant>/<session>/ trees.
+    const { remoteSessionId } = await adapter.createRemoteSession(userId);
     return this.repo.create({
       userId,
       agentType,

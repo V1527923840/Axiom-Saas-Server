@@ -37,11 +37,39 @@ export class VibeClientService {
     return AbortSignal.timeout(ms);
   }
 
-  async createRemoteSession(): Promise<{ remoteSessionId: string }> {
+  /**
+   * 在上游创建一个新的 vibe session。
+   *
+   * ★ User-scope (2026-10-21): `userId` 同时通过 `X-User-Id` 头与 body
+   * 的 `user_id` 字段下发，让 vibe 在**创建时**就把 session owner 钉死。
+   *
+   * 背景:`POST /sessions` 之前只发 `{ title: '' }`,不带任何身份。上游的
+   * session 因此没有 owner,直到用户第一次发消息(`POST /messages` 才带
+   * `X-User-Id`)才知道这是谁。这段空窗期里上游的 tenant 解析链第一环断开,
+   * `SessionService` 会回落到 `session.config["user_id"]`(可能为空 → 再回落到
+   * session_id)。结果是同一会话的产物被拆到两个
+   * `/tmp/axiom-artifacts/<tenant>/<session>/` 目录下(生产上观测到 tenant 1
+   * 与 tenant 13 并存)。
+   *
+   * 与 `submitMessage` 对称:那里已经把 `userId` 同时放进 header 与 body,
+   * 这里补上同样的契约。
+   *
+   * @param userId SaaS 侧用户 id。省略时不发送任何身份字段,保持旧的本地
+   *               开发 / 无认证调用路径不变。
+   */
+  async createRemoteSession(
+    userId?: number | string,
+  ): Promise<{ remoteSessionId: string }> {
     const res = await fetch(`${this.baseUrl()}/sessions`, {
       method: 'POST',
-      headers: this.authHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ title: '' }),
+      headers: this.authHeaders({
+        'Content-Type': 'application/json',
+        ...(userId != null ? { 'X-User-Id': String(userId) } : {}),
+      }),
+      body: JSON.stringify({
+        title: '',
+        ...(userId != null ? { user_id: userId } : {}),
+      }),
       signal: this.timeoutSignal(),
     });
     if (!res.ok) {

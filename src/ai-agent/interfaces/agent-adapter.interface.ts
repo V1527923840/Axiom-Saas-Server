@@ -35,7 +35,17 @@ export interface SkillRef {
 export interface AgentAdapter {
   readonly agentType: string;
 
-  createRemoteSession(): Promise<{
+  /**
+   * 在上游创建一个新的 session。
+   *
+   * @param userId ★ 2026-10-21 — SaaS 侧用户 id。下发给上游后，上游在
+   *   **创建时**就能把 session owner 钉死。之前该参数不存在，上游要到
+   *   第一次发消息才知道 owner，空窗期内的 tenant 解析会回落到
+   *   session.config / session_id，导致同一会话的产物被拆到两个
+   *   `/tmp/axiom-artifacts/<tenant>/<session>/` 目录。可选以保留无认证的
+   *   本地开发路径。
+   */
+  createRemoteSession(userId?: number | string): Promise<{
     remoteSessionId: string;
     meta?: Record<string, unknown>;
   }>;

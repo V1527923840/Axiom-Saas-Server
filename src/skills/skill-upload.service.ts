@@ -14,7 +14,10 @@ import { SkillRepository } from './infrastructure/persistence/relational/reposit
 import { SkillFileRepository } from './infrastructure/persistence/relational/repositories/skill-file.repository';
 import { UserSkillBindingRepository } from './infrastructure/persistence/relational/repositories/user-skill-binding.repository';
 import { FrontmatterValidator } from './infrastructure/frontmatter/frontmatter-validator';
-import { SkillToolSchema, SkillEntity } from './infrastructure/persistence/relational/entities/skill.entity';
+import {
+  SkillToolSchema,
+  SkillEntity,
+} from './infrastructure/persistence/relational/entities/skill.entity';
 import { SkillUpdateEventRepository } from './infrastructure/persistence/relational/repositories/skill-update-event.repository';
 import type { ActorRole } from './skill-access';
 import { AllConfigType } from '../config/config.type';

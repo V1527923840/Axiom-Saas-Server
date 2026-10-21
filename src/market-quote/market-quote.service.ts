@@ -32,8 +32,7 @@ export class MarketQuoteService {
       infer: true,
     });
     const timeoutMs =
-      this.configService.get('vibeTrading.timeoutMs', { infer: true }) ??
-      30000;
+      this.configService.get('vibeTrading.timeoutMs', { infer: true }) ?? 30000;
 
     if (!baseUrl) {
       throw new HttpException(

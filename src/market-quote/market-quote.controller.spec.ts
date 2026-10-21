@@ -114,10 +114,7 @@ describe('MarketQuoteController', () => {
     // Path/version metadata is set on the class via @Controller({path, version}).
     // NestJS stores the version under key '__version__' (see
     // node_modules/@nestjs/common/constants.js: VERSION_METADATA = '__version__').
-    const pathMeta: string = Reflect.getMetadata(
-      'path',
-      MarketQuoteController,
-    );
+    const pathMeta: string = Reflect.getMetadata('path', MarketQuoteController);
     const versionMeta: string = Reflect.getMetadata(
       '__version__',
       MarketQuoteController,

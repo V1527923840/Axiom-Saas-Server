@@ -11,8 +11,7 @@ describe('MarketQuoteService', () => {
       'vibeTrading.timeoutMs': 5000,
     };
     return {
-      get: (k: string, _opts?: unknown) =>
-        k in overrides ? overrides[k] : defaults[k],
+      get: (k: string) => (k in overrides ? overrides[k] : defaults[k]),
     };
   };
 
@@ -86,7 +85,8 @@ describe('MarketQuoteService', () => {
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
-      json: () => Promise.resolve({ ts_code: 'x', range: '1d', bars: [], cached: false }),
+      json: () =>
+        Promise.resolve({ ts_code: 'x', range: '1d', bars: [], cached: false }),
     });
 
     const dto: GetDailyQuoteDto = Object.assign(new GetDailyQuoteDto(), {
@@ -103,7 +103,8 @@ describe('MarketQuoteService', () => {
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
-      json: () => Promise.resolve({ ts_code: 'x', range: '1d', bars: [], cached: false }),
+      json: () =>
+        Promise.resolve({ ts_code: 'x', range: '1d', bars: [], cached: false }),
     });
 
     const dto: GetDailyQuoteDto = Object.assign(new GetDailyQuoteDto(), {
@@ -122,7 +123,16 @@ describe('MarketQuoteService', () => {
     const upstream = {
       ts_code: '600519.SH',
       range: '1d',
-      bars: [{ date: '2026-09-08', open: 1700, high: 1710, low: 1690, close: 1705, volume: 12345 }],
+      bars: [
+        {
+          date: '2026-09-08',
+          open: 1700,
+          high: 1710,
+          low: 1690,
+          close: 1705,
+          volume: 12345,
+        },
+      ],
       cached: true,
     };
     fetchMock.mockResolvedValue({
@@ -247,7 +257,8 @@ describe('MarketQuoteService', () => {
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
-      json: () => Promise.resolve({ ts_code: 'x', range: '1d', bars: [], cached: false }),
+      json: () =>
+        Promise.resolve({ ts_code: 'x', range: '1d', bars: [], cached: false }),
     });
 
     const cfg = makeCfg({ 'vibeTrading.apiToken': '' });
@@ -270,7 +281,8 @@ describe('MarketQuoteService', () => {
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
-      json: () => Promise.resolve({ ts_code: 'x', range: '1d', bars: [], cached: false }),
+      json: () =>
+        Promise.resolve({ ts_code: 'x', range: '1d', bars: [], cached: false }),
     });
 
     const dto: GetDailyQuoteDto = Object.assign(new GetDailyQuoteDto(), {
@@ -285,7 +297,7 @@ describe('MarketQuoteService', () => {
 
   // ----- custom date range -----
 
-  it('passes start_date and end_date to upstream when provided', async () => {
+  it('should pass start_date and end_date to upstream when provided', async () => {
     const upstream = {
       ts_code: '600519.SH',
       range: 'all',
@@ -314,7 +326,7 @@ describe('MarketQuoteService', () => {
     );
   });
 
-  it('omits start_date / end_date query params when not provided', async () => {
+  it('should omit start_date / end_date query params when not provided', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
