@@ -45,8 +45,14 @@ export class AddRoleIdSequenceAndCode1790200000000 implements MigrationInterface
     await queryRunner.query(
       `CREATE SEQUENCE IF NOT EXISTS "role_id_seq" OWNED BY "role"."id"`,
     );
+    // ★ 用 GREATEST(..., 1) 而不是直接 COALESCE(..., 0):
+    //   序列的最小合法值是 1,setval(seq, 0) 会报
+    //   "setval: value 0 is out of bounds for sequence"。
+    //   当 role 表为空时(全新环境跑迁移链、角色尚未由种子写入),
+    //   MAX(id) 为 NULL → COALESCE 得 0 → 直接失败。
+    //   与 1790300000000-SuperAdminRoleAndCodeBackfill 里的写法保持一致。
     await queryRunner.query(
-      `SELECT setval('"role_id_seq"', COALESCE((SELECT MAX("id") FROM "role"), 0))`,
+      `SELECT setval('"role_id_seq"', GREATEST((SELECT COALESCE(MAX("id"), 0) FROM "role"), 1))`,
     );
     await queryRunner.query(
       `ALTER TABLE "role" ALTER COLUMN "id" SET DEFAULT nextval('"role_id_seq"')`,
