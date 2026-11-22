@@ -38,6 +38,12 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
   app.useGlobalPipes(new ValidationPipe(validationOptions));
+  // ★ 请求体大小上限:body-parser 的默认值已经是 100kb,这里**不需要**改动。
+  //   实测确认:NestJS 默认注册的 json parser 会以 413 拒绝超过 100kb 的 body,
+  //   因此 MCP 端点已天然受到"内存耗尽"防护。
+  //   ⚠️ 不要用 app.getHttpAdapter().useBodyParser('json', false, {limit}) 追加
+  //      第二个 parser —— NestJS 已经注册过一个,追加会产生重复解析,
+  //      且对既有接口没有任何收益,徒增风险。保持现状即可。
   app.useGlobalInterceptors(
     // ResolvePromisesInterceptor is used to resolve promises in responses because class-transformer can't do it
     // https://github.com/typestack/class-transformer/issues/549

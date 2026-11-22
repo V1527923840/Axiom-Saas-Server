@@ -53,6 +53,8 @@ import { SkillsModule } from './skills/skills.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 import { MarketQuoteModule } from './market-quote/market-quote.module';
+import { McpModule } from './mcp/mcp.module';
+import mcpConfig from './config/mcp/mcp.config';
 
 // <database-block>
 const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
@@ -84,6 +86,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
         aiAgentConfig,
         skillConfig,
         vibeTradingConfig,
+        mcpConfig,
       ],
       envFilePath: ['.env'],
     }),
@@ -146,6 +149,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
     VibeTradingModule,
     MarketQuoteModule,
     SkillsModule,
+    McpModule,
   ],
 })
 export class AppModule {}

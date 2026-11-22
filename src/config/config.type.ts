@@ -9,6 +9,7 @@ import { GoogleConfig } from '../auth-google/config/google-config.type';
 import { MailConfig } from '../mail/config/mail-config.type';
 import { SkillConfig } from './skill/skill.config';
 import { VibeTradingConfig } from './vibe-trading/vibe-trading.config';
+import { McpConfig } from './mcp/mcp-config.type';
 
 export type AllConfigType = {
   app: AppConfig;
@@ -20,6 +21,7 @@ export type AllConfigType = {
   file: FileConfig;
   google: GoogleConfig;
   mail: MailConfig;
+  mcp: McpConfig;
   skill: SkillConfig['skill'];
   vibeTrading: VibeTradingConfig['vibeTrading'];
 };

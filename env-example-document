@@ -50,3 +50,27 @@ GOOGLE_CLIENT_SECRET=
 APPLE_APP_AUDIENCE=[]
 
 WORKER_HOST=redis://redis:6379/1
+
+# ============ MCP (Model Context Protocol) ============
+# ★ Master switch for the MCP endpoint at /api/v1/mcp.
+#   默认 false —— 升级后端不会意外暴露新端点,需要时显式设为 true。
+#   关闭时端点返回 JSON-RPC 错误 "MCP endpoint is disabled"。
+MCP_ENABLED=false
+# Static API key(s) for MCP clients (sent as X-MCP-Api-Key or Authorization: Bearer <key>).
+# ★ 支持逗号分隔的多个 key:每个 key 是独立凭证,拥有独立的限流桶和审计记录,
+#   可单独吊销(删掉该 key 即可)而不影响其他人。多人共用时务必一人一个 key。
+# Generate with: openssl rand -hex 32
+MCP_API_KEY=
+# Max items a single tool call may return
+MCP_MAX_PAGE_SIZE=20
+# Max characters of original text returned by the detail tools
+MCP_MAX_ORIGINAL_TEXT_LENGTH=20000
+# ---- Abuse protection ----
+# Per-caller sustained tool-call rate (rps). Token bucket per credential.
+MCP_RATE_LIMIT_RPS=5
+# Token-bucket burst capacity (how many calls back-to-back before throttling)
+MCP_RATE_LIMIT_BURST=10
+# Max MCP tool calls in flight across all callers (bounds DB pool usage)
+MCP_MAX_CONCURRENCY=8
+# Max length of keyword/company filters (these run as ILIKE '%x%' scans)
+MCP_MAX_FILTER_LENGTH=100
