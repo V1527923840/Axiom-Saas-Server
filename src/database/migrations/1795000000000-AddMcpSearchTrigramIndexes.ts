@@ -51,34 +51,59 @@ export class AddMcpSearchTrigramIndexes1795000000000 implements MigrationInterfa
     // zsxq_posts.title —— 情报精选的标题模糊搜索。
     // ★ 这张表原本没有 title 索引，是最严重的全表扫描来源。
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS idx_zsxq_posts_title_trgm
-        ON public.zsxq_posts
-        USING gin (title gin_trgm_ops)
+      DO $$
+      BEGIN
+        IF to_regclass('public.zsxq_posts') IS NOT NULL THEN
+          CREATE INDEX IF NOT EXISTS idx_zsxq_posts_title_trgm
+            ON public.zsxq_posts
+            USING gin (title gin_trgm_ops);
+        END IF;
+      END $$;
     `);
 
     // research_analysis.document_name —— 研报名称模糊搜索。
+    //
+    // ★ 用 to_regclass 做存在性守卫：这张表由
+    //   1781000002500-CreateResearchAnalysisTable 创建，但在早于它的
+    //   环境里可能仍然缺失。索引只是性能优化，不该因为目标表不存在
+    //   就让整条迁移链中断。
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS idx_research_analysis_document_name_trgm
-        ON public.research_analysis
-        USING gin (document_name gin_trgm_ops)
+      DO $$
+      BEGIN
+        IF to_regclass('public.research_analysis') IS NOT NULL THEN
+          CREATE INDEX IF NOT EXISTS idx_research_analysis_document_name_trgm
+            ON public.research_analysis
+            USING gin (document_name gin_trgm_ops);
+        END IF;
+      END $$;
     `);
 
     // stock_mapping 是 jsonb，MCP 的 `company` 过滤对它做 ILike。
     // jsonb 的 GIN（jsonb_path_ops）不能服务文本模糊匹配，
     // 因此这里为它建表达式索引，提取出可能被检索的文本再套 trigram。
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS idx_zsxq_posts_stock_mapping_trgm
-        ON public.zsxq_posts
-        USING gin ((stock_mapping::text) gin_trgm_ops)
+      DO $$
+      BEGIN
+        IF to_regclass('public.zsxq_posts') IS NOT NULL THEN
+          CREATE INDEX IF NOT EXISTS idx_zsxq_posts_stock_mapping_trgm
+            ON public.zsxq_posts
+            USING gin ((stock_mapping::text) gin_trgm_ops);
+        END IF;
+      END $$;
     `);
 
     await queryRunner.query(`
-      COMMENT ON INDEX public.idx_zsxq_posts_title_trgm IS
-        'MCP 模糊搜索支撑索引:让 ILIKE ''%kw%'' 走 GIN 而非全表扫描'
-    `);
-    await queryRunner.query(`
-      COMMENT ON INDEX public.idx_research_analysis_document_name_trgm IS
-        'MCP 模糊搜索支撑索引:让 ILIKE ''%kw%'' 走 GIN 而非全表扫描'
+      DO $$
+      BEGIN
+        IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'idx_zsxq_posts_title_trgm') THEN
+          COMMENT ON INDEX public.idx_zsxq_posts_title_trgm IS
+            'MCP 模糊搜索支撑索引:让 ILIKE ''%kw%'' 走 GIN 而非全表扫描';
+        END IF;
+        IF EXISTS (SELECT 1 FROM pg_class WHERE relname = 'idx_research_analysis_document_name_trgm') THEN
+          COMMENT ON INDEX public.idx_research_analysis_document_name_trgm IS
+            'MCP 模糊搜索支撑索引:让 ILIKE ''%kw%'' 走 GIN 而非全表扫描';
+        END IF;
+      END $$;
     `);
   }
 
