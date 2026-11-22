@@ -40,31 +40,31 @@ export class AddMenus1781000000000 implements MigrationInterface {
     // Assign all menus to Admin role (roleId = 2)
     await queryRunner.query(`
       INSERT INTO role_menu ("roleId", "menuId")
-      SELECT 2, id FROM menu WHERE code = 'scrape-logs'
+      SELECT r.id, m.id FROM role r, menu m WHERE m.code = 'scrape-logs' AND r.id = 2
       AND NOT EXISTS (SELECT 1 FROM role_menu WHERE "roleId" = 2 AND "menuId" = (SELECT id FROM menu WHERE code = 'scrape-logs'))
     `);
 
     await queryRunner.query(`
       INSERT INTO role_menu ("roleId", "menuId")
-      SELECT 2, id FROM menu WHERE code = 'oss-browser'
+      SELECT r.id, m.id FROM role r, menu m WHERE m.code = 'oss-browser' AND r.id = 2
       AND NOT EXISTS (SELECT 1 FROM role_menu WHERE "roleId" = 2 AND "menuId" = (SELECT id FROM menu WHERE code = 'oss-browser'))
     `);
 
     await queryRunner.query(`
       INSERT INTO role_menu ("roleId", "menuId")
-      SELECT 2, id FROM menu WHERE code = 'parse-tasks'
+      SELECT r.id, m.id FROM role r, menu m WHERE m.code = 'parse-tasks' AND r.id = 2
       AND NOT EXISTS (SELECT 1 FROM role_menu WHERE "roleId" = 2 AND "menuId" = (SELECT id FROM menu WHERE code = 'parse-tasks'))
     `);
 
     await queryRunner.query(`
       INSERT INTO role_menu ("roleId", "menuId")
-      SELECT 2, id FROM menu WHERE code = 'versions'
+      SELECT r.id, m.id FROM role r, menu m WHERE m.code = 'versions' AND r.id = 2
       AND NOT EXISTS (SELECT 1 FROM role_menu WHERE "roleId" = 2 AND "menuId" = (SELECT id FROM menu WHERE code = 'versions'))
     `);
 
     await queryRunner.query(`
       INSERT INTO role_menu ("roleId", "menuId")
-      SELECT 2, id FROM menu WHERE code = 'intelligence'
+      SELECT r.id, m.id FROM role r, menu m WHERE m.code = 'intelligence' AND r.id = 2
       AND NOT EXISTS (SELECT 1 FROM role_menu WHERE "roleId" = 2 AND "menuId" = (SELECT id FROM menu WHERE code = 'intelligence'))
     `);
   }

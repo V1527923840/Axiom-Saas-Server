@@ -57,18 +57,18 @@ export class IntroduceReportsMenuAndRelocateDailySummary1791000000003 implements
     // 3. Grant the new menu to Admin (roleId=2) and Super Admin (roleId=1).
     await queryRunner.query(`
       INSERT INTO role_menu ("roleId", "menuId")
-      SELECT 2, id FROM menu WHERE code = 'reports'
+      SELECT r.id, m.id FROM role r, menu m WHERE m.code = 'reports' AND r.id = 2
         AND NOT EXISTS (
           SELECT 1 FROM role_menu rm
-          WHERE rm."roleId" = 2 AND rm."menuId" = menu.id
+          WHERE rm."roleId" = 2 AND rm."menuId" = m.id
         )
     `);
     await queryRunner.query(`
       INSERT INTO role_menu ("roleId", "menuId")
-      SELECT 1, id FROM menu WHERE code = 'reports'
+      SELECT r.id, m.id FROM role r, menu m WHERE m.code = 'reports' AND r.id = 1
         AND NOT EXISTS (
           SELECT 1 FROM role_menu rm
-          WHERE rm."roleId" = 1 AND rm."menuId" = menu.id
+          WHERE rm."roleId" = 1 AND rm."menuId" = m.id
         )
     `);
 

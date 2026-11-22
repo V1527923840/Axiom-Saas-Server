@@ -39,7 +39,7 @@ export class AddDailySummaryMenu1791000000001 implements MigrationInterface {
     // Assign to super_admin (roleId = 1) — matches menu-seed.service.ts
     await queryRunner.query(`
       INSERT INTO role_menu ("roleId", "menuId")
-      SELECT 1, id FROM menu WHERE code = 'daily-summary'
+      SELECT r.id, m.id FROM role r, menu m WHERE m.code = 'daily-summary' AND r.id = 1
       AND NOT EXISTS (
         SELECT 1 FROM role_menu
         WHERE "roleId" = 1
@@ -50,7 +50,7 @@ export class AddDailySummaryMenu1791000000001 implements MigrationInterface {
     // Assign to admin (roleId = 2) — required so the sidebar shows it.
     await queryRunner.query(`
       INSERT INTO role_menu ("roleId", "menuId")
-      SELECT 2, id FROM menu WHERE code = 'daily-summary'
+      SELECT r.id, m.id FROM role r, menu m WHERE m.code = 'daily-summary' AND r.id = 2
       AND NOT EXISTS (
         SELECT 1 FROM role_menu
         WHERE "roleId" = 2
